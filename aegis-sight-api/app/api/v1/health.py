@@ -1,11 +1,14 @@
 import shutil
 import time
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 
 from app.core.config import settings
 from app.core.database import engine
+from app.models.device import Device
+from app.models.license import SoftwareLicense
 
 router = APIRouter(tags=["health"])
 
@@ -75,20 +78,84 @@ async def health_detail():
             "error": str(e),
         }
 
-    # Celery check
+    # Celery check (including Beat schedule)
     try:
         from celery import Celery
 
         celery_app = Celery(broker=settings.REDIS_URL)
         inspector = celery_app.control.inspect(timeout=2.0)
         active = inspector.active()
+        scheduled = inspector.scheduled()
+        beat_tasks = sum(len(v) for v in scheduled.values()) if scheduled else 0
         checks["celery"] = {
             "status": "healthy" if active is not None else "unavailable",
             "workers": len(active) if active else 0,
+            "beat_scheduled_tasks": beat_tasks,
         }
     except Exception as e:
         checks["celery"] = {
             "status": "unavailable",
+            "error": str(e),
+        }
+
+    # Last telemetry received (most recent device last_seen)
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                select(func.max(Device.last_seen))
+            )
+            last_telemetry = result.scalar()
+        checks["telemetry"] = {
+            "status": "healthy" if last_telemetry else "no_data",
+            "last_received": last_telemetry.isoformat() if last_telemetry else None,
+        }
+    except Exception as e:
+        checks["telemetry"] = {
+            "status": "unknown",
+            "error": str(e),
+        }
+
+    # Unresponsive devices (last_seen > 1 hour ago)
+    try:
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                select(func.count())
+                .select_from(Device)
+                .where(Device.last_seen < one_hour_ago)
+            )
+            unresponsive_count = result.scalar() or 0
+        checks["unresponsive_devices"] = {
+            "status": "warning" if unresponsive_count > 0 else "healthy",
+            "count": unresponsive_count,
+        }
+    except Exception as e:
+        checks["unresponsive_devices"] = {
+            "status": "unknown",
+            "error": str(e),
+        }
+
+    # License expiry alerts (licenses expiring within 30 days)
+    try:
+        today = datetime.now(timezone.utc).date()
+        alert_threshold = today + timedelta(days=30)
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                select(func.count())
+                .select_from(SoftwareLicense)
+                .where(
+                    SoftwareLicense.expiry_date.isnot(None),
+                    SoftwareLicense.expiry_date <= alert_threshold,
+                )
+            )
+            expiring_count = result.scalar() or 0
+        checks["license_expiry"] = {
+            "status": "warning" if expiring_count > 0 else "healthy",
+            "expiring_within_30d": expiring_count,
+        }
+    except Exception as e:
+        checks["license_expiry"] = {
+            "status": "unknown",
             "error": str(e),
         }
 

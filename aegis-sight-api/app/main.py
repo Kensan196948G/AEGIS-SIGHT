@@ -8,8 +8,11 @@ from sqlalchemy import text
 
 from app.api.v1.health import router as health_router
 from app.api.v1.router import TAG_METADATA, api_router
+from app.core.api_metrics import APIMetricsMiddleware
+from app.core.compression import setup_compression
 from app.core.config import settings
 from app.core.database import engine
+from app.core.etag import ETagMiddleware
 from app.core.exceptions import AEGISBaseException
 from app.core.ip_restriction import IPRestrictionMiddleware
 from app.core.middleware import RequestLoggingMiddleware, RequestTimingMiddleware
@@ -91,7 +94,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# GZip compression (wraps all responses >= 1000 bytes)
+setup_compression(app, minimum_size=1000)
+
 # Custom middleware (order matters: outermost middleware runs first)
+app.add_middleware(ETagMiddleware, max_age=60, exclude_paths=["/auth/", "/ws/", "/health"])
+app.add_middleware(APIMetricsMiddleware)
 app.add_middleware(RequestTimingMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
