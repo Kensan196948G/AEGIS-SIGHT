@@ -14,11 +14,14 @@
 #   make clean      Tear down all containers and volumes
 # ===========================================================================
 
-.PHONY: dev test test-api test-web lint migrate seed build clean help
+.PHONY: dev test test-api test-web lint migrate seed build clean help \
+       deploy-prod deploy-staging deploy-dev healthcheck monitoring monitoring-down
 
 COMPOSE       = docker compose
 COMPOSE_DEV   = $(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml
 COMPOSE_TEST  = $(COMPOSE) -f docker-compose.yml -f docker-compose.test.yml
+COMPOSE_PROD  = $(COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml
+COMPOSE_MON   = $(COMPOSE) -f docker-compose.yml -f docker-compose.monitoring.yml
 
 API_DIR       = aegis-sight-api
 WEB_DIR       = aegis-sight-web
@@ -67,6 +70,36 @@ build: ## Build Docker images
 # ---------------------------------------------------------------------------
 clean: ## Tear down containers and volumes
 	$(COMPOSE) down -v --remove-orphans
+
+# ---------------------------------------------------------------------------
+# Deployment
+# ---------------------------------------------------------------------------
+deploy-prod: ## Deploy to production
+	./scripts/deploy.sh production
+
+deploy-staging: ## Deploy to staging
+	./scripts/deploy.sh staging
+
+deploy-dev: ## Deploy to development
+	./scripts/deploy.sh development
+
+# ---------------------------------------------------------------------------
+# Health Check
+# ---------------------------------------------------------------------------
+healthcheck: ## Run health checks on all services
+	./scripts/healthcheck.sh
+
+healthcheck-json: ## Run health checks (JSON output)
+	./scripts/healthcheck.sh --json
+
+# ---------------------------------------------------------------------------
+# Monitoring
+# ---------------------------------------------------------------------------
+monitoring: ## Start monitoring stack (Prometheus + Grafana + Alertmanager)
+	$(COMPOSE_MON) up -d prometheus grafana alertmanager
+
+monitoring-down: ## Stop monitoring stack
+	$(COMPOSE_MON) down
 
 # ---------------------------------------------------------------------------
 # Help
