@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.api.v1.health import router as health_router
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import engine
@@ -107,6 +108,14 @@ app = FastAPI(
             "name": "users",
             "description": "User management -- list, update, and deactivate user accounts",
         },
+        {
+            "name": "departments",
+            "description": "Department management -- organizational hierarchy and budgets",
+        },
+        {
+            "name": "batch",
+            "description": "Batch import/export -- CSV device and license bulk operations",
+        },
     ],
 )
 
@@ -150,25 +159,5 @@ app.add_middleware(RequestLoggingMiddleware)
 # Register API router
 app.include_router(api_router)
 
-
-@app.get(
-    "/health",
-    tags=["health"],
-    summary="System health check",
-    description="Returns the current health status of the API and its database connection.",
-    response_description="Health status object with version and database connectivity info",
-)
-async def health_check():
-    """Health check endpoint."""
-    try:
-        async with engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        db_status = "healthy"
-    except Exception:
-        db_status = "unhealthy"
-
-    return {
-        "status": "ok" if db_status == "healthy" else "degraded",
-        "version": settings.APP_VERSION,
-        "database": db_status,
-    }
+# Register health check routes (at root, not under /api/v1)
+app.include_router(health_router)

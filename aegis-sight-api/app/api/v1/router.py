@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from app.api.v1.alerts import router as alerts_router
 from app.api.v1.assets import router as assets_router
+from app.api.v1.batch import router as batch_router
+from app.api.v1.departments import router as departments_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.dashboard import router as dashboard_router
@@ -31,3 +33,5 @@ api_router.include_router(security_router)
 api_router.include_router(logs_router)
 api_router.include_router(reports_router)
 api_router.include_router(software_router)
+api_router.include_router(departments_router)
+api_router.include_router(batch_router)
