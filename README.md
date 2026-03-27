@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.2.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.12.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -289,7 +289,12 @@ gantt
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
-| 📋 監査証跡・レポート | 🟡 In Progress | Phase6 実装中 |
+| 📋 監査証跡・レポート | ✅ Done | 監査API + CSV/JSONエクスポート + 通知サービス |
+| 🔔 アラート・ユーザー管理 | ✅ Done | CRUD + acknowledge/resolve + ロール管理 |
+| 🏢 部門・バッチ・ヘルスチェック | ✅ Done | 階層部門 + CSV一括処理 + K8s probe |
+| ⚙️ 設定・ネットワーク探索 | ✅ Done | key-value設定 + MAC UPSERT + unmanaged検出 |
+| ☁️ M365連携・WebSocket | ✅ Done | Graph API + リアルタイム通知 + スケジューラ |
+| 🧪 統合テスト・RBAC | ✅ Done | 6シナリオ + 4ロール検証 + OpenAPI強化 |
 
 ### GitHub Issues トラッカー
 
@@ -300,8 +305,13 @@ gantt
 | [#5](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/5) | Phase2 Backend深化 | Done | ✅ |
 | [#7](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/7) | Phase3 テスト基盤・API追加 | Done | ✅ |
 | [#9](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/9) | Phase4 ログ/SW API・DevOps | Done | ✅ |
-| [#11](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/11) | Phase5 Frontend統合・テスト | Done | ✅ |
-| [#30](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/30) | Phase6 監査・通知・レポート | Development | 🟡 |
+| [#30](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/30) | Phase6 監査・通知・レポート | Done | ✅ |
+| [#32](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/32) | Phase7 アラート・ユーザー管理 | Done | ✅ |
+| [#34](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/34) | Phase8 部門・バッチ・ヘルスチェック | Done | ✅ |
+| [#36](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/36) | Phase9 CI修復・設定・ネットワーク | Done | ✅ |
+| [#38](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/38) | Phase10 M365・WebSocket・スケジューラ | Done | ✅ |
+| [#40](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/40) | Phase11 統合テスト・RBAC・OpenAPI | Done | ✅ |
+| [#42](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/42) | Phase12 README最終更新・品質強化 | Development | 🟡 |
 
 ---
 
@@ -343,11 +353,17 @@ graph LR
 | 09:40-09:45 | 🔨 Build | Phase3 テスト基盤・API追加 | #8 | ✅ |
 | 09:45-09:50 | 🔧 Improve | Phase4 ログ/SW API・Docker/CI最適化 | #10 | ✅ |
 | 09:50-09:57 | 🔧 Improve | Phase5 Frontend統合・テスト76ケース | #29 | ✅ |
-| 09:57-10:15 | 🔧 Improve | Phase6 監査証跡・通知・レポート | - | 🟡 |
-| 10:15-12:00 | 🔨 Build | Phase7+ 追加実装 | - | ⏳ |
-| 12:00-12:30 | 🔍 Monitor | 中間レポート・Projects更新 | - | ⏳ |
-| 12:30-15:00 | 🔧 Improve | 品質改善・テスト拡充・リファクタリング | - | ⏳ |
-| 15:00-16:00 | ✅ Verify | STABLE判定チェック・最終テスト | - | ⏳ |
+| 09:57-10:05 | 🔧 Improve | Phase6 監査証跡・通知・レポート | #31 | ✅ |
+| 10:05-10:15 | 🔧 Improve | Phase7 アラート管理・ユーザー管理 | #33 | ✅ |
+| 10:15-10:22 | 🔧 Improve | Phase8 部門管理・バッチ処理・ヘルスチェック | #35 | ✅ |
+| 10:22-10:28 | 🔧 Improve | Phase9 CI修復・設定管理・ネットワーク探索 | #37 | ✅ |
+| 10:28-10:32 | 🔧 Improve | Phase10 M365連携・WebSocket・スケジューラ | #39 | ✅ |
+| 10:32-10:35 | ✅ Verify | Phase11 統合テスト・RBAC・OpenAPI | #41 | ✅ |
+| 10:35-10:40 | 🔧 Improve | Phase12 README最終更新・品質強化 | - | 🟡 |
+| 10:40-12:00 | 🔨 Build | Phase13+ 継続実装 | - | ⏳ |
+| 12:00-12:30 | 🔍 Monitor | 中間レポート | - | ⏳ |
+| 12:30-15:00 | 🔧 Improve | 品質改善・テスト拡充 | - | ⏳ |
+| 15:00-16:00 | ✅ Verify | STABLE判定・最終テスト | - | ⏳ |
 | 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ⏳ |
 | 16:33 | 🔴 終了 | 8時間制限到達 | - | ⏳ |
 
