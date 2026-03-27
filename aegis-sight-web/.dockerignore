@@ -1,0 +1,49 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies (rebuilt in container)
+node_modules
+
+# Next.js build output
+.next
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+coverage
+test-results
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Documentation
+*.md
+docs
+LICENSE
+
+# CI/CD
+.github
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Storybook
+.storybook
+storybook-static
+
+# Misc
+.turbo
+.vercel

@@ -1,0 +1,169 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday 6:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  trivy-scan:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image for scanning
+        run: |
+          if [ -f aegis-sight-api/Dockerfile ]; then
+            docker build -t aegis-sight-api:scan aegis-sight-api/
+          fi
+
+      - name: Run Trivy on API image
+        if: success()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "aegis-sight-api:scan"
+          format: "sarif"
+          output: "trivy-api-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Build Web image for scanning
+        run: |
+          if [ -f aegis-sight-web/Dockerfile ]; then
+            docker build -t aegis-sight-web:scan aegis-sight-web/
+          fi
+
+      - name: Run Trivy on Web image
+        if: success()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "aegis-sight-web:scan"
+          format: "sarif"
+          output: "trivy-web-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy API SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-api-results.sarif"
+          category: "trivy-api"
+        continue-on-error: true
+
+      - name: Upload Trivy Web SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-web-results.sarif"
+          category: "trivy-web"
+        continue-on-error: true
+
+      - name: Upload Trivy FS SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-fs-results.sarif"
+          category: "trivy-fs"
+        continue-on-error: true
+
+  pip-audit:
+    name: Python Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "aegis-sight-api/requirements.txt"
+
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          if [ -f aegis-sight-api/requirements.txt ]; then
+            pip-audit -r aegis-sight-api/requirements.txt --format json --output pip-audit-results.json || true
+            pip-audit -r aegis-sight-api/requirements.txt || true
+          fi
+
+      - name: Upload pip-audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-results
+          path: pip-audit-results.json
+          retention-days: 30
+
+  npm-audit:
+    name: Node.js Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "aegis-sight-web/package-lock.json"
+
+      - name: Run npm audit
+        run: |
+          if [ -f aegis-sight-web/package-lock.json ]; then
+            cd aegis-sight-web
+            npm audit --json > ../npm-audit-results.json || true
+            npm audit || true
+          fi
+
+      - name: Upload npm audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: npm-audit-results.json
+          retention-days: 30
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["python", "javascript-typescript"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
