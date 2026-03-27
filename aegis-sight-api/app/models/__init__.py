@@ -71,6 +71,14 @@ from app.models.incident import (
     ThreatIndicator,
     ThreatLevel,
 )
+from app.models.sla import (
+    MeasurementPeriod,
+    SLADefinition,
+    SLAMeasurement,
+    SLAMetricType,
+    SLAViolation,
+    ViolationSeverity,
+)
 from app.models.user import User, UserRole
 from app.models.user_session import (
     ActivityType,
@@ -165,4 +173,10 @@ __all__ = [
     "IndicatorType",
     "ThreatIndicator",
     "ThreatLevel",
+    "MeasurementPeriod",
+    "SLADefinition",
+    "SLAMeasurement",
+    "SLAMetricType",
+    "SLAViolation",
+    "ViolationSeverity",
 ]
