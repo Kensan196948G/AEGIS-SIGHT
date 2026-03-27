@@ -9,6 +9,40 @@
 
 ---
 
+## [0.48.0] - 2026-03-27
+
+### Added
+- 最終統合リリース v0.48.0
+- 全 48 Phase 完了 (Phase 0-48)
+- README.md / CHANGELOG.md / PROJECT_STATUS.md 最終更新
+- GitHub Release v0.48.0 作成
+
+### Changed
+- version.py を v0.48.0 に更新
+- メトリクス最終値反映 (~1000ファイル、200+エンドポイント、45+ページ、850+テスト)
+
+## [0.47.0] - 2026-03-27
+
+### Added
+- SLA管理ダッシュボード (`/api/v1/sla-monitoring`)
+- SLA目標設定・達成率リアルタイムモニタリング
+- SLA違反アラート・エスカレーション自動化
+- SLAレポート自動生成 (月次/四半期)
+
+### Changed
+- 監視ダッシュボードとのSLAメトリクス統合
+
+## [0.46.0] - 2026-03-27
+
+### Added
+- ナレッジベース管理 (`/api/v1/knowledge-base`)
+- 障害対応ナレッジ記事CRUD・全文検索
+- ナレッジカテゴリ管理・タグ連携
+- ナレッジ利用率レポート・推薦エンジン
+
+### Changed
+- 自動修復エンジンとのナレッジ連携強化
+
 ## [0.45.0] - 2026-03-27
 
 ### Added
@@ -496,7 +530,10 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.45.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.48.0...HEAD
+[0.48.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.47.0...v0.48.0
+[0.47.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.46.0...v0.47.0
+[0.46.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.42.0...v0.43.0
