@@ -1,3 +1,4 @@
+from app.models.alert import Alert, AlertCategory, AlertSeverity
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.device import Device, DeviceStatus
 from app.models.hardware_snapshot import HardwareSnapshot
@@ -13,6 +14,9 @@ from app.models.software_inventory import SoftwareInventory
 from app.models.user import User, UserRole
 
 __all__ = [
+    "Alert",
+    "AlertCategory",
+    "AlertSeverity",
     "AuditAction",
     "AuditLog",
     "Device",
