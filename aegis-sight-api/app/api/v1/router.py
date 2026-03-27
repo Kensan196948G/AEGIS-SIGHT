@@ -21,6 +21,7 @@ from app.api.v1.logs import router as logs_router
 from app.api.v1.m365 import router as m365_router
 from app.api.v1.metrics import router as metrics_router
 from app.api.v1.network import router as network_router
+from app.api.v1.notifications import router as notifications_router
 from app.api.v1.procurement import router as procurement_router
 from app.api.v1.sam import router as sam_router
 from app.api.v1.scheduler import router as scheduler_router
@@ -214,6 +215,14 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "notifications",
+        "description": (
+            "**Notification channel and rule management.** "
+            "Configure notification channels (email, webhook, Slack, Teams) "
+            "and define rules to route events to specific channels."
+        ),
+    },
+    {
         "name": "websocket",
         "description": (
             "**WebSocket real-time notifications.** "
@@ -245,6 +254,7 @@ api_router.include_router(logs_router)
 api_router.include_router(reports_router)
 api_router.include_router(software_router)
 api_router.include_router(network_router)
+api_router.include_router(notifications_router)
 api_router.include_router(departments_router)
 api_router.include_router(batch_router)
 api_router.include_router(m365_router)

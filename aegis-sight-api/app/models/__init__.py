@@ -1,6 +1,12 @@
 from app.models.alert import Alert, AlertCategory, AlertSeverity
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.department import Department
+from app.models.notification_channel import (
+    ChannelType,
+    NotificationChannel,
+    NotificationEventType,
+    NotificationRule,
+)
 from app.models.device import Device, DeviceStatus
 from app.models.hardware_snapshot import HardwareSnapshot
 from app.models.license import LicenseType, SoftwareLicense
@@ -23,6 +29,7 @@ __all__ = [
     "AlertSeverity",
     "AuditAction",
     "AuditLog",
+    "ChannelType",
     "Department",
     "Device",
     "DeviceStatus",
@@ -33,6 +40,9 @@ __all__ = [
     "LogonEvent",
     "NetworkDevice",
     "NetworkDeviceType",
+    "NotificationChannel",
+    "NotificationEventType",
+    "NotificationRule",
     "ProcurementCategory",
     "ProcurementRequest",
     "ProcurementStatus",
