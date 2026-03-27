@@ -44,6 +44,7 @@ from app.api.v1.ip_management import router as ip_management_router
 from app.api.v1.changes import router as changes_router
 from app.api.v1.dlp import router as dlp_router
 from app.api.v1.policies import router as policies_router
+from app.api.v1.sessions import router as sessions_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -352,6 +353,15 @@ TAG_METADATA: list[dict] = [
             "cloud storage. Track DLP events and view statistics."
         ),
     },
+    {
+        "name": "sessions",
+        "description": (
+            "**User session and activity tracking.** "
+            "Monitor RDP, VPN, Citrix, and local sessions. Record user activities "
+            "(app launches, web access, file operations, print jobs, email). "
+            "Session analytics with peak hours, type distribution, and user behavior profiles."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -395,4 +405,5 @@ api_router.include_router(ip_management_router)
 api_router.include_router(policies_router)
 api_router.include_router(changes_router)
 api_router.include_router(dlp_router)
+api_router.include_router(sessions_router)
 api_router.include_router(ws_router)
