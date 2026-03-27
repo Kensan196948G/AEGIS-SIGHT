@@ -10,7 +10,9 @@ from fastapi import APIRouter
 
 from app.api.v1.alerts import router as alerts_router
 from app.api.v1.compliance import router as compliance_router
+from app.api.v1.custom_views import router as custom_views_router
 from app.api.v1.assets import router as assets_router
+from app.api.v1.device_groups import router as device_groups_router
 from app.api.v1.batch import router as batch_router
 from app.api.v1.config import router as config_router
 from app.api.v1.database import router as database_router
@@ -253,6 +255,22 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "device-groups",
+        "description": (
+            "**Device group management.** "
+            "Create static or dynamic device groups with filter criteria. "
+            "Manage group membership to organize devices logically."
+        ),
+    },
+    {
+        "name": "views",
+        "description": (
+            "**Custom view management.** "
+            "Create, update, and share custom views with column and filter "
+            "configurations for devices, licenses, and procurements."
+        ),
+    },
+    {
         "name": "search",
         "description": (
             "**Unified search.** "
@@ -308,6 +326,8 @@ api_router.include_router(m365_router)
 api_router.include_router(scheduler_router)
 api_router.include_router(export_router)
 api_router.include_router(tags_router)
+api_router.include_router(device_groups_router)
+api_router.include_router(custom_views_router)
 api_router.include_router(search_router)
 api_router.include_router(version_router)
 api_router.include_router(compliance_router)
