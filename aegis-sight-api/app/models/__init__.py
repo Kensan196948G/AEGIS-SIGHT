@@ -1,3 +1,4 @@
+from app.models.audit_log import AuditAction, AuditLog
 from app.models.device import Device, DeviceStatus
 from app.models.hardware_snapshot import HardwareSnapshot
 from app.models.license import LicenseType, SoftwareLicense
@@ -12,6 +13,8 @@ from app.models.software_inventory import SoftwareInventory
 from app.models.user import User, UserRole
 
 __all__ = [
+    "AuditAction",
+    "AuditLog",
     "Device",
     "DeviceStatus",
     "FileAction",

@@ -91,6 +91,14 @@ app = FastAPI(
             "name": "software",
             "description": "Software inventory -- installed software tracking across devices",
         },
+        {
+            "name": "audit",
+            "description": "Audit trail -- immutable log of all system actions",
+        },
+        {
+            "name": "reports",
+            "description": "Report generation -- SAM, asset, and security CSV reports",
+        },
     ],
 )
 
