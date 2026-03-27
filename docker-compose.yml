@@ -1,0 +1,171 @@
+version: "3.9"
+
+services:
+  # ---------- Core Application ----------
+  api:
+    build:
+      context: ./aegis-sight-api
+      dockerfile: Dockerfile
+    image: aegis-sight-api:latest
+    container_name: aegis-sight-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://aegis:aegis_dev@db:5432/aegis_sight
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=change-me-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aegis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  web:
+    build:
+      context: ./aegis-sight-web
+      dockerfile: Dockerfile
+    image: aegis-sight-web:latest
+    container_name: aegis-sight-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+    depends_on:
+      - api
+    networks:
+      - aegis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ---------- Data Stores ----------
+  db:
+    image: postgres:16
+    container_name: aegis-sight-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=aegis
+      - POSTGRES_PASSWORD=aegis_dev
+      - POSTGRES_DB=aegis_sight
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - aegis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegis -d aegis_sight"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: aegis-sight-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aegis-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Task Queue ----------
+  celery-worker:
+    build:
+      context: ./aegis-sight-api
+      dockerfile: Dockerfile
+    image: aegis-sight-api:latest
+    container_name: aegis-sight-celery-worker
+    command: celery -A app.worker worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://aegis:aegis_dev@db:5432/aegis_sight
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=change-me-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./aegis-sight-api
+      dockerfile: Dockerfile
+    image: aegis-sight-api:latest
+    container_name: aegis-sight-celery-beat
+    command: celery -A app.worker beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://aegis:aegis_dev@db:5432/aegis_sight
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=change-me-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+  # ---------- Observability ----------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aegis-sight-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./aegis-sight-infra/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./aegis-sight-infra/observability/prometheus/rules:/etc/prometheus/rules:ro
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aegis-sight-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./aegis-sight-infra/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./aegis-sight-infra/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - aegis-network
+    restart: unless-stopped
+
+networks:
+  aegis-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+  grafana-data:
+    driver: local
