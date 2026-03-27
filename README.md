@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.30.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.35.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -52,7 +52,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全30フェーズ（Phase 0-30 全完了） |
+| 📅 **開発期間** | 全35フェーズ（Phase 0-35 全完了） |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -92,6 +92,10 @@
 | 📊 コンプライアンスダッシュボード | ISO 27001/J-SOX準拠状況可視化 | ✅ Done |
 | 🔍 監査UI | 監査ログ検索・フィルタ・エクスポート | ✅ Done |
 | 📄 レポートUI | 各種レポート生成・PDF/CSV出力 | ✅ Done |
+| 🔧 パッチ管理 | OS/SWパッチ適用状況管理・自動配信 | ✅ Done |
+| 📱 デバイスグループ | デバイスグループ管理・ポリシー適用 | ✅ Done |
+| 🗑️ 廃棄ワークフロー | 資産廃棄申請・承認・証跡管理 | ✅ Done |
+| ⚡ ETag/圧縮 | APIレスポンスキャッシュ・gzip圧縮最適化 | ✅ Done |
 
 ### ❌ IAMS から移植しない機能
 
@@ -181,8 +185,8 @@ graph TB
 
 ```
 📦 AEGIS-SIGHT/
-├── 🐍 aegis-sight-api/           # FastAPI バックエンド (~350ファイル)
-│   ├── app/api/v1/               # REST API (110+エンドポイント)
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (~400ファイル)
+│   ├── app/api/v1/               # REST API (130+エンドポイント)
 │   │   ├── auth.py               #   認証 (JWT/OAuth2)
 │   │   ├── assets.py             #   IT資産管理
 │   │   ├── sam.py                #   SAMライセンス管理
@@ -199,10 +203,10 @@ graph TB
 │   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
 │   ├── alembic/                  # DBマイグレーション (2版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (80+ファイル, 560+テスト)
+│   └── tests/                    # pytest (90+ファイル, 640+テスト)
 │
 ├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (~200ファイル)
-│   ├── app/dashboard/            # ダッシュボード (30ページ)
+│   ├── app/dashboard/            # ダッシュボード (35+ページ)
 │   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
 │   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
 │   │   ├── sam/                  #   SAM管理 (ライセンス/コンプライアンス/レポート)
@@ -287,18 +291,25 @@ gantt
     タグ/検索基盤               :done, p5b, after p5a, 7d
     チャート/ウィジェット       :done, p5c, after p5b, 7d
     コンプライアンスダッシュボード :done, p5d, after p5c, 7d
-    最終品質保証・リリース      :done, p5e, after p5d, 7d
+    品質保証・リリース v0.30.0  :done, p5e, after p5d, 7d
+
+    section Phase 6 運用強化
+    パッチ管理・配信基盤        :done, p6a, after p5e, 7d
+    デバイスグループ・ポリシー  :done, p6b, after p6a, 7d
+    廃棄ワークフロー            :done, p6c, after p6b, 7d
+    ETag/圧縮・パフォーマンス最適化 :done, p6d, after p6c, 7d
+    最終統合・リリース v0.35.0  :done, p6e, after p6d, 7d
 ```
 
 ### 現在のステータス
 
 | 項目 | 状態 | 詳細 |
 |:---|:---:|:---|
-| 📚 ドキュメント (52ファイル) | ✅ Done | PR #2 merged |
+| 📚 ドキュメント (55+ファイル) | ✅ Done | PR #2 merged |
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (560+ケース) | ✅ Done | pytest 80+ファイル + Vitest + Playwright E2E |
+| 🧪 テスト (640+ケース) | ✅ Done | pytest 90+ファイル + Vitest + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
@@ -313,6 +324,10 @@ gantt
 | 🏷️ タグ/検索基盤 | ✅ Done | 資産タグ管理 + 全文検索 + フィルタ強化 |
 | 📊 チャート/ウィジェット | ✅ Done | ダッシュボードウィジェット + リアルタイムチャート |
 | 📋 コンプライアンスダッシュボード | ✅ Done | ISO 27001/J-SOX準拠状況可視化 + 監査UI + レポートUI |
+| 🔧 パッチ管理 | ✅ Done | OS/SWパッチ適用状況管理・自動配信基盤 |
+| 📱 デバイスグループ | ✅ Done | デバイスグループ管理・ポリシー適用 |
+| 🗑️ 廃棄ワークフロー | ✅ Done | 資産廃棄申請・承認・証跡管理 |
+| ⚡ ETag/圧縮 | ✅ Done | APIレスポンスキャッシュ・gzip圧縮最適化 |
 
 ### GitHub Issues トラッカー
 
@@ -336,6 +351,11 @@ gantt
 | - | Phase28 チャート/ウィジェットシステム | Done | ✅ |
 | - | Phase29 コンプライアンスダッシュボード・監査UI | Done | ✅ |
 | - | Phase30 最終品質保証・リリース v0.30.0 | Done | ✅ |
+| - | Phase31 パッチ管理・配信基盤 | Done | ✅ |
+| - | Phase32 デバイスグループ・ポリシー管理 | Done | ✅ |
+| - | Phase33 廃棄ワークフロー | Done | ✅ |
+| - | Phase34 ETag/圧縮・パフォーマンス最適化 | Done | ✅ |
+| - | Phase35 最終統合・リリース v0.35.0 | Done | ✅ |
 
 ---
 
@@ -397,6 +417,13 @@ graph LR
 | - | 🔨 Build | Phase28 チャート/ウィジェットシステム | - | ✅ |
 | - | 🔨 Build | Phase29 コンプライアンスダッシュボード・監査UI | - | ✅ |
 | - | ✅ Verify | Phase30 最終品質保証・README更新・v0.30.0リリース | - | ✅ |
+| --- | --- | --- | --- | --- |
+| 2026-03-27 | 🟢 Session 3 | Phase31-35 運用強化セッション | - | ✅ |
+| - | 🔨 Build | Phase31 パッチ管理・配信基盤 | - | ✅ |
+| - | 🔨 Build | Phase32 デバイスグループ・ポリシー管理 | - | ✅ |
+| - | 🔨 Build | Phase33 廃棄ワークフロー | - | ✅ |
+| - | 🔨 Build | Phase34 ETag/圧縮・パフォーマンス最適化 | - | ✅ |
+| - | ✅ Verify | Phase35 最終統合・リリース v0.35.0 | - | ✅ |
 
 ### STABLE 判定条件
 
