@@ -1,5 +1,6 @@
 from app.models.alert import Alert, AlertCategory, AlertSeverity
 from app.models.audit_log import AuditAction, AuditLog
+from app.models.department import Department
 from app.models.device import Device, DeviceStatus
 from app.models.hardware_snapshot import HardwareSnapshot
 from app.models.license import LicenseType, SoftwareLicense
@@ -19,6 +20,7 @@ __all__ = [
     "AlertSeverity",
     "AuditAction",
     "AuditLog",
+    "Department",
     "Device",
     "DeviceStatus",
     "FileAction",
