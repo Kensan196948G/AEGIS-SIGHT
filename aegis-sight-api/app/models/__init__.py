@@ -45,6 +45,12 @@ from app.models.ip_management import (
     IPAssignment,
     IPRange,
 )
+from app.models.change_tracking import (
+    ChangeType,
+    ConfigChange,
+    ConfigSnapshot,
+    SnapshotType,
+)
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
 from app.models.user import User, UserRole
 
@@ -98,6 +104,10 @@ __all__ = [
     "AssignmentType",
     "IPAssignment",
     "IPRange",
+    "ChangeType",
+    "ConfigChange",
+    "ConfigSnapshot",
+    "SnapshotType",
     "DevicePolicy",
     "PolicyType",
     "PolicyViolation",

@@ -41,6 +41,7 @@ from app.api.v1.tags import router as tags_router
 from app.api.v1.version import router as version_router
 from app.api.v1.patches import router as patches_router
 from app.api.v1.ip_management import router as ip_management_router
+from app.api.v1.changes import router as changes_router
 from app.api.v1.policies import router as policies_router
 from app.api.v1.ws import router as ws_router
 
@@ -332,6 +333,15 @@ TAG_METADATA: list[dict] = [
             "and evaluate compliance across the device fleet."
         ),
     },
+    {
+        "name": "changes",
+        "description": (
+            "**Configuration change tracking.** "
+            "Track device configuration changes over time. Browse change history, "
+            "view snapshot diffs, and register new configuration snapshots "
+            "with automatic change detection."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -373,4 +383,5 @@ api_router.include_router(lifecycle_router)
 api_router.include_router(patches_router)
 api_router.include_router(ip_management_router)
 api_router.include_router(policies_router)
+api_router.include_router(changes_router)
 api_router.include_router(ws_router)
