@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEGIS-SIGHT - Offline</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --aegis-bg: #0f172a;
+      --aegis-surface: #1e293b;
+      --aegis-primary: #2563eb;
+      --aegis-primary-light: #3b82f6;
+      --aegis-text: #f1f5f9;
+      --aegis-text-muted: #94a3b8;
+      --aegis-border: #334155;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--aegis-bg);
+      color: var(--aegis-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--aegis-primary-light);
+      margin-bottom: 2rem;
+    }
+
+    .logo span {
+      color: var(--aegis-text-muted);
+      font-weight: 400;
+      font-size: 0.875rem;
+      display: block;
+      margin-top: 0.25rem;
+    }
+
+    .icon-container {
+      margin: 1.5rem auto;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: var(--aegis-surface);
+      border: 2px solid var(--aegis-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-container svg {
+      width: 40px;
+      height: 40px;
+      color: var(--aegis-text-muted);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .message {
+      color: var(--aegis-text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-size: 0.9375rem;
+    }
+
+    .status-card {
+      background-color: var(--aegis-surface);
+      border: 1px solid var(--aegis-border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+    }
+
+    .status-row:not(:last-child) {
+      border-bottom: 1px solid var(--aegis-border);
+    }
+
+    .status-label {
+      font-size: 0.875rem;
+      color: var(--aegis-text-muted);
+    }
+
+    .status-value {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .status-offline {
+      color: #f87171;
+    }
+
+    .status-cached {
+      color: #34d399;
+    }
+
+    .retry-info {
+      font-size: 0.8125rem;
+      color: var(--aegis-text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .retry-info .countdown {
+      color: var(--aegis-primary-light);
+      font-weight: 600;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--aegis-border);
+      border-top-color: var(--aegis-primary-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.375rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .link-row {
+      margin-top: 1rem;
+    }
+
+    .link-row a {
+      color: var(--aegis-primary-light);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .link-row a:hover {
+      text-decoration: underline;
+    }
+
+    .reconnected {
+      display: none;
+      background-color: #065f46;
+      border: 1px solid #34d399;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .reconnected.show {
+      display: block;
+    }
+
+    .reconnected p {
+      color: #34d399;
+      font-weight: 500;
+      font-size: 0.9375rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      AEGIS-SIGHT
+      <span>IT Asset Management Platform</span>
+    </div>
+
+    <div class="icon-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+      </svg>
+    </div>
+
+    <h1>接続がオフラインです</h1>
+    <p class="message">
+      ネットワーク接続が確認できません。<br />
+      接続が回復するまでお待ちください。
+    </p>
+
+    <div class="status-card">
+      <div class="status-row">
+        <span class="status-label">ネットワーク状態</span>
+        <span class="status-value status-offline" id="network-status">オフライン</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">キャッシュ済みページ</span>
+        <span class="status-value status-cached" id="cached-count">確認中...</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">最終接続</span>
+        <span class="status-value" id="last-online">--</span>
+      </div>
+    </div>
+
+    <p class="retry-info">
+      <span class="spinner"></span>
+      <span class="countdown" id="countdown">5</span>秒後に自動リトライ...
+    </p>
+
+    <div class="link-row">
+      <a href="/dashboard">ダッシュボード（キャッシュ）を表示</a>
+    </div>
+
+    <div class="reconnected" id="reconnected">
+      <p>接続が回復しました。ページを再読み込みしています...</p>
+    </div>
+  </div>
+
+  <script>
+    // Display cached pages count
+    async function updateCachedCount() {
+      try {
+        const cacheNames = await caches.keys();
+        let count = 0;
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          count += keys.length;
+        }
+        document.getElementById('cached-count').textContent = count + ' 件';
+      } catch (e) {
+        document.getElementById('cached-count').textContent = '不明';
+      }
+    }
+    updateCachedCount();
+
+    // Last online time from localStorage
+    const lastOnline = localStorage.getItem('aegis-last-online');
+    if (lastOnline) {
+      const date = new Date(parseInt(lastOnline, 10));
+      document.getElementById('last-online').textContent =
+        date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP');
+    }
+
+    // Auto-retry every 5 seconds
+    let countdown = 5;
+    const countdownEl = document.getElementById('countdown');
+    const statusEl = document.getElementById('network-status');
+    const reconnectedEl = document.getElementById('reconnected');
+
+    function checkOnline() {
+      fetch('/', { method: 'HEAD', cache: 'no-store' })
+        .then((response) => {
+          if (response.ok) {
+            statusEl.textContent = 'オンライン';
+            statusEl.classList.remove('status-offline');
+            statusEl.classList.add('status-cached');
+            reconnectedEl.classList.add('show');
+            localStorage.setItem('aegis-last-online', Date.now().toString());
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
+          }
+        })
+        .catch(() => {
+          // Still offline
+        });
+    }
+
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = 5;
+        checkOnline();
+      }
+      countdownEl.textContent = countdown;
+    }, 1000);
+
+    // Also respond to browser online event
+    window.addEventListener('online', () => {
+      checkOnline();
+    });
+  </script>
+</body>
+</html>
