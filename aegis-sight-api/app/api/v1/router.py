@@ -41,6 +41,7 @@ from app.api.v1.tags import router as tags_router
 from app.api.v1.version import router as version_router
 from app.api.v1.patches import router as patches_router
 from app.api.v1.ip_management import router as ip_management_router
+from app.api.v1.policies import router as policies_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -322,6 +323,15 @@ TAG_METADATA: list[dict] = [
             "utilization statistics, conflict detection, and network topology."
         ),
     },
+    {
+        "name": "policies",
+        "description": (
+            "**Device policy engine.** "
+            "Manage device policies for USB control, software restrictions, "
+            "patch requirements, and security baselines. Track policy violations "
+            "and evaluate compliance across the device fleet."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -362,4 +372,5 @@ api_router.include_router(compliance_router)
 api_router.include_router(lifecycle_router)
 api_router.include_router(patches_router)
 api_router.include_router(ip_management_router)
+api_router.include_router(policies_router)
 api_router.include_router(ws_router)
