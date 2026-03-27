@@ -61,6 +61,12 @@ from app.models.dlp import (
 )
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
 from app.models.user import User, UserRole
+from app.models.user_session import (
+    ActivityType,
+    SessionType,
+    UserActivity,
+    UserSession,
+)
 
 __all__ = [
     "Alert",
@@ -127,6 +133,10 @@ __all__ = [
     "PolicyViolation",
     "User",
     "UserRole",
+    "UserActivity",
+    "UserSession",
+    "ActivityType",
+    "SessionType",
     "Vulnerability",
     "VulnerabilitySeverity",
     "WindowsUpdate",
