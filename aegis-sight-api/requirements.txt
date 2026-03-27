@@ -14,3 +14,4 @@ msal>=1.28.0
 websockets>=12.0
 prometheus-client>=0.21.0
 python-multipart>=0.0.18
+structlog>=24.1.0
