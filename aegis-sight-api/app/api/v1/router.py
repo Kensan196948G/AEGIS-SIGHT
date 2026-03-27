@@ -40,6 +40,7 @@ from app.api.v1.search import router as search_router
 from app.api.v1.tags import router as tags_router
 from app.api.v1.version import router as version_router
 from app.api.v1.patches import router as patches_router
+from app.api.v1.ip_management import router as ip_management_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -313,6 +314,14 @@ TAG_METADATA: list[dict] = [
             "missing-patch reports, and CVE vulnerability management."
         ),
     },
+    {
+        "name": "ip-management",
+        "description": (
+            "**IP address management.** "
+            "IP range (CIDR) registration, IP assignment tracking, "
+            "utilization statistics, conflict detection, and network topology."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -352,4 +361,5 @@ api_router.include_router(version_router)
 api_router.include_router(compliance_router)
 api_router.include_router(lifecycle_router)
 api_router.include_router(patches_router)
+api_router.include_router(ip_management_router)
 api_router.include_router(ws_router)
