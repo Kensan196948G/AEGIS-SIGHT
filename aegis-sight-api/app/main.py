@@ -99,6 +99,14 @@ app = FastAPI(
             "name": "reports",
             "description": "Report generation -- SAM, asset, and security CSV reports",
         },
+        {
+            "name": "alerts",
+            "description": "Alert management -- create, acknowledge, and resolve alerts",
+        },
+        {
+            "name": "users",
+            "description": "User management -- list, update, and deactivate user accounts",
+        },
     ],
 )
 
