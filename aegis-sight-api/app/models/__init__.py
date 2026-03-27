@@ -31,6 +31,14 @@ from app.models.security_status import SecurityStatus
 from app.models.software_inventory import SoftwareInventory
 from app.models.system_config import SystemConfig
 from app.models.tag import Tag, TagAssignment, TagCategory
+from app.models.patch import (
+    DevicePatchStatus,
+    PatchStatus,
+    UpdateSeverity,
+    Vulnerability,
+    VulnerabilitySeverity,
+    WindowsUpdate,
+)
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -76,6 +84,12 @@ __all__ = [
     "TaskType",
     "UsbAction",
     "UsbEvent",
+    "DevicePatchStatus",
+    "PatchStatus",
+    "UpdateSeverity",
     "User",
     "UserRole",
+    "Vulnerability",
+    "VulnerabilitySeverity",
+    "WindowsUpdate",
 ]
