@@ -60,6 +60,7 @@ from app.models.dlp import (
     DLPSeverity,
 )
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
+from app.models.print_management import PrintJob, PrintJobStatus, Printer, PrintPolicy
 from app.models.user import User, UserRole
 from app.models.user_session import (
     ActivityType,
@@ -131,6 +132,10 @@ __all__ = [
     "DevicePolicy",
     "PolicyType",
     "PolicyViolation",
+    "PrintJob",
+    "PrintJobStatus",
+    "Printer",
+    "PrintPolicy",
     "User",
     "UserRole",
     "UserActivity",
