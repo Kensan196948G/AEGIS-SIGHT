@@ -1,4 +1,11 @@
 from app.models.alert import Alert, AlertCategory, AlertSeverity
+from app.models.asset_lifecycle import (
+    AssetLifecycleEvent,
+    DisposalMethod,
+    DisposalRequest,
+    DisposalStatus,
+    LifecycleEventType,
+)
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.custom_view import CustomView
 from app.models.department import Department
@@ -30,6 +37,11 @@ __all__ = [
     "Alert",
     "AlertCategory",
     "AlertSeverity",
+    "AssetLifecycleEvent",
+    "DisposalMethod",
+    "DisposalRequest",
+    "DisposalStatus",
+    "LifecycleEventType",
     "AuditAction",
     "AuditLog",
     "ChannelType",

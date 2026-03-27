@@ -20,6 +20,7 @@ from app.api.v1.departments import router as departments_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.lifecycle import router as lifecycle_router
 from app.api.v1.logs import router as logs_router
 from app.api.v1.m365 import router as m365_router
 from app.api.v1.metrics import router as metrics_router
@@ -279,6 +280,15 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "lifecycle",
+        "description": (
+            "**Asset lifecycle tracking and disposal management.** "
+            "Record lifecycle events (procured, deployed, reassigned, maintenance, "
+            "disposed) for devices. Manage disposal requests with approval workflow "
+            "and certificate tracking."
+        ),
+    },
+    {
         "name": "websocket",
         "description": (
             "**WebSocket real-time notifications.** "
@@ -331,4 +341,5 @@ api_router.include_router(custom_views_router)
 api_router.include_router(search_router)
 api_router.include_router(version_router)
 api_router.include_router(compliance_router)
+api_router.include_router(lifecycle_router)
 api_router.include_router(ws_router)
