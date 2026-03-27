@@ -12,6 +12,7 @@ celery_app = Celery(
     include=[
         "app.tasks.sam_tasks",
         "app.tasks.procurement_tasks",
+        "app.tasks.retention_tasks",
     ],
 )
 
@@ -46,10 +47,26 @@ celery_app.conf.update(
             "schedule": crontab(hour=9, minute=0, day_of_week="1-5"),  # Weekday 09:00
             "options": {"queue": "procurement"},
         },
+        "retention-daily-cleanup": {
+            "task": "app.tasks.retention_tasks.daily_retention_cleanup",
+            "schedule": crontab(hour=2, minute=0),  # 02:00 JST
+            "options": {"queue": "retention"},
+        },
+        "retention-weekly-archive": {
+            "task": "app.tasks.retention_tasks.weekly_archive",
+            "schedule": crontab(hour=3, minute=0, day_of_week=0),  # Sunday 03:00 JST
+            "options": {"queue": "retention"},
+        },
+        "retention-monthly-stats": {
+            "task": "app.tasks.retention_tasks.monthly_stats_report",
+            "schedule": crontab(hour=6, minute=0, day_of_month=1),  # 1st of month 06:00 JST
+            "options": {"queue": "retention"},
+        },
     },
     # Task routes
     task_routes={
         "app.tasks.sam_tasks.*": {"queue": "sam"},
         "app.tasks.procurement_tasks.*": {"queue": "procurement"},
+        "app.tasks.retention_tasks.*": {"queue": "retention"},
     },
 )
