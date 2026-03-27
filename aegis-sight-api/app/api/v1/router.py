@@ -12,6 +12,7 @@ from app.api.v1.alerts import router as alerts_router
 from app.api.v1.assets import router as assets_router
 from app.api.v1.batch import router as batch_router
 from app.api.v1.config import router as config_router
+from app.api.v1.database import router as database_router
 from app.api.v1.departments import router as departments_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
@@ -180,6 +181,14 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "database",
+        "description": (
+            "**Database management (admin only).** "
+            "Statistics, retention policy configuration, manual cleanup "
+            "triggers, and connection pool / replication health checks."
+        ),
+    },
+    {
         "name": "scheduler",
         "description": (
             "**Scheduled task management (read: all, write: admin only).** "
@@ -216,6 +225,7 @@ api_router.include_router(users_router)
 api_router.include_router(assets_router)
 api_router.include_router(audit_router)
 api_router.include_router(config_router)
+api_router.include_router(database_router)
 api_router.include_router(sam_router)
 api_router.include_router(procurement_router)
 api_router.include_router(metrics_router)
