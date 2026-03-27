@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.35.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.39.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -52,7 +52,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全35フェーズ（Phase 0-35 全完了） |
+| 📅 **開発期間** | 全39フェーズ（Phase 0-39 全完了） |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -96,6 +96,9 @@
 | 📱 デバイスグループ | デバイスグループ管理・ポリシー適用 | ✅ Done |
 | 🗑️ 廃棄ワークフロー | 資産廃棄申請・承認・証跡管理 | ✅ Done |
 | ⚡ ETag/圧縮 | APIレスポンスキャッシュ・gzip圧縮最適化 | ✅ Done |
+| 🌐 IPAM | IPアドレスプール管理・サブネット・VLAN | ✅ Done |
+| 📜 ポリシーエンジン | ルールベースポリシー評価・違反検知 | ✅ Done |
+| 🔄 変更追跡 | 構成変更自動検知・履歴管理・影響分析 | ✅ Done |
 
 ### ❌ IAMS から移植しない機能
 
@@ -185,8 +188,8 @@ graph TB
 
 ```
 📦 AEGIS-SIGHT/
-├── 🐍 aegis-sight-api/           # FastAPI バックエンド (~400ファイル)
-│   ├── app/api/v1/               # REST API (130+エンドポイント)
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (~450ファイル)
+│   ├── app/api/v1/               # REST API (140+エンドポイント)
 │   │   ├── auth.py               #   認証 (JWT/OAuth2)
 │   │   ├── assets.py             #   IT資産管理
 │   │   ├── sam.py                #   SAMライセンス管理
@@ -203,10 +206,10 @@ graph TB
 │   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
 │   ├── alembic/                  # DBマイグレーション (2版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (90+ファイル, 640+テスト)
+│   └── tests/                    # pytest (90+ファイル, 700+テスト)
 │
-├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (~200ファイル)
-│   ├── app/dashboard/            # ダッシュボード (35+ページ)
+├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (~220ファイル)
+│   ├── app/dashboard/            # ダッシュボード (38+ページ)
 │   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
 │   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
 │   │   ├── sam/                  #   SAM管理 (ライセンス/コンプライアンス/レポート)
@@ -299,13 +302,19 @@ gantt
     廃棄ワークフロー            :done, p6c, after p6b, 7d
     ETag/圧縮・パフォーマンス最適化 :done, p6d, after p6c, 7d
     最終統合・リリース v0.35.0  :done, p6e, after p6d, 7d
+
+    section Phase 7 高度管理
+    IPアドレス管理 (IPAM)        :done, p7a, after p6e, 7d
+    ポリシーエンジン              :done, p7b, after p7a, 7d
+    変更追跡システム              :done, p7c, after p7b, 7d
+    最終統合・リリース v0.39.0    :done, p7d, after p7c, 7d
 ```
 
 ### 現在のステータス
 
 | 項目 | 状態 | 詳細 |
 |:---|:---:|:---|
-| 📚 ドキュメント (55+ファイル) | ✅ Done | PR #2 merged |
+| 📚 ドキュメント (57+ファイル) | ✅ Done | PR #2 merged |
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
@@ -328,6 +337,9 @@ gantt
 | 📱 デバイスグループ | ✅ Done | デバイスグループ管理・ポリシー適用 |
 | 🗑️ 廃棄ワークフロー | ✅ Done | 資産廃棄申請・承認・証跡管理 |
 | ⚡ ETag/圧縮 | ✅ Done | APIレスポンスキャッシュ・gzip圧縮最適化 |
+| 🌐 IP管理 (IPAM) | ✅ Done | IPアドレスプール管理・サブネット・VLAN |
+| 📜 ポリシーエンジン | ✅ Done | ルールベースポリシー評価・違反検知・自動通知 |
+| 🔄 変更追跡 | ✅ Done | 構成変更自動検知・履歴管理・影響分析 |
 
 ### GitHub Issues トラッカー
 
@@ -356,6 +368,10 @@ gantt
 | - | Phase33 廃棄ワークフロー | Done | ✅ |
 | - | Phase34 ETag/圧縮・パフォーマンス最適化 | Done | ✅ |
 | - | Phase35 最終統合・リリース v0.35.0 | Done | ✅ |
+| - | Phase36 IPアドレス管理 (IPAM) | Done | ✅ |
+| - | Phase37 ポリシーエンジン | Done | ✅ |
+| - | Phase38 変更追跡システム | Done | ✅ |
+| - | Phase39 最終統合・リリース v0.39.0 | Done | ✅ |
 
 ---
 
@@ -424,6 +440,12 @@ graph LR
 | - | 🔨 Build | Phase33 廃棄ワークフロー | - | ✅ |
 | - | 🔨 Build | Phase34 ETag/圧縮・パフォーマンス最適化 | - | ✅ |
 | - | ✅ Verify | Phase35 最終統合・リリース v0.35.0 | - | ✅ |
+| --- | --- | --- | --- | --- |
+| 2026-03-27 | 🟢 Session 4 | Phase36-39 高度管理セッション | - | ✅ |
+| - | 🔨 Build | Phase36 IPアドレス管理 (IPAM) | - | ✅ |
+| - | 🔨 Build | Phase37 ポリシーエンジン | - | ✅ |
+| - | 🔨 Build | Phase38 変更追跡システム | - | ✅ |
+| - | ✅ Verify | Phase39 最終統合・リリース v0.39.0 | - | ✅ |
 
 ### STABLE 判定条件
 

@@ -9,6 +9,51 @@
 
 ---
 
+## [0.39.0] - 2026-03-27
+
+### Added
+- 最終統合リリース v0.39.0
+- README.md / CHANGELOG.md / PROJECT_STATUS.md 全面最終更新
+- GitHub Release v0.39.0 作成
+- 全 Phase 0-39 完了
+
+### Changed
+- version.py を v0.39.0 に更新
+- メトリクス最終値反映 (~850ファイル、140+エンドポイント、38+ページ、700+テスト)
+
+## [0.38.0] - 2026-03-27
+
+### Added
+- 変更追跡システム (`/api/v1/change-tracking`)
+- 構成変更の自動検知・履歴管理
+- 変更影響分析レポート
+- 変更承認ワークフロー
+
+### Changed
+- 監査証跡との統合強化
+
+## [0.37.0] - 2026-03-27
+
+### Added
+- ポリシーエンジン (`/api/v1/policies`)
+- ルールベースのポリシー評価エンジン
+- ポリシー違反検知・自動通知
+- ポリシーテンプレート管理
+
+### Changed
+- デバイスグループポリシーとの統合
+
+## [0.36.0] - 2026-03-27
+
+### Added
+- IP アドレス管理 (IPAM) (`/api/v1/ipam`)
+- IP アドレスプール管理・割当追跡
+- サブネット管理・VLAN マッピング
+- IP 利用率ダッシュボード
+
+### Changed
+- ネットワーク探索機能との統合強化
+
 ## [0.35.0] - 2026-03-27
 
 ### Added
@@ -383,7 +428,11 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.39.0...HEAD
+[0.39.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.38.0...v0.39.0
+[0.38.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.37.0...v0.38.0
+[0.37.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.36.0...v0.37.0
+[0.36.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.32.0...v0.33.0
