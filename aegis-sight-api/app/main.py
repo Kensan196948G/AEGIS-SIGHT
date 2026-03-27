@@ -83,6 +83,14 @@ app = FastAPI(
             "name": "security",
             "description": "Security monitoring and device compliance",
         },
+        {
+            "name": "logs",
+            "description": "Log event management -- logon, USB, and file operation events",
+        },
+        {
+            "name": "software",
+            "description": "Software inventory -- installed software tracking across devices",
+        },
     ],
 )
 

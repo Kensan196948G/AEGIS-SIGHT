@@ -1,0 +1,73 @@
+version: 2
+updates:
+  # Python dependencies (aegis-sight-api)
+  - package-ecosystem: "pip"
+    directory: "/aegis-sight-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    reviewers:
+      - "Kensan196948G"
+    commit-message:
+      prefix: "deps(python):"
+
+  # Node.js dependencies (aegis-sight-web)
+  - package-ecosystem: "npm"
+    directory: "/aegis-sight-web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "javascript"
+    reviewers:
+      - "Kensan196948G"
+    commit-message:
+      prefix: "deps(npm):"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    reviewers:
+      - "Kensan196948G"
+    commit-message:
+      prefix: "deps(actions):"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/aegis-sight-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "Kensan196948G"
+    commit-message:
+      prefix: "deps(docker):"
+
+  - package-ecosystem: "docker"
+    directory: "/aegis-sight-web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "Kensan196948G"
+    commit-message:
+      prefix: "deps(docker):"
