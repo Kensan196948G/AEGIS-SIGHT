@@ -32,6 +32,8 @@ from app.api.v1.reports import router as reports_router
 from app.api.v1.telemetry import router as telemetry_router
 from app.api.v1.users import router as users_router
 from app.api.v1.export import router as export_router
+from app.api.v1.search import router as search_router
+from app.api.v1.tags import router as tags_router
 from app.api.v1.version import router as version_router
 from app.api.v1.ws import router as ws_router
 
@@ -242,6 +244,22 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "tags",
+        "description": (
+            "**Tag management.** "
+            "Create, list, and delete tags. Assign tags to devices, licenses, "
+            "and procurement requests for flexible categorization."
+        ),
+    },
+    {
+        "name": "search",
+        "description": (
+            "**Unified search.** "
+            "Full-text search across devices, licenses, procurements, and alerts. "
+            "Results are grouped by entity type with match highlighting."
+        ),
+    },
+    {
         "name": "websocket",
         "description": (
             "**WebSocket real-time notifications.** "
@@ -280,5 +298,7 @@ api_router.include_router(batch_router)
 api_router.include_router(m365_router)
 api_router.include_router(scheduler_router)
 api_router.include_router(export_router)
+api_router.include_router(tags_router)
+api_router.include_router(search_router)
 api_router.include_router(version_router)
 api_router.include_router(ws_router)
