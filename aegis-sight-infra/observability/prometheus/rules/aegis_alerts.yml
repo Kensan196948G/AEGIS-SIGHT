@@ -1,0 +1,54 @@
+groups:
+  - name: aegis-sight-infrastructure
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage has been above 90% for more than 5 minutes. Current value: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Available disk space is below 10%. Current value: {{ $value | printf \"%.1f\" }}%"
+
+  - name: aegis-sight-application
+    rules:
+      - alert: LicenseOveruse
+        expr: aegis_license_active_count > aegis_license_total_count
+        for: 1m
+        labels:
+          severity: critical
+          team: compliance
+        annotations:
+          summary: "License overuse detected"
+          description: "Active licenses ({{ $value }}) exceed total allocated licenses. Immediate action required."
+
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="aegis-sight-api"}[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API p95 latency is high"
+          description: "95th percentile response time has exceeded 500ms for 5 minutes. Current p95: {{ $value | printf \"%.3f\" }}s"
+
+      - alert: APIErrorRate
+        expr: (sum(rate(http_requests_total{job="aegis-sight-api", status=~"5.."}[5m])) / sum(rate(http_requests_total{job="aegis-sight-api"}[5m]))) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "API error rate is high"
+          description: "HTTP 5xx error rate has exceeded 5% for 5 minutes. Current rate: {{ $value | printf \"%.2f\" }}%"

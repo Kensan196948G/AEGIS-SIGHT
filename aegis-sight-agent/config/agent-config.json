@@ -1,0 +1,13 @@
+{
+  "api_url": "https://aegis-sight.example.com",
+  "collection_interval_minutes": 5,
+  "buffer_db_path": "C:\\ProgramData\\AegisSight\\buffer.db",
+  "log_path": "C:\\ProgramData\\AegisSight\\logs\\agent.log",
+  "cert_thumbprint": "",
+  "modules_enabled": {
+    "hardware": true,
+    "software": true,
+    "logs": true,
+    "security": true
+  }
+}
