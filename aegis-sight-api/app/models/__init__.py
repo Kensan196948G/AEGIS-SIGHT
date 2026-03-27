@@ -1,6 +1,8 @@
 from app.models.alert import Alert, AlertCategory, AlertSeverity
 from app.models.audit_log import AuditAction, AuditLog
+from app.models.custom_view import CustomView
 from app.models.department import Department
+from app.models.device_group import DeviceGroup, DeviceGroupMembership
 from app.models.notification_channel import (
     ChannelType,
     NotificationChannel,
@@ -31,8 +33,11 @@ __all__ = [
     "AuditAction",
     "AuditLog",
     "ChannelType",
+    "CustomView",
     "Department",
     "Device",
+    "DeviceGroup",
+    "DeviceGroupMembership",
     "DeviceStatus",
     "FileAction",
     "FileEvent",
