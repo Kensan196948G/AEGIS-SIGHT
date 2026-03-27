@@ -11,6 +11,7 @@ from app.models.procurement import (
     ProcurementRequest,
     ProcurementStatus,
 )
+from app.models.scheduled_task import ScheduledTask, TaskStatus, TaskType
 from app.models.security_status import SecurityStatus
 from app.models.software_inventory import SoftwareInventory
 from app.models.system_config import SystemConfig
@@ -35,10 +36,13 @@ __all__ = [
     "ProcurementCategory",
     "ProcurementRequest",
     "ProcurementStatus",
+    "ScheduledTask",
     "SecurityStatus",
     "SoftwareInventory",
     "SoftwareLicense",
     "SystemConfig",
+    "TaskStatus",
+    "TaskType",
     "UsbAction",
     "UsbEvent",
     "User",

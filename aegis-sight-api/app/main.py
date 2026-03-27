@@ -124,6 +124,18 @@ app = FastAPI(
             "name": "network",
             "description": "Network discovery -- discovered devices and managed-device linking",
         },
+        {
+            "name": "m365",
+            "description": "Microsoft 365 integration -- licenses, users, and Graph API sync",
+        },
+        {
+            "name": "scheduler",
+            "description": "Scheduled task management -- recurring job configuration and execution",
+        },
+        {
+            "name": "websocket",
+            "description": "WebSocket real-time notifications -- alerts and device status changes",
+        },
     ],
 )
 
