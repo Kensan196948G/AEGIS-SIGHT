@@ -39,6 +39,12 @@ from app.models.patch import (
     VulnerabilitySeverity,
     WindowsUpdate,
 )
+from app.models.ip_management import (
+    AssignmentStatus,
+    AssignmentType,
+    IPAssignment,
+    IPRange,
+)
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -87,6 +93,10 @@ __all__ = [
     "DevicePatchStatus",
     "PatchStatus",
     "UpdateSeverity",
+    "AssignmentStatus",
+    "AssignmentType",
+    "IPAssignment",
+    "IPRange",
     "User",
     "UserRole",
     "Vulnerability",
