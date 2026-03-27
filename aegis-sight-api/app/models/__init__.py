@@ -5,6 +5,7 @@ from app.models.device import Device, DeviceStatus
 from app.models.hardware_snapshot import HardwareSnapshot
 from app.models.license import LicenseType, SoftwareLicense
 from app.models.log_event import FileAction, FileEvent, LogonEvent, UsbAction, UsbEvent
+from app.models.network_device import NetworkDevice, NetworkDeviceType
 from app.models.procurement import (
     ProcurementCategory,
     ProcurementRequest,
@@ -12,6 +13,7 @@ from app.models.procurement import (
 )
 from app.models.security_status import SecurityStatus
 from app.models.software_inventory import SoftwareInventory
+from app.models.system_config import SystemConfig
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -28,12 +30,15 @@ __all__ = [
     "HardwareSnapshot",
     "LicenseType",
     "LogonEvent",
+    "NetworkDevice",
+    "NetworkDeviceType",
     "ProcurementCategory",
     "ProcurementRequest",
     "ProcurementStatus",
     "SecurityStatus",
     "SoftwareInventory",
     "SoftwareLicense",
+    "SystemConfig",
     "UsbAction",
     "UsbEvent",
     "User",

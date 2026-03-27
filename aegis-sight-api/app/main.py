@@ -116,6 +116,14 @@ app = FastAPI(
             "name": "batch",
             "description": "Batch import/export -- CSV device and license bulk operations",
         },
+        {
+            "name": "config",
+            "description": "System configuration -- global settings and thresholds",
+        },
+        {
+            "name": "network",
+            "description": "Network discovery -- discovered devices and managed-device linking",
+        },
     ],
 )
 
