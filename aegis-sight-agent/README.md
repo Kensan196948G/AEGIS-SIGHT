@@ -15,13 +15,19 @@ aegis-sight-agent/
     Collect-Logs.ps1         # Logon events, USB, processes
     Collect-Security.ps1     # Defender, BitLocker, FW, updates
     Send-Telemetry.ps1       # API POST with retry & offline buffer
+    Test-Config.ps1          # Configuration validation & health-check
+    Update-Agent.ps1         # Auto-updater with rollback support
   config/
     agent-config.json        # Configuration template
+    prometheus-exporter.yml  # Prometheus Windows Exporter settings
   install/
     Install-Agent.ps1        # Automated installer
     Uninstall-Agent.ps1      # Automated uninstaller
   tests/
     AegisSightAgent.Tests.ps1  # Pester v5 unit tests
+    Config.Tests.ps1           # Configuration validation tests
+    Update.Tests.ps1           # Auto-updater tests
+  version.json               # Agent version metadata
 ```
 
 ## Requirements
@@ -107,6 +113,123 @@ Install [Pester v5](https://pester.dev/) and run:
 ```powershell
 Invoke-Pester -Path .\tests\AegisSightAgent.Tests.ps1 -Output Detailed
 ```
+
+## Configuration Validation
+
+Before deploying the agent, validate the configuration using `Test-Config.ps1`:
+
+```powershell
+.\src\Test-Config.ps1
+```
+
+This performs the following checks:
+
+| Check | Description |
+|-------|-------------|
+| Config file | Existence and JSON validity |
+| Required fields | `api_url`, `collection_interval_minutes`, `buffer_db_path`, `log_path`, `modules_enabled` |
+| URL format | Verifies HTTPS is used (warns on plain HTTP) |
+| API connectivity | Attempts `GET /api/v1/health` |
+| Certificate | Locates cert in `Cert:\LocalMachine\My` and checks expiry (warns at 30 days) |
+| Buffer DB | Checks directory existence and file size |
+| Log directory | Verifies the log output directory exists |
+
+Export the report as JSON for automation:
+
+```powershell
+.\src\Test-Config.ps1 -ReportPath "C:\temp\config-report.json"
+```
+
+Each check returns `PASS`, `WARN`, or `FAIL`. The overall result is `PASS` only if all checks pass.
+
+## Auto-Update
+
+The agent supports automatic updates via `Update-Agent.ps1`:
+
+```powershell
+.\src\Update-Agent.ps1
+```
+
+The update process:
+
+1. **Version check** - Queries `GET /api/v1/agent/version` for the latest release
+2. **Download** - Fetches the update package and verifies its SHA-256 checksum
+3. **Backup** - Creates a timestamped backup of the current installation
+4. **Apply** - Stops the scheduled task, extracts new files, and replaces the current version
+5. **Verify** - Runs a syntax check on the updated scripts
+6. **Task re-registration** - Re-registers the Windows Scheduled Task with the same settings
+7. **Rollback** - If verification fails, automatically restores from the backup
+
+Force a reinstall of the current version:
+
+```powershell
+.\src\Update-Agent.ps1 -Force
+```
+
+Version metadata is stored in `version.json` at the agent root:
+
+```json
+{
+  "current_version": "1.1.0",
+  "minimum_api_version": "1.0.0",
+  "release_date": "2026-03-27"
+}
+```
+
+## Prometheus Windows Exporter
+
+The agent ships with a configuration file for [Prometheus Windows Exporter](https://github.com/prometheus-community/windows_exporter) at `config/prometheus-exporter.yml`. This exposes system metrics on port **9182** for Prometheus scraping.
+
+Collected metric categories:
+
+| Collector | Metrics |
+|-----------|---------|
+| `cpu` | Per-core usage, idle, interrupt, DPC, privileged time |
+| `memory` | Available bytes, committed bytes, cache, page faults |
+| `logical_disk` | Read/write bytes, IOPS, free space, queue length |
+| `net` | Bytes sent/received, packets, errors, drops |
+| `service` | State and start mode for monitored Windows services |
+| `process` | CPU, memory, handle count, thread count per process |
+
+Start the exporter with the config:
+
+```powershell
+windows_exporter.exe --config.file="C:\Program Files\AegisSight\config\prometheus-exporter.yml"
+```
+
+## Troubleshooting
+
+### Agent does not send telemetry
+
+1. Run `.\src\Test-Config.ps1` and check for FAIL results
+2. Verify the API URL is reachable: `Invoke-WebRequest -Uri "https://your-api/api/v1/health"`
+3. Check the agent log at the path specified in `agent-config.json` (default: `C:\ProgramData\AegisSight\logs\agent.log`)
+4. Ensure the scheduled task is registered: `Get-ScheduledTask -TaskName AegisSightAgent`
+
+### Certificate authentication fails
+
+1. Verify the certificate exists: `Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq '<your-thumbprint>' }`
+2. Check expiry: `.\src\Test-Config.ps1` will warn if the cert expires within 30 days
+3. Ensure the private key is accessible to the SYSTEM account
+
+### Buffer database grows too large
+
+1. Check size: `(Get-Item "C:\ProgramData\AegisSight\buffer.db").Length / 1MB`
+2. If the API is reachable, the agent flushes buffered payloads automatically each cycle
+3. Manually clear: `Remove-Item "C:\ProgramData\AegisSight\buffer.db"` (payloads will be lost)
+
+### Update fails or agent breaks after update
+
+1. Check the backup directory (named `backup-<version>-<timestamp>`) under the install dir
+2. Manually restore: `Copy-Item -Path "backup-*\src\*" -Destination ".\src\" -Recurse -Force`
+3. Re-register the scheduled task: `.\install\Install-Agent.ps1 -ApiUrl "https://your-api"`
+
+### Prometheus exporter not responding
+
+1. Verify the exporter process is running: `Get-Process windows_exporter -ErrorAction SilentlyContinue`
+2. Check port 9182: `Test-NetConnection -ComputerName localhost -Port 9182`
+3. Review exporter logs at `C:\ProgramData\AegisSight\logs\windows-exporter.log`
+4. Ensure Windows Firewall allows inbound TCP 9182
 
 ## Collected Data
 
