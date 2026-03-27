@@ -1,0 +1,48 @@
+# Version control
+.git
+.gitignore
+
+# Documentation
+docs
+*.md
+LICENSE
+
+# Dependencies
+node_modules
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Tests
+tests
+test-results
+.pytest_cache
+.coverage
+htmlcov
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github
+
+# Build artifacts
+dist
+build
+.next
