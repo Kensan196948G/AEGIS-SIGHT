@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.v1.health import router as health_router
-from app.api.v1.router import api_router
+from app.api.v1.router import TAG_METADATA, api_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.exceptions import AEGISBaseException
@@ -52,90 +52,7 @@ app = FastAPI(
             "name": "health",
             "description": "System health and readiness checks",
         },
-        {
-            "name": "auth",
-            "description": "Authentication and user management",
-        },
-        {
-            "name": "assets",
-            "description": "IT device asset inventory management",
-        },
-        {
-            "name": "sam",
-            "description": "Software Asset Management -- license tracking and compliance",
-        },
-        {
-            "name": "procurement",
-            "description": "Procurement request lifecycle management",
-        },
-        {
-            "name": "metrics",
-            "description": "Prometheus metrics for monitoring",
-        },
-        {
-            "name": "telemetry",
-            "description": "Agent telemetry data ingestion",
-        },
-        {
-            "name": "dashboard",
-            "description": "Dashboard statistics and alerts",
-        },
-        {
-            "name": "security",
-            "description": "Security monitoring and device compliance",
-        },
-        {
-            "name": "logs",
-            "description": "Log event management -- logon, USB, and file operation events",
-        },
-        {
-            "name": "software",
-            "description": "Software inventory -- installed software tracking across devices",
-        },
-        {
-            "name": "audit",
-            "description": "Audit trail -- immutable log of all system actions",
-        },
-        {
-            "name": "reports",
-            "description": "Report generation -- SAM, asset, and security CSV reports",
-        },
-        {
-            "name": "alerts",
-            "description": "Alert management -- create, acknowledge, and resolve alerts",
-        },
-        {
-            "name": "users",
-            "description": "User management -- list, update, and deactivate user accounts",
-        },
-        {
-            "name": "departments",
-            "description": "Department management -- organizational hierarchy and budgets",
-        },
-        {
-            "name": "batch",
-            "description": "Batch import/export -- CSV device and license bulk operations",
-        },
-        {
-            "name": "config",
-            "description": "System configuration -- global settings and thresholds",
-        },
-        {
-            "name": "network",
-            "description": "Network discovery -- discovered devices and managed-device linking",
-        },
-        {
-            "name": "m365",
-            "description": "Microsoft 365 integration -- licenses, users, and Graph API sync",
-        },
-        {
-            "name": "scheduler",
-            "description": "Scheduled task management -- recurring job configuration and execution",
-        },
-        {
-            "name": "websocket",
-            "description": "WebSocket real-time notifications -- alerts and device status changes",
-        },
+        *TAG_METADATA,
     ],
 )
 
