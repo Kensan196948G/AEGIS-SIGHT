@@ -15,7 +15,8 @@
 # ===========================================================================
 
 .PHONY: dev test test-api test-web lint migrate seed build clean help \
-       deploy-prod deploy-staging deploy-dev healthcheck monitoring monitoring-down
+       deploy-prod deploy-staging deploy-dev healthcheck monitoring monitoring-down \
+       benchmark load-test load-test-k6 db-benchmark generate-api-types
 
 COMPOSE       = docker compose
 COMPOSE_DEV   = $(COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml
@@ -100,6 +101,27 @@ monitoring: ## Start monitoring stack (Prometheus + Grafana + Alertmanager)
 
 monitoring-down: ## Stop monitoring stack
 	$(COMPOSE_MON) down
+
+# ---------------------------------------------------------------------------
+# Performance / Benchmarks
+# ---------------------------------------------------------------------------
+benchmark: ## Run API endpoint benchmark (curl-based)
+	./scripts/benchmark.sh
+
+benchmark-json: ## Run API benchmark (JSON output)
+	./scripts/benchmark.sh --json
+
+load-test: ## Run Locust load test (headless, 100 users)
+	cd $(API_DIR) && locust -f tests/performance/locustfile.py --config tests/performance/locust.conf
+
+load-test-k6: ## Run k6 performance test (smoke + load + stress)
+	k6 run $(API_DIR)/tests/performance/k6-load-test.js
+
+db-benchmark: ## Run database query benchmark
+	cd $(API_DIR) && python -m tests.performance.db_benchmark
+
+generate-api-types: ## Generate TypeScript types from OpenAPI schema
+	./scripts/generate-api-types.sh
 
 # ---------------------------------------------------------------------------
 # Help
