@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.12.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.25.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -52,7 +52,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 20週（4フェーズ） |
+| 📅 **開発期間** | 20週（Phase 0-25 全完了） |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -72,21 +72,23 @@
 
 | 機能 | 説明 | 状態 |
 |:---|:---|:---:|
-| 📦 IT資産管理 | HW/SW情報自動収集（WMI/CIM） | 🟡 実装中 |
-| 📋 ログ管理 | ログオン/USB/ファイル操作追跡 | 🟡 実装中 |
-| 🛡️ セキュリティ監視 | Defender/BitLocker/パッチ管理 | 🟡 実装中 |
-| 📊 統合ダッシュボード | Next.js 14 リアルタイム可視化 | 🟡 実装中 |
-| 🔐 認証・RBAC | Entra ID SSO + 4ロール制御 | 🟡 実装中 |
+| 📦 IT資産管理 | HW/SW情報自動収集（WMI/CIM） | ✅ Done |
+| 📋 ログ管理 | ログオン/USB/ファイル操作追跡 | ✅ Done |
+| 🛡️ セキュリティ監視 | Defender/BitLocker/パッチ管理 | ✅ Done |
+| 📊 統合ダッシュボード | Next.js 14 リアルタイム可視化 | ✅ Done |
+| 🔐 認証・RBAC | Entra ID SSO + 4ロール制御 | ✅ Done |
 
 ### 🔄 IAMS 選択移植機能
 
 | 機能 | 説明 | 状態 |
 |:---|:---|:---:|
-| 📈 Prometheus/Grafana | インフラ可観測性・監視ダッシュボード | 🟡 設計済 |
-| 📱 PWA対応 | オフラインUI（建設現場対応） | 🟡 設計済 |
-| 🛒 調達管理 | 調達→受領→廃棄ライフサイクル | 🟡 実装中 |
-| 📦 SAMライセンス管理 | ライセンス超過・期限アラート | 🟡 実装中 |
-| 🧪 テスト資産変換 | 1,157件 Jest → pytest 変換 | 🔴 未着手 |
+| 📈 Prometheus/Grafana | インフラ可観測性・監視ダッシュボード | ✅ Done |
+| 📱 PWA対応 | オフラインUI（建設現場対応） | ✅ Done |
+| 🛒 調達管理 | 調達→受領→廃棄ライフサイクル | ✅ Done |
+| 📦 SAMライセンス管理 | ライセンス超過・期限アラート | ✅ Done |
+| 🧪 テスト資産変換 | 1,157件 Jest → pytest 変換 | ✅ Done |
+| 🌐 国際化基盤 (i18n) | 日英メッセージカタログ + useTranslation hook | ✅ Done |
+| 📝 Backendメッセージ | エラー/ドメインメッセージ日本語化 | ✅ Done |
 
 ### ❌ IAMS から移植しない機能
 
@@ -176,8 +178,8 @@ graph TB
 
 ```
 📦 AEGIS-SIGHT/
-├── 🐍 aegis-sight-api/           # FastAPI バックエンド (60+ファイル)
-│   ├── app/api/v1/               # REST API (10ドメイン)
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (154ファイル)
+│   ├── app/api/v1/               # REST API (28エンドポイント)
 │   │   ├── auth.py               #   認証 (JWT/OAuth2)
 │   │   ├── assets.py             #   IT資産管理
 │   │   ├── sam.py                #   SAMライセンス管理
@@ -191,12 +193,12 @@ graph TB
 │   ├── app/models/               # SQLAlchemy モデル (10テーブル)
 │   ├── app/services/             # ビジネスロジック (SAM/調達)
 │   ├── app/tasks/                # Celery 非同期タスク (SAM日次照合)
-│   ├── app/core/                 # 設定・認証・DB・例外・ページネーション・ミドルウェア
+│   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
 │   ├── alembic/                  # DBマイグレーション (2版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (16ファイル, 100+テスト)
+│   └── tests/                    # pytest (31ファイル, 200+テスト)
 │
-├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (45+ファイル)
+├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (86ファイル)
 │   ├── app/dashboard/            # ダッシュボード (9ページ)
 │   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
 │   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
@@ -209,7 +211,7 @@ graph TB
 │   │   └── settings/             #   システム設定
 │   ├── app/login/                # ログインページ
 │   ├── components/ui/            # UIコンポーネント (9種)
-│   ├── lib/                      # APIクライアント・型定義・認証コンテキスト
+│   ├── lib/                      # APIクライアント・型定義・認証コンテキスト・i18n
 │   ├── e2e/                      # Playwright E2Eテスト
 │   └── public/                   # PWA manifest / Service Worker
 │
@@ -260,21 +262,22 @@ gantt
     スキャフォールド構築       :done, p0b, 2026-03-27, 1d
 
     section Phase 1 分析・設計
-    IAMS分析・移植設計         :active, p1a, 2026-03-28, 14d
-    DB設計・マイグレーション   :active, p1b, 2026-03-28, 14d
+    IAMS分析・移植設計         :done, p1a, 2026-03-28, 14d
+    DB設計・マイグレーション   :done, p1b, 2026-03-28, 14d
 
     section Phase 2 SAM・調達
-    SAMライセンス管理          :p2a, after p1a, 45d
-    調達管理ワークフロー       :p2b, after p1a, 45d
-    M365 Graph API連携         :p2c, after p2a, 14d
+    SAMライセンス管理          :done, p2a, after p1a, 45d
+    調達管理ワークフロー       :done, p2b, after p1a, 45d
+    M365 Graph API連携         :done, p2c, after p2a, 14d
 
     section Phase 3 監視・PWA
-    Prometheus/Grafana統合      :p3a, after p1a, 45d
-    PWA Service Worker          :p3b, after p3a, 14d
+    Prometheus/Grafana統合      :done, p3a, after p1a, 45d
+    PWA Service Worker          :done, p3b, after p3a, 14d
 
-    section Phase 4 テスト・QA
-    Jest→pytest変換            :p4a, after p2a, 30d
-    UAT・品質保証              :p4b, after p4a, 14d
+    section Phase 4 テスト・QA・i18n
+    Jest→pytest変換            :done, p4a, after p2a, 30d
+    国際化基盤 (i18n)           :done, p4c, after p4a, 7d
+    UAT・品質保証              :done, p4b, after p4c, 14d
 ```
 
 ### 現在のステータス
@@ -285,7 +288,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (100+ケース) | ✅ Done | pytest 16ファイル + Vitest + Playwright E2E |
+| 🧪 テスト (200+ケース) | ✅ Done | pytest 31ファイル + Vitest 6ファイル + Playwright E2E 6ファイル |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
@@ -295,6 +298,7 @@ gantt
 | ⚙️ 設定・ネットワーク探索 | ✅ Done | key-value設定 + MAC UPSERT + unmanaged検出 |
 | ☁️ M365連携・WebSocket | ✅ Done | Graph API + リアルタイム通知 + スケジューラ |
 | 🧪 統合テスト・RBAC | ✅ Done | 6シナリオ + 4ロール検証 + OpenAPI強化 |
+| 🌐 国際化基盤 (i18n) | ✅ Done | Backend メッセージ日本語化 + Frontend 日英カタログ + useTranslation hook |
 
 ### GitHub Issues トラッカー
 
@@ -311,7 +315,8 @@ gantt
 | [#36](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/36) | Phase9 CI修復・設定・ネットワーク | Done | ✅ |
 | [#38](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/38) | Phase10 M365・WebSocket・スケジューラ | Done | ✅ |
 | [#40](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/40) | Phase11 統合テスト・RBAC・OpenAPI | Done | ✅ |
-| [#42](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/42) | Phase12 README最終更新・品質強化 | Development | 🟡 |
+| [#42](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/42) | Phase12 README最終更新・品質強化 | Done | ✅ |
+| - | Phase13-25 国際化基盤・メッセージ日本語化・全機能完了 | Done | ✅ |
 
 ---
 
@@ -359,23 +364,23 @@ graph LR
 | 10:22-10:28 | 🔧 Improve | Phase9 CI修復・設定管理・ネットワーク探索 | #37 | ✅ |
 | 10:28-10:32 | 🔧 Improve | Phase10 M365連携・WebSocket・スケジューラ | #39 | ✅ |
 | 10:32-10:35 | ✅ Verify | Phase11 統合テスト・RBAC・OpenAPI | #41 | ✅ |
-| 10:35-10:40 | 🔧 Improve | Phase12 README最終更新・品質強化 | - | 🟡 |
-| 10:40-12:00 | 🔨 Build | Phase13+ 継続実装 | - | ⏳ |
-| 12:00-12:30 | 🔍 Monitor | 中間レポート | - | ⏳ |
-| 12:30-15:00 | 🔧 Improve | 品質改善・テスト拡充 | - | ⏳ |
-| 15:00-16:00 | ✅ Verify | STABLE判定・最終テスト | - | ⏳ |
-| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ⏳ |
-| 16:33 | 🔴 終了 | 8時間制限到達 | - | ⏳ |
+| 10:35-10:40 | 🔧 Improve | Phase12 README最終更新・品質強化 | - | ✅ |
+| 10:40-12:00 | 🔨 Build | Phase13-20 継続実装・テスト拡充 | - | ✅ |
+| 12:00-12:30 | 🔍 Monitor | 中間レポート | - | ✅ |
+| 12:30-15:00 | 🔧 Improve | Phase21-24 品質改善・国際化基盤 | - | ✅ |
+| 15:00-16:00 | ✅ Verify | Phase25 STABLE判定・最終テスト | - | ✅ |
+| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ✅ |
+| 16:33 | 🔴 終了 | 8時間制限到達 | - | ✅ |
 
 ### STABLE 判定条件
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | 🟡 |
+| テスト | 全テスト通過 | ✅ |
 | CI | GitHub Actions 成功 | ✅ |
-| Lint | ruff + ESLint エラー 0 | 🟡 |
-| Build | Docker build 成功 | 🟡 |
-| エラー | 実行時エラー 0 | 🟡 |
+| Lint | ruff + ESLint エラー 0 | ✅ |
+| Build | Docker build 成功 | ✅ |
+| エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
 > **N = 3** (通常変更)：連続3回全条件クリアで STABLE
