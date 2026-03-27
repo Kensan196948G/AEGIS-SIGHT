@@ -9,6 +9,7 @@ endpoints logically.
 from fastapi import APIRouter
 
 from app.api.v1.alerts import router as alerts_router
+from app.api.v1.compliance import router as compliance_router
 from app.api.v1.assets import router as assets_router
 from app.api.v1.batch import router as batch_router
 from app.api.v1.config import router as config_router
@@ -267,6 +268,14 @@ TAG_METADATA: list[dict] = [
             "notifications for alerts, device status changes, and system events."
         ),
     },
+    {
+        "name": "compliance",
+        "description": (
+            "**Compliance framework management.** "
+            "ISO 27001 control scores, J-SOX ITGC status, and NIST CSF "
+            "maturity assessments. Aggregated overview with open issues."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -301,4 +310,5 @@ api_router.include_router(export_router)
 api_router.include_router(tags_router)
 api_router.include_router(search_router)
 api_router.include_router(version_router)
+api_router.include_router(compliance_router)
 api_router.include_router(ws_router)
