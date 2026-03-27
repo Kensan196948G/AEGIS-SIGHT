@@ -98,3 +98,111 @@ export interface DashboardStats {
   complianceTrend: number;
   procurementsTrend: number;
 }
+
+/** ページネーション付きレスポンス */
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    perPage: number;
+    totalPages: number;
+  };
+}
+
+/** セキュリティ概要 */
+export interface SecurityOverview {
+  riskScore: number;
+  criticalVulnerabilities: number;
+  highVulnerabilities: number;
+  mediumVulnerabilities: number;
+  lowVulnerabilities: number;
+  unpatched: number;
+  complianceRate: number;
+  lastScanAt: string;
+  threats: {
+    id: string;
+    type: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    description: string;
+    detectedAt: string;
+    status: 'open' | 'mitigated' | 'resolved';
+  }[];
+}
+
+/** ログオンイベント */
+export interface LogonEvent {
+  id: string;
+  userId: string;
+  userName: string;
+  hostname: string;
+  ipAddress: string;
+  logonType: 'interactive' | 'remote' | 'network' | 'service' | 'unlock';
+  status: 'success' | 'failure';
+  timestamp: string;
+  source: string;
+}
+
+/** USBイベント */
+export interface UsbEvent {
+  id: string;
+  deviceName: string;
+  deviceType: string;
+  serialNumber: string;
+  hostname: string;
+  userName: string;
+  action: 'connected' | 'disconnected' | 'blocked';
+  timestamp: string;
+}
+
+/** ファイル操作イベント */
+export interface FileEvent {
+  id: string;
+  filePath: string;
+  fileName: string;
+  operation: 'create' | 'modify' | 'delete' | 'rename' | 'copy' | 'move';
+  userName: string;
+  hostname: string;
+  fileSize: number;
+  timestamp: string;
+}
+
+/** ログイベント統合型 */
+export type LogEvent = LogonEvent | UsbEvent | FileEvent;
+
+/** ソフトウェアインベントリ */
+export interface SoftwareInventory {
+  id: string;
+  name: string;
+  vendor: string;
+  version: string;
+  installedCount: number;
+  licensedCount: number | null;
+  category: string;
+  complianceStatus: 'compliant' | 'over-deployed' | 'unlicensed' | 'unknown';
+  lastDetectedAt: string;
+}
+
+/** コンプライアンスチェック */
+export interface ComplianceCheck {
+  id: string;
+  softwareName: string;
+  vendor: string;
+  licensedQuantity: number;
+  installedQuantity: number;
+  complianceRate: number;
+  status: 'compliant' | 'over-deployed' | 'under-utilized';
+  lastCheckedAt: string;
+  recommendation: string | null;
+}
+
+/** ログフィルタ */
+export interface LogFilters {
+  startDate?: string;
+  endDate?: string;
+  userName?: string;
+  hostname?: string;
+  status?: string;
+  page?: number;
+  perPage?: number;
+}

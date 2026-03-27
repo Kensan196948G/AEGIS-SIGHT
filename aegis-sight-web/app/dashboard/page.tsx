@@ -1,59 +1,9 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
 import { StatCard } from '@/components/ui/stat-card';
-
-// Mock data - will be replaced with API calls
-const stats = {
-  totalDevices: 1284,
-  activeAlerts: 7,
-  licenseComplianceRate: 94.2,
-  pendingProcurements: 12,
-  devicesTrend: 3.2,
-  alertsTrend: -15,
-  complianceTrend: 1.5,
-  procurementsTrend: 8,
-};
-
-const recentAlerts = [
-  {
-    id: '1',
-    severity: 'critical' as const,
-    title: 'Adobe Creative Suite ライセンス超過',
-    message: '購入数50に対し、インストール数が58台検出されました',
-    source: 'SAMスキャン',
-    time: '15分前',
-  },
-  {
-    id: '2',
-    severity: 'warning' as const,
-    title: 'サーバー CPU 使用率 90% 超過',
-    message: 'srv-prod-03 の CPU 使用率が継続的に高い状態です',
-    source: '監視エージェント',
-    time: '32分前',
-  },
-  {
-    id: '3',
-    severity: 'warning' as const,
-    title: 'Windows 10 サポート終了まで 90日',
-    message: '47台の端末が Windows 10 を使用中です',
-    source: '資産管理',
-    time: '1時間前',
-  },
-  {
-    id: '4',
-    severity: 'info' as const,
-    title: '調達申請 #PR-2024-089 承認済み',
-    message: 'Dell Latitude 5540 x 20台の調達が承認されました',
-    source: '調達管理',
-    time: '2時間前',
-  },
-  {
-    id: '5',
-    severity: 'info' as const,
-    title: '新規デバイス検出',
-    message: '3台の新規デバイスがネットワークに接続されました',
-    source: '資産スキャン',
-    time: '3時間前',
-  },
-];
+import { fetchDashboardStats, fetchAlerts, ApiError } from '@/lib/api';
+import type { DashboardStats, Alert } from '@/lib/types';
 
 const severityStyles = {
   critical: 'border-l-red-500 bg-red-50 dark:bg-red-900/10',
@@ -73,16 +23,163 @@ const severityLabel = {
   info: '情報',
 };
 
+// フォールバック用モックデータ
+const fallbackStats: DashboardStats = {
+  totalDevices: 1284,
+  activeAlerts: 7,
+  licenseComplianceRate: 94.2,
+  pendingProcurements: 12,
+  devicesTrend: 3.2,
+  alertsTrend: -15,
+  complianceTrend: 1.5,
+  procurementsTrend: 8,
+};
+
+const fallbackAlerts: (Alert & { time?: string })[] = [
+  {
+    id: '1',
+    type: 'compliance',
+    severity: 'critical',
+    title: 'Adobe Creative Suite ライセンス超過',
+    message: '購入数50に対し、インストール数が58台検出されました',
+    source: 'SAMスキャン',
+    acknowledged: false,
+    createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+  },
+  {
+    id: '2',
+    type: 'performance',
+    severity: 'warning',
+    title: 'サーバー CPU 使用率 90% 超過',
+    message: 'srv-prod-03 の CPU 使用率が継続的に高い状態です',
+    source: '監視エージェント',
+    acknowledged: false,
+    createdAt: new Date(Date.now() - 32 * 60000).toISOString(),
+  },
+  {
+    id: '3',
+    type: 'inventory',
+    severity: 'warning',
+    title: 'Windows 10 サポート終了まで 90日',
+    message: '47台の端末が Windows 10 を使用中です',
+    source: '資産管理',
+    acknowledged: false,
+    createdAt: new Date(Date.now() - 60 * 60000).toISOString(),
+  },
+  {
+    id: '4',
+    type: 'inventory',
+    severity: 'info',
+    title: '調達申請 #PR-2024-089 承認済み',
+    message: 'Dell Latitude 5540 x 20台の調達が承認されました',
+    source: '調達管理',
+    acknowledged: true,
+    createdAt: new Date(Date.now() - 120 * 60000).toISOString(),
+  },
+  {
+    id: '5',
+    type: 'inventory',
+    severity: 'info',
+    title: '新規デバイス検出',
+    message: '3台の新規デバイスがネットワークに接続されました',
+    source: '資産スキャン',
+    acknowledged: false,
+    createdAt: new Date(Date.now() - 180 * 60000).toISOString(),
+  },
+];
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'たった今';
+  if (minutes < 60) return `${minutes}分前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}時間前`;
+  const days = Math.floor(hours / 24);
+  return `${days}日前`;
+}
+
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>(fallbackStats);
+  const [alerts, setAlerts] = useState<Alert[]>(fallbackAlerts);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = useCallback(async () => {
+    try {
+      setError(null);
+      const [statsRes, alertsRes] = await Promise.allSettled([
+        fetchDashboardStats(),
+        fetchAlerts(1, 5),
+      ]);
+
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value.data);
+      }
+      if (alertsRes.status === 'fulfilled') {
+        setAlerts(alertsRes.value.data);
+      }
+
+      // 両方失敗した場合のみエラー表示（フォールバックデータは維持）
+      if (statsRes.status === 'rejected' && alertsRes.status === 'rejected') {
+        const err = statsRes.reason;
+        if (err instanceof ApiError && err.status !== 401) {
+          setError('データの取得に失敗しました。フォールバックデータを表示しています。');
+        }
+      }
+    } catch {
+      setError('データの取得に失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+
+    // 60秒ごとに自動リフレッシュ
+    const interval = setInterval(loadData, 60000);
+    return () => clearInterval(interval);
+  }, [loadData]);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          IT資産管理の概要とアラート
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            IT資産管理の概要とアラート
+          </p>
+        </div>
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            更新中...
+          </div>
+        )}
       </div>
+
+      {/* エラー通知 */}
+      {error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+            <p className="text-sm text-amber-800 dark:text-amber-200">{error}</p>
+            <button
+              onClick={loadData}
+              className="ml-auto text-sm font-medium text-amber-700 hover:text-amber-900 dark:text-amber-300"
+            >
+              再試行
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -138,13 +235,13 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">最近のアラート</h2>
           <a
             href="/dashboard/monitoring"
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             すべて表示 &rarr;
           </a>
         </div>
         <div className="space-y-3">
-          {recentAlerts.map((alert) => (
+          {alerts.map((alert) => (
             <div
               key={alert.id}
               className={`rounded-lg border-l-4 p-4 ${severityStyles[alert.severity]}`}
@@ -165,7 +262,7 @@ export default function DashboardPage() {
                   <div className="mt-2 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
                     <span>{alert.source}</span>
                     <span>&middot;</span>
-                    <span>{alert.time}</span>
+                    <span>{formatRelativeTime(alert.createdAt)}</span>
                   </div>
                 </div>
               </div>
