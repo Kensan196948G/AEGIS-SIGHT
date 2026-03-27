@@ -31,6 +31,7 @@ from app.api.v1.software import router as software_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.telemetry import router as telemetry_router
 from app.api.v1.users import router as users_router
+from app.api.v1.export import router as export_router
 from app.api.v1.version import router as version_router
 from app.api.v1.ws import router as ws_router
 
@@ -232,6 +233,15 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "export",
+        "description": (
+            "**Data export (operator/auditor/admin).** "
+            "Bulk export of devices, licenses, alerts, and audit logs "
+            "as CSV or JSON with optional date-range filtering. "
+            "Uses streaming responses for large datasets."
+        ),
+    },
+    {
         "name": "websocket",
         "description": (
             "**WebSocket real-time notifications.** "
@@ -269,5 +279,6 @@ api_router.include_router(departments_router)
 api_router.include_router(batch_router)
 api_router.include_router(m365_router)
 api_router.include_router(scheduler_router)
+api_router.include_router(export_router)
 api_router.include_router(version_router)
 api_router.include_router(ws_router)
