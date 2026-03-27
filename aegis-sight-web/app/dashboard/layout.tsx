@@ -1,6 +1,8 @@
 import { Sidebar } from '@/components/ui/sidebar';
 import { Header } from '@/components/ui/header';
 import { SkipLink } from '@/components/ui/skip-link';
+import { OfflineIndicator } from '@/components/ui/offline-indicator';
+import { PWAInstallPrompt } from '@/components/ui/pwa-install';
 
 export default function DashboardLayout({
   children,
@@ -9,6 +11,8 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-aegis-dark">
+      <OfflineIndicator />
+      <PWAInstallPrompt />
       <SkipLink targetId="main-content" />
       <nav aria-label="サイドバーナビゲーション" role="navigation">
         <Sidebar />

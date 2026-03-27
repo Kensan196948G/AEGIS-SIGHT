@@ -25,6 +25,72 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AEGIS-SIGHT ダッシュボード（デスクトップ）"
+    },
+    {
+      "src": "/screenshots/dashboard-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AEGIS-SIGHT ダッシュボード（モバイル）"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ダッシュボード",
+      "short_name": "ダッシュ",
+      "url": "/dashboard",
+      "description": "メインダッシュボードを表示",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "資産管理",
+      "short_name": "資産",
+      "url": "/dashboard/assets",
+      "description": "IT資産一覧を表示",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "SAMライセンス管理",
+      "short_name": "SAM",
+      "url": "/dashboard/sam",
+      "description": "ソフトウェア資産管理",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/dashboard/assets",
+    "method": "GET",
+    "params": {
+      "title": "name",
+      "text": "description",
+      "url": "link"
+    }
+  },
   "categories": ["business", "productivity"],
-  "lang": "ja"
+  "lang": "ja",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "/dashboard"
 }
