@@ -49,6 +49,7 @@ from app.api.v1.remote_work import router as remote_work_router
 from app.api.v1.sessions import router as sessions_router
 from app.api.v1.incidents import router as incidents_router
 from app.api.v1.sla import router as sla_router
+from app.api.v1.knowledge import router as knowledge_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -395,6 +396,14 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "knowledge",
+        "description": (
+            "**Knowledge base and help center.** "
+            "Create, search, and browse knowledge base articles organized by category. "
+            "Track article popularity and helpfulness. Full-text search across all content."
+        ),
+    },
+    {
         "name": "sla",
         "description": (
             "**SLA management and reporting.** "
@@ -451,4 +460,5 @@ api_router.include_router(remote_work_router)
 api_router.include_router(sessions_router)
 api_router.include_router(incidents_router)
 api_router.include_router(sla_router)
+api_router.include_router(knowledge_router)
 api_router.include_router(ws_router)
