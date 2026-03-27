@@ -17,6 +17,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.core.config import settings
+from app.version import __api_version__, __version__
 
 router = APIRouter(prefix="/version", tags=["version"])
 
@@ -62,7 +63,7 @@ def _build_date() -> str:
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-API_VERSION = "1.0.0"
+API_VERSION = __api_version__
 MINIMUM_AGENT_VERSION = "0.1.0"
 
 
@@ -82,7 +83,7 @@ MINIMUM_AGENT_VERSION = "0.1.0"
 async def get_version() -> VersionResponse:
     return VersionResponse(
         api_version=API_VERSION,
-        app_version=settings.APP_VERSION,
+        app_version=__version__,
         python_version=f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         build_date=_build_date(),
         git_commit_hash=_git_commit_hash(),
