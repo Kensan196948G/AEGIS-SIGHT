@@ -30,7 +30,10 @@ export function Header() {
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div className="hidden items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-500 dark:border-aegis-border dark:bg-aegis-surface dark:text-gray-400 md:flex">
+        <Link
+          href="/dashboard/search"
+          className="hidden items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-aegis-border dark:bg-aegis-surface dark:text-gray-400 dark:hover:border-primary-700 dark:hover:bg-primary-900/20 md:flex"
+        >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
@@ -38,7 +41,7 @@ export function Header() {
           <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400">
             /
           </kbd>
-        </div>
+        </Link>
 
         {/* Theme Toggle */}
         <ThemeToggle />

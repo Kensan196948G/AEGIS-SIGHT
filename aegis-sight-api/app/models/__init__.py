@@ -21,6 +21,7 @@ from app.models.scheduled_task import ScheduledTask, TaskStatus, TaskType
 from app.models.security_status import SecurityStatus
 from app.models.software_inventory import SoftwareInventory
 from app.models.system_config import SystemConfig
+from app.models.tag import Tag, TagAssignment, TagCategory
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -51,6 +52,9 @@ __all__ = [
     "SoftwareInventory",
     "SoftwareLicense",
     "SystemConfig",
+    "Tag",
+    "TagAssignment",
+    "TagCategory",
     "TaskStatus",
     "TaskType",
     "UsbAction",
