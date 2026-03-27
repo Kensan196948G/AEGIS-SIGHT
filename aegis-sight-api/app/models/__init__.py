@@ -51,6 +51,14 @@ from app.models.change_tracking import (
     ConfigSnapshot,
     SnapshotType,
 )
+from app.models.dlp import (
+    DLPAction,
+    DLPActionTaken,
+    DLPEvent,
+    DLPRule,
+    DLPRuleType,
+    DLPSeverity,
+)
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
 from app.models.user import User, UserRole
 
@@ -108,6 +116,12 @@ __all__ = [
     "ConfigChange",
     "ConfigSnapshot",
     "SnapshotType",
+    "DLPAction",
+    "DLPActionTaken",
+    "DLPEvent",
+    "DLPRule",
+    "DLPRuleType",
+    "DLPSeverity",
     "DevicePolicy",
     "PolicyType",
     "PolicyViolation",
