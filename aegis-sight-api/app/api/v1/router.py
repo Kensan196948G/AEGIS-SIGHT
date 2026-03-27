@@ -47,6 +47,7 @@ from app.api.v1.policies import router as policies_router
 from app.api.v1.printing import router as printing_router
 from app.api.v1.remote_work import router as remote_work_router
 from app.api.v1.sessions import router as sessions_router
+from app.api.v1.incidents import router as incidents_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -382,6 +383,16 @@ TAG_METADATA: list[dict] = [
             "Session analytics with peak hours, type distribution, and user behavior profiles."
         ),
     },
+    {
+        "name": "incidents",
+        "description": (
+            "**Incident response and forensics.** "
+            "Create, track, and resolve security incidents through a structured "
+            "workflow (detected -> investigating -> containing -> eradicating -> "
+            "recovering -> resolved -> post_mortem). Manage threat indicators "
+            "(IoCs) and view incident statistics including MTTR."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -428,4 +439,5 @@ api_router.include_router(dlp_router)
 api_router.include_router(printing_router)
 api_router.include_router(remote_work_router)
 api_router.include_router(sessions_router)
+api_router.include_router(incidents_router)
 api_router.include_router(ws_router)
