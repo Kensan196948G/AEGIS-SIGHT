@@ -11,7 +11,9 @@ from app.api.v1.router import TAG_METADATA, api_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.exceptions import AEGISBaseException
+from app.core.ip_restriction import IPRestrictionMiddleware
 from app.core.middleware import RequestLoggingMiddleware, RequestTimingMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +94,8 @@ app.add_middleware(
 # Custom middleware (order matters: outermost middleware runs first)
 app.add_middleware(RequestTimingMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(IPRestrictionMiddleware)
 
 # Register API router
 app.include_router(api_router)

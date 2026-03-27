@@ -26,6 +26,7 @@ from app.api.v1.procurement import router as procurement_router
 from app.api.v1.sam import router as sam_router
 from app.api.v1.scheduler import router as scheduler_router
 from app.api.v1.security import router as security_router
+from app.api.v1.security_audit import router as security_audit_router
 from app.api.v1.software import router as software_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.telemetry import router as telemetry_router
@@ -111,6 +112,14 @@ TAG_METADATA: list[dict] = [
             "**Security monitoring and compliance.** "
             "Aggregated Defender, BitLocker, and patch status across all devices. "
             "Per-device security detail view."
+        ),
+    },
+    {
+        "name": "security-audit",
+        "description": (
+            "**Security audit (admin only).** "
+            "Failed login monitoring, active session overview, and "
+            "forced session revocation for incident response."
         ),
     },
     {
@@ -250,6 +259,7 @@ api_router.include_router(metrics_router)
 api_router.include_router(telemetry_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(security_router)
+api_router.include_router(security_audit_router)
 api_router.include_router(logs_router)
 api_router.include_router(reports_router)
 api_router.include_router(software_router)
