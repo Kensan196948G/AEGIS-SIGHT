@@ -1,0 +1,120 @@
+# =============================================================================
+# AEGIS-SIGHT - Prometheus Windows Exporter Configuration
+# =============================================================================
+# This configuration file controls which metrics the Prometheus Windows Exporter
+# collects from Windows endpoints. The exporter runs alongside the AEGIS-SIGHT
+# agent and exposes metrics on port 9182 for Prometheus scraping.
+#
+# Reference: https://github.com/prometheus-community/windows_exporter
+# =============================================================================
+
+# Scrape endpoint configuration
+server:
+  listen_address: "0.0.0.0"
+  listen_port: 9182
+  telemetry_path: "/metrics"
+  # Maximum number of concurrent requests
+  max_requests: 5
+  # Request timeout
+  timeout_seconds: 10
+
+# ---------------------------------------------------------------------------
+# Enabled collectors
+# ---------------------------------------------------------------------------
+collectors:
+  enabled:
+    # CPU metrics: usage per core, idle, interrupt, DPC, privileged time
+    - cpu
+    # Memory metrics: available bytes, committed bytes, cache, page faults
+    - memory
+    # Logical disk metrics: read/write bytes, IOPS, free space, queue length
+    - logical_disk
+    # Network interface metrics: bytes sent/received, packets, errors, drops
+    - net
+    # Windows services: state, start mode, status per service
+    - service
+    # Process metrics: CPU, memory, handle count, thread count per process
+    - process
+
+# ---------------------------------------------------------------------------
+# Collector-specific settings
+# ---------------------------------------------------------------------------
+collector:
+  # CPU collector
+  cpu:
+    # Report per-core metrics (true) or aggregate only (false)
+    per_core: true
+
+  # Memory collector (no special options; all counters enabled by default)
+  memory: {}
+
+  # Logical disk collector
+  logical_disk:
+    # Volume include filter (regex). Empty = all volumes.
+    volume_include: ".*"
+    # Volume exclude filter (regex). Exclude temporary/recovery partitions.
+    volume_exclude: ""
+
+  # Network interface collector
+  net:
+    # NIC include filter (regex). Empty = all interfaces.
+    nic_include: ".*"
+    # NIC exclude filter. Exclude loopback and virtual adapters.
+    nic_exclude: "Loopback|isatap|Teredo"
+
+  # Service collector
+  service:
+    # Service include filter (regex). Monitor critical services.
+    service_include: >-
+      AegisSightAgent|
+      WinDefend|MpsSvc|
+      wuauserv|W32Time|
+      MSSQLSERVER|SQLAgent.*|
+      W3SVC|WAS|
+      Spooler|EventLog|
+      LanmanServer|LanmanWorkstation|
+      Dnscache|Dhcp
+    # Service exclude filter
+    service_exclude: ""
+
+  # Process collector
+  process:
+    # Process include filter (regex). Monitor key processes.
+    process_include: >-
+      powershell|pwsh|
+      AegisSight.*|
+      sqlservr|w3wp|
+      svchost|lsass|csrss|
+      explorer|RuntimeBroker
+    # Process exclude filter
+    process_exclude: ""
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+log:
+  level: "info"           # debug | info | warn | error
+  format: "logfmt"        # logfmt | json
+  file: "C:\\ProgramData\\AegisSight\\logs\\windows-exporter.log"
+
+# ---------------------------------------------------------------------------
+# TLS (optional - uncomment to enable HTTPS scrape endpoint)
+# ---------------------------------------------------------------------------
+# tls:
+#   cert_file: "C:\\ProgramData\\AegisSight\\certs\\exporter.crt"
+#   key_file:  "C:\\ProgramData\\AegisSight\\certs\\exporter.key"
+
+# ---------------------------------------------------------------------------
+# Integration notes
+# ---------------------------------------------------------------------------
+# Prometheus scrape_configs entry:
+#
+#   - job_name: 'aegis-sight-windows'
+#     scrape_interval: 30s
+#     static_configs:
+#       - targets: ['<hostname>:9182']
+#     relabel_configs:
+#       - source_labels: [__address__]
+#         target_label: instance
+#         regex: '(.+):.*'
+#         replacement: '${1}'
