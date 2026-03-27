@@ -1,3 +1,7 @@
+'use client';
+
+import Link from 'next/link';
+
 export default function ProcurementPage() {
   const requests = [
     { id: 'PR-2024-089', title: 'Dell Latitude 5540 x 20台', requester: '田中太郎', dept: 'エンジニアリング', cost: '¥3,200,000', priority: 'high', status: 'approved' },
@@ -51,12 +55,12 @@ export default function ProcurementPage() {
             IT機器・ソフトウェアの調達申請と承認
           </p>
         </div>
-        <button className="aegis-btn-primary">
+        <Link href="/dashboard/procurement/new" className="aegis-btn-primary">
           <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           新規申請
-        </button>
+        </Link>
       </div>
 
       {/* Table */}
@@ -76,9 +80,9 @@ export default function ProcurementPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
               {requests.map((req) => (
-                <tr key={req.id} className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
+                <tr key={req.id} className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50" onClick={() => window.location.href = `/dashboard/procurement/${req.id}`}>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-primary-600 dark:text-primary-400">
-                    {req.id}
+                    <Link href={`/dashboard/procurement/${req.id}`} className="hover:underline">{req.id}</Link>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {req.title}
