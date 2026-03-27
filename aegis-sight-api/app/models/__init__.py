@@ -61,6 +61,7 @@ from app.models.dlp import (
 )
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
 from app.models.print_management import PrintJob, PrintJobStatus, Printer, PrintPolicy
+from app.models.remote_work import RemoteAccessPolicy, VPNConnection, VPNProtocol
 from app.models.user import User, UserRole
 from app.models.user_session import (
     ActivityType,
@@ -136,6 +137,9 @@ __all__ = [
     "PrintJobStatus",
     "Printer",
     "PrintPolicy",
+    "RemoteAccessPolicy",
+    "VPNConnection",
+    "VPNProtocol",
     "User",
     "UserRole",
     "UserActivity",

@@ -45,6 +45,7 @@ from app.api.v1.changes import router as changes_router
 from app.api.v1.dlp import router as dlp_router
 from app.api.v1.policies import router as policies_router
 from app.api.v1.printing import router as printing_router
+from app.api.v1.remote_work import router as remote_work_router
 from app.api.v1.sessions import router as sessions_router
 from app.api.v1.ws import router as ws_router
 
@@ -364,6 +365,15 @@ TAG_METADATA: list[dict] = [
         ),
     },
     {
+        "name": "remote-work",
+        "description": (
+            "**Remote work and VPN management.** "
+            "Track VPN connections (IPsec, SSL, WireGuard, L2TP), monitor active "
+            "sessions, view telework analytics (utilization, peak hours, bandwidth), "
+            "and manage remote access policies."
+        ),
+    },
+    {
         "name": "sessions",
         "description": (
             "**User session and activity tracking.** "
@@ -416,5 +426,6 @@ api_router.include_router(policies_router)
 api_router.include_router(changes_router)
 api_router.include_router(dlp_router)
 api_router.include_router(printing_router)
+api_router.include_router(remote_work_router)
 api_router.include_router(sessions_router)
 api_router.include_router(ws_router)
