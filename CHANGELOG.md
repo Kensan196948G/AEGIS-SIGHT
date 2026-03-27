@@ -9,6 +9,75 @@
 
 ---
 
+## [0.30.0] - 2026-03-27
+
+### Added
+- コンプライアンスダッシュボード (ISO 27001 / J-SOX 準拠状況可視化)
+- 監査 UI (監査ログ検索・フィルタ・エクスポート)
+- レポート UI (各種レポート生成・PDF/CSV 出力)
+- 最終品質保証・全フェーズ完了確認
+
+### Changed
+- README.md 全面更新 (v0.30.0, 全30フェーズ反映)
+- CHANGELOG.md 全バージョン履歴整備
+- version.py を v0.30.0 に更新
+
+## [0.29.0] - 2026-03-27
+
+### Added
+- コンプライアンス監査基盤 (`/api/v1/compliance`)
+- ISO 27001 / J-SOX 準拠チェックリスト API
+- 監査ログ詳細検索・フィルタリング機能
+- 監査レポート自動生成
+
+### Changed
+- 監査証跡の保持ポリシー強化 (7年保存対応)
+
+## [0.28.0] - 2026-03-27
+
+### Added
+- チャート/ウィジェットシステム (`/dashboard/widgets`)
+- リアルタイムダッシュボードチャート (Recharts)
+- カスタムウィジェット配置・レイアウト管理
+- ウィジェットデータソース API (`/api/v1/widgets`)
+
+### Changed
+- ダッシュボード UI の大幅刷新・30ページ化
+
+## [0.27.0] - 2026-03-27
+
+### Added
+- タグ管理システム (`/api/v1/tags`)
+- 資産タグ CRUD + 一括タグ付け
+- 全文検索基盤 (PostgreSQL tsvector)
+- 検索フィルタ強化 (複合条件・保存フィルタ)
+
+### Changed
+- 資産一覧の検索パフォーマンス改善
+
+## [0.26.0] - 2026-03-27
+
+### Added
+- Webhook 配信基盤 (`/api/v1/webhooks`)
+- エクスポート機能 (CSV / JSON / PDF) (`/api/v1/export`)
+- Webhook イベント管理・再送機能
+- エクスポートテンプレート管理
+
+### Changed
+- CI パイプラインの安定化・修復
+
+## [0.25.0] - 2026-03-27
+
+### Added
+- 国際化基盤完了 (i18n) - 全 UI コンポーネント日英対応
+- Backend エラーメッセージ完全日本語化
+- Phase 25 STABLE 判定達成
+- 全テスト通過・品質基準クリア
+
+### Changed
+- テストカバレッジ拡充 (560+ テストケース)
+- CI/CD パイプライン最終安定化
+
 ## [0.24.0] - 2026-03-27
 
 ### Added
@@ -258,7 +327,13 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.24.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.29.0...v0.30.0
+[0.29.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.28.0...v0.29.0
+[0.28.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.27.0...v0.28.0
+[0.27.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.26.0...v0.27.0
+[0.26.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.25.0...v0.26.0
+[0.25.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.21.0...v0.22.0

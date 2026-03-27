@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.25.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.30.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -52,7 +52,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 20週（Phase 0-25 全完了） |
+| 📅 **開発期間** | 全30フェーズ（Phase 0-30 全完了） |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -89,6 +89,9 @@
 | 🧪 テスト資産変換 | 1,157件 Jest → pytest 変換 | ✅ Done |
 | 🌐 国際化基盤 (i18n) | 日英メッセージカタログ + useTranslation hook | ✅ Done |
 | 📝 Backendメッセージ | エラー/ドメインメッセージ日本語化 | ✅ Done |
+| 📊 コンプライアンスダッシュボード | ISO 27001/J-SOX準拠状況可視化 | ✅ Done |
+| 🔍 監査UI | 監査ログ検索・フィルタ・エクスポート | ✅ Done |
+| 📄 レポートUI | 各種レポート生成・PDF/CSV出力 | ✅ Done |
 
 ### ❌ IAMS から移植しない機能
 
@@ -178,8 +181,8 @@ graph TB
 
 ```
 📦 AEGIS-SIGHT/
-├── 🐍 aegis-sight-api/           # FastAPI バックエンド (154ファイル)
-│   ├── app/api/v1/               # REST API (28エンドポイント)
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (~350ファイル)
+│   ├── app/api/v1/               # REST API (110+エンドポイント)
 │   │   ├── auth.py               #   認証 (JWT/OAuth2)
 │   │   ├── assets.py             #   IT資産管理
 │   │   ├── sam.py                #   SAMライセンス管理
@@ -196,10 +199,10 @@ graph TB
 │   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
 │   ├── alembic/                  # DBマイグレーション (2版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (31ファイル, 200+テスト)
+│   └── tests/                    # pytest (80+ファイル, 560+テスト)
 │
-├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (86ファイル)
-│   ├── app/dashboard/            # ダッシュボード (9ページ)
+├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (~200ファイル)
+│   ├── app/dashboard/            # ダッシュボード (30ページ)
 │   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
 │   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
 │   │   ├── sam/                  #   SAM管理 (ライセンス/コンプライアンス/レポート)
@@ -278,6 +281,13 @@ gantt
     Jest→pytest変換            :done, p4a, after p2a, 30d
     国際化基盤 (i18n)           :done, p4c, after p4a, 7d
     UAT・品質保証              :done, p4b, after p4c, 14d
+
+    section Phase 5 拡張機能
+    Webhook/エクスポート        :done, p5a, after p4b, 7d
+    タグ/検索基盤               :done, p5b, after p5a, 7d
+    チャート/ウィジェット       :done, p5c, after p5b, 7d
+    コンプライアンスダッシュボード :done, p5d, after p5c, 7d
+    最終品質保証・リリース      :done, p5e, after p5d, 7d
 ```
 
 ### 現在のステータス
@@ -288,7 +298,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (200+ケース) | ✅ Done | pytest 31ファイル + Vitest 6ファイル + Playwright E2E 6ファイル |
+| 🧪 テスト (560+ケース) | ✅ Done | pytest 80+ファイル + Vitest + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
@@ -299,6 +309,10 @@ gantt
 | ☁️ M365連携・WebSocket | ✅ Done | Graph API + リアルタイム通知 + スケジューラ |
 | 🧪 統合テスト・RBAC | ✅ Done | 6シナリオ + 4ロール検証 + OpenAPI強化 |
 | 🌐 国際化基盤 (i18n) | ✅ Done | Backend メッセージ日本語化 + Frontend 日英カタログ + useTranslation hook |
+| 🔗 Webhook/エクスポート | ✅ Done | Webhook配信 + CSV/JSON/PDFエクスポート |
+| 🏷️ タグ/検索基盤 | ✅ Done | 資産タグ管理 + 全文検索 + フィルタ強化 |
+| 📊 チャート/ウィジェット | ✅ Done | ダッシュボードウィジェット + リアルタイムチャート |
+| 📋 コンプライアンスダッシュボード | ✅ Done | ISO 27001/J-SOX準拠状況可視化 + 監査UI + レポートUI |
 
 ### GitHub Issues トラッカー
 
@@ -317,6 +331,11 @@ gantt
 | [#40](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/40) | Phase11 統合テスト・RBAC・OpenAPI | Done | ✅ |
 | [#42](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/42) | Phase12 README最終更新・品質強化 | Done | ✅ |
 | - | Phase13-25 国際化基盤・メッセージ日本語化・全機能完了 | Done | ✅ |
+| - | Phase26 Webhook配信・エクスポート機能 | Done | ✅ |
+| - | Phase27 タグ管理・全文検索基盤 | Done | ✅ |
+| - | Phase28 チャート/ウィジェットシステム | Done | ✅ |
+| - | Phase29 コンプライアンスダッシュボード・監査UI | Done | ✅ |
+| - | Phase30 最終品質保証・リリース v0.30.0 | Done | ✅ |
 
 ---
 
@@ -370,7 +389,14 @@ graph LR
 | 12:30-15:00 | 🔧 Improve | Phase21-24 品質改善・国際化基盤 | - | ✅ |
 | 15:00-16:00 | ✅ Verify | Phase25 STABLE判定・最終テスト | - | ✅ |
 | 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ✅ |
-| 16:33 | 🔴 終了 | 8時間制限到達 | - | ✅ |
+| 16:33 | 🔴 終了 | 8時間制限到達（Session 1） | - | ✅ |
+| --- | --- | --- | --- | --- |
+| 2026-03-27 | 🟢 Session 2 | Phase26-30 拡張開発セッション | - | ✅ |
+| - | 🔨 Build | Phase26 Webhook配信・エクスポート機能 | - | ✅ |
+| - | 🔨 Build | Phase27 タグ管理・全文検索基盤 | - | ✅ |
+| - | 🔨 Build | Phase28 チャート/ウィジェットシステム | - | ✅ |
+| - | 🔨 Build | Phase29 コンプライアンスダッシュボード・監査UI | - | ✅ |
+| - | ✅ Verify | Phase30 最終品質保証・README更新・v0.30.0リリース | - | ✅ |
 
 ### STABLE 判定条件
 
@@ -427,7 +453,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 ## 📚 ドキュメント
 
-全52ファイルの詳細ドキュメントは [docs/](./docs/) フォルダに配置:
+全52ファイル以上の詳細ドキュメントは [docs/](./docs/) フォルダに配置:
 
 | # | カテゴリ | ファイル数 | 内容 |
 |:--|:---|:---:|:---|
