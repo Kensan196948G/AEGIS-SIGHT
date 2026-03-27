@@ -176,24 +176,41 @@ graph TB
 
 ```
 📦 AEGIS-SIGHT/
-├── 🐍 aegis-sight-api/           # FastAPI バックエンド (45ファイル)
-│   ├── app/api/v1/               # REST APIエンドポイント
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (60+ファイル)
+│   ├── app/api/v1/               # REST API (10ドメイン)
 │   │   ├── auth.py               #   認証 (JWT/OAuth2)
 │   │   ├── assets.py             #   IT資産管理
 │   │   ├── sam.py                #   SAMライセンス管理
 │   │   ├── procurement.py        #   調達管理
+│   │   ├── telemetry.py          #   エージェントテレメトリ受信
+│   │   ├── dashboard.py          #   ダッシュボード統計
+│   │   ├── security.py           #   セキュリティ監視
+│   │   ├── logs.py               #   ログ管理
+│   │   ├── software.py           #   SWインベントリ
 │   │   └── metrics.py            #   Prometheus メトリクス
-│   ├── app/models/               # SQLAlchemy モデル (6テーブル)
-│   ├── app/services/             # ビジネスロジック
-│   ├── app/tasks/                # Celery 非同期タスク
-│   ├── app/core/                 # 設定・認証・DB・例外・ページネーション
-│   ├── alembic/                  # DBマイグレーション
-│   └── tests/                    # pytest テスト
+│   ├── app/models/               # SQLAlchemy モデル (10テーブル)
+│   ├── app/services/             # ビジネスロジック (SAM/調達)
+│   ├── app/tasks/                # Celery 非同期タスク (SAM日次照合)
+│   ├── app/core/                 # 設定・認証・DB・例外・ページネーション・ミドルウェア
+│   ├── alembic/                  # DBマイグレーション (2版)
+│   ├── scripts/                  # シードデータ
+│   └── tests/                    # pytest (16ファイル, 100+テスト)
 │
-├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (28ファイル)
-│   ├── app/dashboard/            # ダッシュボード各ページ
-│   ├── components/ui/            # UIコンポーネント
-│   ├── lib/                      # APIクライアント・型定義
+├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (45+ファイル)
+│   ├── app/dashboard/            # ダッシュボード (9ページ)
+│   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
+│   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
+│   │   ├── sam/                  #   SAM管理 (ライセンス/コンプライアンス/レポート)
+│   │   ├── procurement/          #   調達管理 (申請/詳細/ワークフロー)
+│   │   ├── logs/                 #   ログ管理 (ログオン/USB/ファイル)
+│   │   ├── software/             #   SWインベントリ
+│   │   ├── security/             #   セキュリティ概要
+│   │   ├── monitoring/           #   Grafana監視
+│   │   └── settings/             #   システム設定
+│   ├── app/login/                # ログインページ
+│   ├── components/ui/            # UIコンポーネント (9種)
+│   ├── lib/                      # APIクライアント・型定義・認証コンテキスト
+│   ├── e2e/                      # Playwright E2Eテスト
 │   └── public/                   # PWA manifest / Service Worker
 │
 ├── 💻 aegis-sight-agent/         # PowerShell Agent (12ファイル)
@@ -266,10 +283,13 @@ gantt
 |:---|:---:|:---|
 | 📚 ドキュメント (52ファイル) | ✅ Done | PR #2 merged |
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
-| 🐍 Backend API深化 | 🟡 In Progress | Alembic, Celery, テスト強化 |
-| ⚛️ Frontend UI強化 | 🟡 In Progress | ログイン、SAM/調達ページ |
-| 📊 GitHub Projects | ✅ Setup | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
-| 🔄 CI/CD | ✅ Passing | GitHub Actions |
+| 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
+| ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
+| 🧪 テスト (100+ケース) | ✅ Done | pytest 16ファイル + Vitest + Playwright E2E |
+| 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
+| 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
+| 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
+| 📋 監査証跡・レポート | 🟡 In Progress | Phase6 実装中 |
 
 ### GitHub Issues トラッカー
 
@@ -277,7 +297,11 @@ gantt
 |:--|:---|:---|:---:|
 | [#1](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/1) | 全ドキュメント作成 | Done | ✅ |
 | [#3](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/3) | Phase1 スキャフォールド | Done | ✅ |
-| [#5](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/5) | Phase2 Backend深化 | Development | 🟡 |
+| [#5](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/5) | Phase2 Backend深化 | Done | ✅ |
+| [#7](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/7) | Phase3 テスト基盤・API追加 | Done | ✅ |
+| [#9](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/9) | Phase4 ログ/SW API・DevOps | Done | ✅ |
+| [#11](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/11) | Phase5 Frontend統合・テスト | Done | ✅ |
+| [#30](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/30) | Phase6 監査・通知・レポート | Development | 🟡 |
 
 ---
 
@@ -309,21 +333,23 @@ graph LR
 
 ### 本日のタイムスケジュール (2026-03-27)
 
-| 時間 (JST) | ループ | 内容 | 状態 |
-|:---|:---|:---|:---:|
-| 08:33 | 🟢 開始 | ClaudeOS Boot | ✅ |
-| 08:33-09:00 | 📚 Build | ドキュメント52ファイル作成 → PR #2 merged | ✅ |
-| 09:00-09:30 | 🔨 Build | Phase1 スキャフォールド94ファイル → PR #4 merged | ✅ |
-| 09:30-09:35 | 🔍 Monitor | リポジトリ状態確認・Projects設定 | ✅ |
-| 09:35-10:30 | 🔨 Build | Phase2 Backend/Frontend深化 | 🟡 |
-| 10:30-11:00 | ✅ Verify | テスト実行・lint・CI確認 | ⏳ |
-| 11:00-12:00 | 🔨 Build | Phase2 継続・追加実装 | ⏳ |
-| 12:00-12:30 | 🔍 Monitor | 中間レポート・Projects更新 | ⏳ |
-| 12:30-14:00 | 🔨 Build | Phase2-3 実装継続 | ⏳ |
-| 14:00-14:30 | ✅ Verify | STABLE判定チェック | ⏳ |
-| 14:30-16:00 | 🔧 Improve | コード品質改善・リファクタリング | ⏳ |
-| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | ⏳ |
-| 16:33 | 🔴 終了 | 8時間制限到達 | ⏳ |
+| 時間 (JST) | ループ | 内容 | PR | 状態 |
+|:---|:---|:---|:---:|:---:|
+| 08:33 | 🟢 開始 | ClaudeOS Boot | - | ✅ |
+| 08:33-08:50 | 📚 Build | ドキュメント52ファイル作成 | #2 | ✅ |
+| 08:50-09:15 | 🔨 Build | Phase1 スキャフォールド94ファイル | #4 | ✅ |
+| 09:15-09:35 | 🔍 Monitor | リポジトリ状態確認・GitHub Projects #14 設定 | - | ✅ |
+| 09:35-09:40 | 🔨 Build | Phase2 Backend/Frontend深化 | #6 | ✅ |
+| 09:40-09:45 | 🔨 Build | Phase3 テスト基盤・API追加 | #8 | ✅ |
+| 09:45-09:50 | 🔧 Improve | Phase4 ログ/SW API・Docker/CI最適化 | #10 | ✅ |
+| 09:50-09:57 | 🔧 Improve | Phase5 Frontend統合・テスト76ケース | #29 | ✅ |
+| 09:57-10:15 | 🔧 Improve | Phase6 監査証跡・通知・レポート | - | 🟡 |
+| 10:15-12:00 | 🔨 Build | Phase7+ 追加実装 | - | ⏳ |
+| 12:00-12:30 | 🔍 Monitor | 中間レポート・Projects更新 | - | ⏳ |
+| 12:30-15:00 | 🔧 Improve | 品質改善・テスト拡充・リファクタリング | - | ⏳ |
+| 15:00-16:00 | ✅ Verify | STABLE判定チェック・最終テスト | - | ⏳ |
+| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ⏳ |
+| 16:33 | 🔴 終了 | 8時間制限到達 | - | ⏳ |
 
 ### STABLE 判定条件
 
