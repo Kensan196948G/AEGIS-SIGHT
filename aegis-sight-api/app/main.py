@@ -1,13 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import engine
+from app.core.exceptions import AEGISBaseException
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +35,67 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
+    description=(
+        "AEGIS-SIGHT is a comprehensive IT asset management and software "
+        "license compliance platform. It provides device inventory tracking, "
+        "SAM (Software Asset Management) compliance checks, and end-to-end "
+        "procurement lifecycle management."
+    ),
     version=settings.APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "System health and readiness checks",
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and user management",
+        },
+        {
+            "name": "assets",
+            "description": "IT device asset inventory management",
+        },
+        {
+            "name": "sam",
+            "description": "Software Asset Management -- license tracking and compliance",
+        },
+        {
+            "name": "procurement",
+            "description": "Procurement request lifecycle management",
+        },
+        {
+            "name": "metrics",
+            "description": "Prometheus metrics for monitoring",
+        },
+    ],
 )
+
+
+# ---- Global exception handlers ----
+
+
+@app.exception_handler(AEGISBaseException)
+async def aegis_exception_handler(request: Request, exc: AEGISBaseException):
+    """Handle all custom AEGIS exceptions with a consistent JSON structure."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=getattr(exc, "headers", None),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all for unhandled exceptions -- return 500 without leaking internals."""
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 
 # CORS
 app.add_middleware(
@@ -52,7 +110,13 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-@app.get("/health", tags=["health"])
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="System health check",
+    description="Returns the current health status of the API and its database connection.",
+    response_description="Health status object with version and database connectivity info",
+)
 async def health_check():
     """Health check endpoint."""
     try:

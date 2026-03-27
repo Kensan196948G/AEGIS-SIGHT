@@ -39,7 +39,12 @@ PENDING_PROCUREMENT = Gauge(
 )
 
 
-@router.get("/metrics", response_class=PlainTextResponse)
+@router.get(
+    "/metrics",
+    response_class=PlainTextResponse,
+    summary="Prometheus metrics",
+    description="Expose application metrics in Prometheus exposition format for scraping.",
+)
 async def get_metrics():
     """Expose Prometheus metrics."""
     return PlainTextResponse(

@@ -14,7 +14,13 @@ async def test_list_assets(client: AsyncClient, auth_headers: dict):
     """Test listing assets with authentication."""
     response = await client.get("/api/v1/assets", headers=auth_headers)
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert "offset" in data
+    assert "limit" in data
+    assert "has_more" in data
+    assert isinstance(data["items"], list)
 
 
 @pytest.mark.asyncio

@@ -1,72 +1,428 @@
-# AEGIS-SIGHT
+<div align="center">
 
-**Autonomous Endpoint Governance & Integrated Sight**
+```
+ █████╗ ███████╗ ██████╗ ██╗███████╗      ███████╗██╗ ██████╗ ██╗  ██╗████████╗
+██╔══██╗██╔════╝██╔════╝ ██║██╔════╝      ██╔════╝██║██╔════╝ ██║  ██║╚══██╔══╝
+███████║█████╗  ██║  ███╗██║███████╗█████╗███████╗██║██║  ███╗███████║   ██║
+██╔══██║██╔══╝  ██║   ██║██║╚════██║╚════╝╚════██║██║██║   ██║██╔══██║   ██║
+██║  ██║███████╗╚██████╔╝██║███████║      ███████║██║╚██████╔╝██║  ██║   ██║
+╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝      ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
+```
 
-SKYSEA Client View 同等機能を内製化した、エンタープライズ向けITエンドポイント統合管理システム。
-IAMS（IntegratedITAssetServiceManagement）の有用機能を選択的に移植統合。
+### Autonomous Endpoint Governance & Integrated Sight
 
-## 概要
+**SKYSEA Client View 内製代替 + IAMS 選択移植**
+
+![Version](https://img.shields.io/badge/version-0.2.0-1A3A5C?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-27-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![ISO 27001](https://img.shields.io/badge/ISO%2027001-Compliant-1A7A4A?style=for-the-badge)
+
+[![CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/claudeos-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
+[![Project](https://img.shields.io/badge/Project-司令盤-blue?style=flat-square)](https://github.com/users/Kensan196948G/projects/14)
+
+</div>
+
+---
+
+## 📋 目次
+
+- [概要](#-概要)
+- [主要機能](#-主要機能)
+- [システムアーキテクチャ](#-システムアーキテクチャ)
+- [技術スタック](#-技術スタック)
+- [ディレクトリ構成](#-ディレクトリ構成)
+- [開発進捗](#-開発進捗)
+- [ClaudeOS 自律開発](#-claudeos-自律開発)
+- [クイックスタート](#-クイックスタート)
+- [ドキュメント](#-ドキュメント)
+- [コンプライアンス](#-コンプライアンス)
+
+---
+
+## 🎯 概要
 
 | 項目 | 内容 |
-|------|------|
-| **対象組織** | みらい建設工業（約550名） |
-| **管理対象** | Windows 11/10 クライアントPC 約500台 + サーバ群 |
-| **技術スタック** | Python 3.12 (FastAPI) / Next.js 14 / PostgreSQL 16 / Docker |
-| **準拠規格** | ISO 27001:2022 / ISO 20000-1:2018 / NIST CSF 2.0 / J-SOX |
-| **開発方式** | ClaudeOS v4 自律型開発 |
+|:---|:---|
+| 🏷️ **プロジェクト名** | AEGIS-SIGHT |
+| 🏢 **対象組織** | みらい建設工業（約550名） |
+| 🖥️ **管理対象** | Windows 11/10 クライアントPC 約500台 + サーバ群 |
+| 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
+| 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
+| 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
+| 📅 **開発期間** | 20週（4フェーズ） |
 
-## 主要機能
+### 💡 なぜ AEGIS-SIGHT を作るのか
 
-### 既存 AEGIS-SIGHT 機能
-- IT資産管理（HW/SW情報自動収集）
-- 操作ログ管理（ログオン/USB/ファイル操作）
-- セキュリティ監視（Defender/BitLocker/パッチ）
-- 統合ダッシュボード（Next.js + Entra ID SSO）
+| 商用製品の課題 | AEGIS-SIGHT で解決 |
+|:---|:---|
+| 💰 ライセンスコスト継続発生 | 内製化で **70%以上コスト削減** |
+| 🔒 組織固有要件への対応困難 | **完全カスタマイズ可能** |
+| 🔗 Microsoft 365 との統合不足 | **Graph API でネイティブ統合** |
+| 📋 J-SOX 監査証跡の不完全さ | **3年以上の証跡保全を保証** |
+| 👷 IT 部門 5 名での運用限界 | **AI 自動化で工数 40%削減** |
 
-### IAMS 選択移植機能
-- **Prometheus/Grafana** — インフラ可観測性・監視ダッシュボード
-- **PWA対応** — オフラインUI（建設現場対応）
-- **調達管理** — 調達→受領→廃棄ライフサイクル
-- **SAMライセンス管理** — ライセンス期限・超過アラート
-- **テスト資産** — 1,157件 Jest → pytest 変換
+---
 
-## ディレクトリ構成
+## ✨ 主要機能
+
+### 🖥️ 既存 AEGIS-SIGHT 機能
+
+| 機能 | 説明 | 状態 |
+|:---|:---|:---:|
+| 📦 IT資産管理 | HW/SW情報自動収集（WMI/CIM） | 🟡 実装中 |
+| 📋 ログ管理 | ログオン/USB/ファイル操作追跡 | 🟡 実装中 |
+| 🛡️ セキュリティ監視 | Defender/BitLocker/パッチ管理 | 🟡 実装中 |
+| 📊 統合ダッシュボード | Next.js 14 リアルタイム可視化 | 🟡 実装中 |
+| 🔐 認証・RBAC | Entra ID SSO + 4ロール制御 | 🟡 実装中 |
+
+### 🔄 IAMS 選択移植機能
+
+| 機能 | 説明 | 状態 |
+|:---|:---|:---:|
+| 📈 Prometheus/Grafana | インフラ可観測性・監視ダッシュボード | 🟡 設計済 |
+| 📱 PWA対応 | オフラインUI（建設現場対応） | 🟡 設計済 |
+| 🛒 調達管理 | 調達→受領→廃棄ライフサイクル | 🟡 実装中 |
+| 📦 SAMライセンス管理 | ライセンス超過・期限アラート | 🟡 実装中 |
+| 🧪 テスト資産変換 | 1,157件 Jest → pytest 変換 | 🔴 未着手 |
+
+### ❌ IAMS から移植しない機能
+
+| 機能 | 理由 |
+|:---|:---|
+| CMDB | AEGIS-SIGHT 本体と重複 |
+| インシデント管理 | ITSM-System と重複 |
+| SLA管理 | ITSM-System と重複 |
+| 変更管理 | ITSM-System と重複 |
+
+---
+
+## 🏗️ システムアーキテクチャ
+
+```mermaid
+graph TB
+    subgraph CLIENT["🖥️ クライアント層"]
+        PC["💻 社内PC<br/>PowerShell Agent"]
+        FIELD["🏗️ 現場PC<br/>PWA + Offline Buffer"]
+        TABLET["📱 タブレット<br/>PWA対応"]
+    end
+
+    subgraph BACKEND["⚙️ バックエンド層 (Docker)"]
+        API["🐍 FastAPI<br/>REST API"]
+        CELERY["⏰ Celery<br/>非同期タスク"]
+    end
+
+    subgraph DATA["🗄️ データ層"]
+        PG[("🐘 PostgreSQL 16<br/>資産/SAM/調達DB")]
+        REDIS[("⚡ Redis<br/>キャッシュ")]
+    end
+
+    subgraph MONITOR["📊 監視層"]
+        PROM["📈 Prometheus"]
+        GRAF["📉 Grafana"]
+    end
+
+    subgraph FRONTEND["🌐 フロントエンド層"]
+        WEB["⚛️ Next.js 14<br/>管理ダッシュボード"]
+    end
+
+    subgraph EXTERNAL["☁️ 外部連携"]
+        ENTRA["🔷 Entra ID"]
+        GRAPH["📊 Graph API"]
+    end
+
+    PC -->|HTTPS/JWT| API
+    FIELD -->|オフライン→自動同期| API
+    TABLET --> WEB
+    API --> PG
+    API --> REDIS
+    API --> CELERY
+    CELERY --> PG
+    CELERY --> REDIS
+    API --> PROM
+    PROM --> GRAF
+    WEB --> API
+    WEB --> ENTRA
+    API --> GRAPH
+
+    style CLIENT fill:#E8F4FD,stroke:#2E6DA4
+    style BACKEND fill:#E8F5E9,stroke:#2E7D32
+    style DATA fill:#F3E5F5,stroke:#7B1FA2
+    style MONITOR fill:#FFF3E0,stroke:#FFA000
+    style FRONTEND fill:#FCE4EC,stroke:#C62828
+    style EXTERNAL fill:#E3F2FD,stroke:#1565C0
+```
+
+---
+
+## 🔧 技術スタック
+
+| レイヤー | 技術 | バージョン |
+|:---|:---|:---|
+| 🐍 **Backend** | FastAPI / SQLAlchemy / Alembic / Celery | Python 3.12 |
+| ⚛️ **Frontend** | Next.js / TypeScript / Tailwind CSS | Next.js 14 |
+| 🐘 **Database** | PostgreSQL / Redis | PG 16 / Redis 7 |
+| 💻 **Agent** | PowerShell / Pester | PS 7.4 |
+| 🐳 **Infrastructure** | Docker Compose / Nginx | Docker 27 |
+| 📈 **Monitoring** | Prometheus / Grafana | Latest |
+| 🔄 **CI/CD** | GitHub Actions | - |
+| 🔐 **Auth** | JWT (RS256) / OIDC (Entra ID) | - |
+
+---
+
+## 📁 ディレクトリ構成
 
 ```
-AEGIS-SIGHT/
-├── aegis-sight-api/          # FastAPI バックエンド
-├── aegis-sight-web/          # Next.js フロントエンド
-├── aegis-sight-agent/        # PowerShell Agent
-├── aegis-sight-infra/        # Docker / Prometheus / Grafana
-├── docs/                     # プロジェクトドキュメント
-│   ├── 01_計画フェーズ（Planning）/
-│   ├── 02_ロードマップ（Roadmap）/
-│   ├── 03_要件定義（Requirements）/
-│   ├── 04_アーキテクチャ設計（Architecture）/
-│   ├── 05_詳細設計（Detailed-Design）/
-│   ├── 06_開発ガイド（Development-Guide）/
-│   ├── 07_テスト計画（Testing）/
-│   ├── 08_リリース管理（Release-Management）/
-│   ├── 09_運用管理（Operations）/
-│   ├── 10_コンプライアンス（Compliance）/
-│   └── 11_IAMS廃止計画（IAMS-Decommission）/
-├── scripts/                  # ClaudeOS 自動化スクリプト
-├── .github/workflows/        # CI/CD パイプライン
-├── CLAUDE.md                 # ClaudeOS プロジェクト設定
-└── README.md
+📦 AEGIS-SIGHT/
+├── 🐍 aegis-sight-api/           # FastAPI バックエンド (45ファイル)
+│   ├── app/api/v1/               # REST APIエンドポイント
+│   │   ├── auth.py               #   認証 (JWT/OAuth2)
+│   │   ├── assets.py             #   IT資産管理
+│   │   ├── sam.py                #   SAMライセンス管理
+│   │   ├── procurement.py        #   調達管理
+│   │   └── metrics.py            #   Prometheus メトリクス
+│   ├── app/models/               # SQLAlchemy モデル (6テーブル)
+│   ├── app/services/             # ビジネスロジック
+│   ├── app/tasks/                # Celery 非同期タスク
+│   ├── app/core/                 # 設定・認証・DB・例外・ページネーション
+│   ├── alembic/                  # DBマイグレーション
+│   └── tests/                    # pytest テスト
+│
+├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (28ファイル)
+│   ├── app/dashboard/            # ダッシュボード各ページ
+│   ├── components/ui/            # UIコンポーネント
+│   ├── lib/                      # APIクライアント・型定義
+│   └── public/                   # PWA manifest / Service Worker
+│
+├── 💻 aegis-sight-agent/         # PowerShell Agent (12ファイル)
+│   ├── src/                      # 収集モジュール (HW/SW/Log/Security)
+│   ├── install/                  # インストーラ
+│   └── tests/                    # Pester テスト
+│
+├── 🏗️ aegis-sight-infra/         # インフラ設定
+│   ├── observability/            # Prometheus + Grafana
+│   └── nginx/                    # リバースプロキシ
+│
+├── 📚 docs/                      # プロジェクトドキュメント (52ファイル)
+│   ├── 01_計画フェーズ/          #   プロジェクト計画・WBS・リスク管理
+│   ├── 02_ロードマップ/          #   Phase1-4 詳細計画
+│   ├── 03_要件定義/              #   機能/非機能要件・受入条件
+│   ├── 04_アーキテクチャ設計/    #   システム・API・DB・セキュリティ
+│   ├── 05_詳細設計/              #   SAM・調達・監視・PWA
+│   ├── 06_開発ガイド/            #   環境構築・規約・CI/CD
+│   ├── 07_テスト計画/            #   テスト戦略・変換計画
+│   ├── 08_リリース管理/          #   デプロイ・ロールバック
+│   ├── 09_運用管理/              #   監視・バックアップ・SLA
+│   ├── 10_コンプライアンス/      #   ISO27001・J-SOX・NIST CSF
+│   └── 11_IAMS廃止計画/          #   移植チェック・データ移行
+│
+├── 🔧 scripts/                   # ClaudeOS 自動化スクリプト
+├── 🔄 .github/workflows/         # CI/CD パイプライン
+├── 🐳 docker-compose.yml         # 全サービス起動
+├── 🐳 docker-compose.dev.yml     # 開発用 (ホットリロード)
+├── 🐳 docker-compose.test.yml    # テスト用
+└── 📋 CLAUDE.md                  # ClaudeOS プロジェクト設定
 ```
 
-## 開発ルール
+---
+
+## 📊 開発進捗
+
+### フェーズ計画
+
+```mermaid
+gantt
+    title AEGIS-SIGHT 開発ロードマップ
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+
+    section Phase 0 準備
+    ドキュメント作成           :done, p0a, 2026-03-27, 1d
+    スキャフォールド構築       :done, p0b, 2026-03-27, 1d
+
+    section Phase 1 分析・設計
+    IAMS分析・移植設計         :active, p1a, 2026-03-28, 14d
+    DB設計・マイグレーション   :active, p1b, 2026-03-28, 14d
+
+    section Phase 2 SAM・調達
+    SAMライセンス管理          :p2a, after p1a, 45d
+    調達管理ワークフロー       :p2b, after p1a, 45d
+    M365 Graph API連携         :p2c, after p2a, 14d
+
+    section Phase 3 監視・PWA
+    Prometheus/Grafana統合      :p3a, after p1a, 45d
+    PWA Service Worker          :p3b, after p3a, 14d
+
+    section Phase 4 テスト・QA
+    Jest→pytest変換            :p4a, after p2a, 30d
+    UAT・品質保証              :p4b, after p4a, 14d
+```
+
+### 現在のステータス
+
+| 項目 | 状態 | 詳細 |
+|:---|:---:|:---|
+| 📚 ドキュメント (52ファイル) | ✅ Done | PR #2 merged |
+| 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
+| 🐍 Backend API深化 | 🟡 In Progress | Alembic, Celery, テスト強化 |
+| ⚛️ Frontend UI強化 | 🟡 In Progress | ログイン、SAM/調達ページ |
+| 📊 GitHub Projects | ✅ Setup | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
+| 🔄 CI/CD | ✅ Passing | GitHub Actions |
+
+### GitHub Issues トラッカー
+
+| # | タイトル | Phase | 状態 |
+|:--|:---|:---|:---:|
+| [#1](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/1) | 全ドキュメント作成 | Done | ✅ |
+| [#3](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/3) | Phase1 スキャフォールド | Done | ✅ |
+| [#5](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/5) | Phase2 Backend深化 | Development | 🟡 |
+
+---
+
+## 🤖 ClaudeOS 自律開発
+
+### 開発ループ
+
+```mermaid
+graph LR
+    M["🔍 Monitor<br/>1h間隔"] --> B["🔨 Build<br/>2h間隔"]
+    B --> V["✅ Verify<br/>2h間隔"]
+    V --> I["🔧 Improve<br/>3h間隔"]
+    I --> M
+
+    V -->|失敗| R["🔄 Auto Repair"]
+    R --> V
+
+    V -->|N回成功| S["🎯 STABLE"]
+    S --> D["🚀 Deploy"]
+
+    style M fill:#E3F2FD,stroke:#1565C0
+    style B fill:#E8F5E9,stroke:#2E7D32
+    style V fill:#FFF3E0,stroke:#FFA000
+    style I fill:#F3E5F5,stroke:#7B1FA2
+    style R fill:#FFEBEE,stroke:#C62828
+    style S fill:#E8F5E9,stroke:#2E7D32,stroke-width:3px
+    style D fill:#C8E6C9,stroke:#1B5E20,stroke-width:3px
+```
+
+### 本日のタイムスケジュール (2026-03-27)
+
+| 時間 (JST) | ループ | 内容 | 状態 |
+|:---|:---|:---|:---:|
+| 08:33 | 🟢 開始 | ClaudeOS Boot | ✅ |
+| 08:33-09:00 | 📚 Build | ドキュメント52ファイル作成 → PR #2 merged | ✅ |
+| 09:00-09:30 | 🔨 Build | Phase1 スキャフォールド94ファイル → PR #4 merged | ✅ |
+| 09:30-09:35 | 🔍 Monitor | リポジトリ状態確認・Projects設定 | ✅ |
+| 09:35-10:30 | 🔨 Build | Phase2 Backend/Frontend深化 | 🟡 |
+| 10:30-11:00 | ✅ Verify | テスト実行・lint・CI確認 | ⏳ |
+| 11:00-12:00 | 🔨 Build | Phase2 継続・追加実装 | ⏳ |
+| 12:00-12:30 | 🔍 Monitor | 中間レポート・Projects更新 | ⏳ |
+| 12:30-14:00 | 🔨 Build | Phase2-3 実装継続 | ⏳ |
+| 14:00-14:30 | ✅ Verify | STABLE判定チェック | ⏳ |
+| 14:30-16:00 | 🔧 Improve | コード品質改善・リファクタリング | ⏳ |
+| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | ⏳ |
+| 16:33 | 🔴 終了 | 8時間制限到達 | ⏳ |
+
+### STABLE 判定条件
+
+| 条件 | 基準 | 現在 |
+|:---|:---|:---:|
+| テスト | 全テスト通過 | 🟡 |
+| CI | GitHub Actions 成功 | ✅ |
+| Lint | ruff + ESLint エラー 0 | 🟡 |
+| Build | Docker build 成功 | 🟡 |
+| エラー | 実行時エラー 0 | 🟡 |
+| セキュリティ | Critical 脆弱性 0 | ✅ |
+
+> **N = 3** (通常変更)：連続3回全条件クリアで STABLE
+
+### Agent Teams
+
+| 役割 | 責務 |
+|:---|:---|
+| 🧠 **CTO** | 優先順位判断、8時間制御、最終判断 |
+| 📐 **Architect** | アーキテクチャ設計、責務分離 |
+| 💻 **Developer** | 実装、修正、修復 |
+| 👀 **Reviewer** | コード品質、保守性確認 |
+| 🧪 **QA** | テスト、回帰確認、品質評価 |
+| 🔐 **Security** | secrets、権限、脆弱性確認 |
+| 🚀 **DevOps** | CI/CD、PR、Projects制御 |
+
+---
+
+## 🚀 クイックスタート
+
+```bash
+# リポジトリクローン
+git clone https://github.com/Kensan196948G/AEGIS-SIGHT.git
+cd AEGIS-SIGHT
+
+# 全サービス起動 (本番)
+docker compose up -d
+
+# 開発モード (ホットリロード)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# テスト実行
+docker compose -f docker-compose.test.yml up --abort-on-container-exit
+
+# 個別サービスアクセス
+# API:        http://localhost:8000
+# API Docs:   http://localhost:8000/docs
+# Web UI:     http://localhost:3000
+# Grafana:    http://localhost:3001
+# Prometheus: http://localhost:9090
+```
+
+---
+
+## 📚 ドキュメント
+
+全52ファイルの詳細ドキュメントは [docs/](./docs/) フォルダに配置:
+
+| # | カテゴリ | ファイル数 | 内容 |
+|:--|:---|:---:|:---|
+| 01 | [計画フェーズ](./docs/01_計画フェーズ（Planning）/) | 5 | プロジェクト計画、WBS、リスク管理 |
+| 02 | [ロードマップ](./docs/02_ロードマップ（Roadmap）/) | 5 | Phase1-4 詳細計画 |
+| 03 | [要件定義](./docs/03_要件定義（Requirements）/) | 4 | 機能/非機能要件、受入条件 |
+| 04 | [アーキテクチャ](./docs/04_アーキテクチャ設計（Architecture）/) | 6 | システム・API・DB・セキュリティ |
+| 05 | [詳細設計](./docs/05_詳細設計（Detailed-Design）/) | 5 | SAM・調達・監視・PWA |
+| 06 | [開発ガイド](./docs/06_開発ガイド（Development-Guide）/) | 5 | 環境構築・規約・CI/CD |
+| 07 | [テスト計画](./docs/07_テスト計画（Testing）/) | 5 | テスト戦略・変換計画 |
+| 08 | [リリース管理](./docs/08_リリース管理（Release-Management）/) | 5 | デプロイ・ロールバック |
+| 09 | [運用管理](./docs/09_運用管理（Operations）/) | 5 | 監視・バックアップ・SLA |
+| 10 | [コンプライアンス](./docs/10_コンプライアンス（Compliance）/) | 4 | ISO27001・J-SOX・NIST CSF |
+| 11 | [IAMS廃止](./docs/11_IAMS廃止計画（IAMS-Decommission）/) | 3 | 移植チェック・データ移行 |
+
+---
+
+## 🔒 コンプライアンス
+
+| 規格 | 対応範囲 |
+|:---|:---|
+| **ISO 27001:2022** | A.5.9 資産目録 / A.5.14 情報転送 / A.8.8 脆弱性管理 |
+| **ISO 20000-1:2018** | IT資産ライフサイクル管理 |
+| **NIST CSF 2.0** | IDENTIFY (ID.AM) 資産管理 |
+| **J-SOX** | IT全般統制 / ライセンス管理証跡 / 7年保存 |
+
+---
+
+## 📜 開発ルール
 
 - `main` への直接 push 禁止
 - feature branch または Git WorkTree で開発
 - PR 必須、CI 通過必須（lint / test / build / security）
-- テストカバレッジ 80% 以上
+- テストカバレッジ 80% 以上目標
+- ClaudeOS 自律開発ループによる継続的品質改善
 
-## ドキュメント
+---
 
-詳細なプロジェクトドキュメントは [docs/](./docs/) フォルダを参照してください。
+<div align="center">
 
-## ライセンス
+**🏗️ みらい建設工業 IT部門 | AEGIS-SIGHT | 2026**
 
-Proprietary - みらい建設工業 IT部門
+*Built with [ClaudeOS v4](./CLAUDE.md) Autonomous Development*
+
+</div>

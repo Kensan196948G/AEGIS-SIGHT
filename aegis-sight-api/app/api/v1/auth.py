@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.deps import get_current_active_user
+from app.core.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.core.security import (
     create_access_token,
-    get_current_user,
     get_password_hash,
     verify_password,
 )
@@ -16,7 +17,16 @@ from app.schemas.user import Token, UserCreate, UserResponse
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/token", response_model=Token)
+@router.post(
+    "/token",
+    response_model=Token,
+    summary="Login",
+    description="Authenticate with email and password to receive a JWT access token.",
+    responses={
+        401: {"description": "Incorrect email or password"},
+        403: {"description": "User account is inactive"},
+    },
+)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
@@ -27,29 +37,38 @@ async def login(
     )
     user = result.scalar_one_or_none()
     if user is None or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedError(detail="Incorrect email or password")
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
+        raise ForbiddenError(detail="Inactive user")
     access_token = create_access_token(data={"sub": str(user.id)})
     return Token(access_token=access_token)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get current user",
+    description="Retrieve the profile of the currently authenticated user.",
+    responses={401: {"description": "Not authenticated"}},
+)
 async def read_current_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get current authenticated user profile."""
     return current_user
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=201,
+    summary="Register new user",
+    description="Create a new user account. Email must be unique across the system.",
+    responses={
+        409: {"description": "Email already registered"},
+        422: {"description": "Invalid input data"},
+    },
+)
 async def register_user(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
@@ -59,10 +78,7 @@ async def register_user(
         select(User).where(User.email == user_data.email)
     )
     if result.scalar_one_or_none() is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
-        )
+        raise ConflictError(detail="Email already registered")
     user = User(
         email=user_data.email,
         hashed_password=get_password_hash(user_data.password),

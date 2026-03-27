@@ -1,9 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import Link from 'next/link';
 
 export function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, logout } = useAuth();
+
+  const displayName = user?.name || '管理者';
+  const displayEmail = user?.email || 'admin@aegis-sight.local';
+  const initials = displayName.charAt(0);
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 px-6 backdrop-blur-sm dark:border-aegis-border dark:bg-aegis-dark/80">
@@ -47,7 +54,7 @@ export function Header() {
             className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-gray-100 dark:hover:bg-aegis-surface"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
-              A
+              {initials}
             </div>
             <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -57,19 +64,22 @@ export function Header() {
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white py-2 shadow-lg dark:border-aegis-border dark:bg-aegis-surface">
               <div className="border-b border-gray-100 px-4 py-3 dark:border-aegis-border">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">管理者</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">admin@aegis-sight.local</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{displayName}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{displayEmail}</p>
               </div>
               <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">
                 プロフィール
               </a>
-              <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">
+              <Link href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">
                 設定
-              </a>
+              </Link>
               <div className="border-t border-gray-100 dark:border-aegis-border">
-                <a href="#" className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-gray-700">
+                <button
+                  onClick={logout}
+                  className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-gray-700"
+                >
                   ログアウト
-                </a>
+                </button>
               </div>
             </div>
           )}
