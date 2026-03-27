@@ -9,6 +9,40 @@
 
 ---
 
+## [0.42.0] - 2026-03-27
+
+### Added
+- 最終統合リリース v0.42.0
+- 全 42 Phase 完了 (Phase 0-42)
+- README.md / CHANGELOG.md / PROJECT_STATUS.md 最終更新
+- GitHub Release v0.42.0 作成
+
+### Changed
+- version.py を v0.42.0 に更新
+- メトリクス最終値反映 (~900ファイル、150+エンドポイント、40+ページ、750+テスト)
+
+## [0.41.0] - 2026-03-27
+
+### Added
+- 自動修復エンジン (`/api/v1/auto-remediation`)
+- インシデント自動対応ルール管理
+- 修復アクションテンプレート
+- 修復実行履歴・監査ログ
+
+### Changed
+- アラート管理との自動連携強化
+
+## [0.40.0] - 2026-03-27
+
+### Added
+- 容量計画・予測分析 (`/api/v1/capacity-planning`)
+- リソース使用率トレンド分析
+- 容量予測ダッシュボード
+- アラート閾値自動調整
+
+### Changed
+- 監視ダッシュボードとの統合強化
+
 ## [0.39.0] - 2026-03-27
 
 ### Added
@@ -428,7 +462,10 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.42.0...HEAD
+[0.42.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.41.0...v0.42.0
+[0.41.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.40.0...v0.41.0
+[0.40.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.36.0...v0.37.0
