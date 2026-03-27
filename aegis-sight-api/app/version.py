@@ -9,7 +9,7 @@ Usage:
 """
 
 # Application version (follows semver)
-__version__ = "0.42.0"
+__version__ = "0.45.0"
 
 # API version (for /api/v{N}/ routing and OpenAPI spec)
 __api_version__ = "1.0.0"

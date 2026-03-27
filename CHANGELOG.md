@@ -9,6 +9,40 @@
 
 ---
 
+## [0.45.0] - 2026-03-27
+
+### Added
+- 最終統合リリース v0.45.0
+- 全 45 Phase 完了 (Phase 0-45)
+- README.md / CHANGELOG.md / PROJECT_STATUS.md 最終更新
+- GitHub Release v0.45.0 作成
+
+### Changed
+- version.py を v0.45.0 に更新
+- メトリクス最終値反映 (~950ファイル、190+エンドポイント、45+ページ、800+テスト)
+
+## [0.44.0] - 2026-03-27
+
+### Added
+- リモートワーク・VPN追跡 (`/api/v1/remote-work`)
+- VPN接続状況リアルタイムモニタリング
+- リモートワーク勤務状況ダッシュボード
+- VPN接続履歴・帯域使用率レポート
+
+### Changed
+- セキュリティ監視とのVPN追跡統合強化
+
+## [0.43.0] - 2026-03-27
+
+### Added
+- 印刷管理システム (`/api/v1/print-management`)
+- プリンター資産管理・印刷ジョブ追跡
+- 印刷コスト集計・部門別レポート
+- 印刷ポリシー管理 (カラー制限・枚数制限)
+
+### Changed
+- 資産管理ダッシュボードに印刷統計ウィジェット追加
+
 ## [0.42.0] - 2026-03-27
 
 ### Added
@@ -462,7 +496,10 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.42.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.45.0...HEAD
+[0.45.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.44.0...v0.45.0
+[0.44.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.43.0...v0.44.0
+[0.43.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.39.0...v0.40.0
