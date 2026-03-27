@@ -39,6 +39,7 @@ from app.api.v1.export import router as export_router
 from app.api.v1.search import router as search_router
 from app.api.v1.tags import router as tags_router
 from app.api.v1.version import router as version_router
+from app.api.v1.patches import router as patches_router
 from app.api.v1.ws import router as ws_router
 
 # ---------------------------------------------------------------------------
@@ -304,6 +305,14 @@ TAG_METADATA: list[dict] = [
             "maturity assessments. Aggregated overview with open issues."
         ),
     },
+    {
+        "name": "patches",
+        "description": (
+            "**Patch management and vulnerability tracking.** "
+            "Windows Update tracking, device patch compliance summaries, "
+            "missing-patch reports, and CVE vulnerability management."
+        ),
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -342,4 +351,5 @@ api_router.include_router(search_router)
 api_router.include_router(version_router)
 api_router.include_router(compliance_router)
 api_router.include_router(lifecycle_router)
+api_router.include_router(patches_router)
 api_router.include_router(ws_router)
