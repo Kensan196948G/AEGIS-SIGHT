@@ -10,6 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import engine
 from app.core.exceptions import AEGISBaseException
+from app.core.middleware import RequestLoggingMiddleware, RequestTimingMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,18 @@ app = FastAPI(
             "name": "metrics",
             "description": "Prometheus metrics for monitoring",
         },
+        {
+            "name": "telemetry",
+            "description": "Agent telemetry data ingestion",
+        },
+        {
+            "name": "dashboard",
+            "description": "Dashboard statistics and alerts",
+        },
+        {
+            "name": "security",
+            "description": "Security monitoring and device compliance",
+        },
     ],
 )
 
@@ -105,6 +118,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Custom middleware (order matters: outermost middleware runs first)
+app.add_middleware(RequestTimingMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Register API router
 app.include_router(api_router)

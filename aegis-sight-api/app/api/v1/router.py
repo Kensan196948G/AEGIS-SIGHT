@@ -2,9 +2,12 @@ from fastapi import APIRouter
 
 from app.api.v1.assets import router as assets_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.metrics import router as metrics_router
 from app.api.v1.procurement import router as procurement_router
 from app.api.v1.sam import router as sam_router
+from app.api.v1.security import router as security_router
+from app.api.v1.telemetry import router as telemetry_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -13,3 +16,6 @@ api_router.include_router(assets_router)
 api_router.include_router(sam_router)
 api_router.include_router(procurement_router)
 api_router.include_router(metrics_router)
+api_router.include_router(telemetry_router)
+api_router.include_router(dashboard_router)
+api_router.include_router(security_router)
