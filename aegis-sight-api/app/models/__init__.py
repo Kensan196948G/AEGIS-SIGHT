@@ -71,6 +71,12 @@ from app.models.incident import (
     ThreatIndicator,
     ThreatLevel,
 )
+from app.models.knowledge_base import (
+    ArticleCategory,
+    ArticleStatus,
+    KBArticle,
+    KBCategory,
+)
 from app.models.sla import (
     MeasurementPeriod,
     SLADefinition,
@@ -179,4 +185,8 @@ __all__ = [
     "SLAMetricType",
     "SLAViolation",
     "ViolationSeverity",
+    "ArticleCategory",
+    "ArticleStatus",
+    "KBArticle",
+    "KBCategory",
 ]
