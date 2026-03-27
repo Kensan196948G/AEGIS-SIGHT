@@ -9,6 +9,62 @@
 
 ---
 
+## [0.35.0] - 2026-03-27
+
+### Added
+- 最終統合リリース v0.35.0
+- README.md / CHANGELOG.md / PROJECT_STATUS.md 全面最終更新
+- GitHub Release v0.35.0 作成
+- 全 Open Issue クローズ
+
+### Changed
+- version.py を v0.35.0 に更新
+- メトリクス最終値反映 (~800ファイル、130+エンドポイント、35+ページ、640+テスト)
+
+## [0.34.0] - 2026-03-27
+
+### Added
+- ETag ベースの条件付きリクエスト (304 Not Modified)
+- gzip / Brotli レスポンス圧縮ミドルウェア
+- API レスポンスキャッシュ最適化
+- パフォーマンスベンチマーク自動化
+
+### Changed
+- 全 API エンドポイントのレスポンス時間改善
+
+## [0.33.0] - 2026-03-27
+
+### Added
+- 資産廃棄ワークフロー (`/api/v1/disposal`)
+- 廃棄申請・承認・実行の3段階ワークフロー
+- 廃棄証跡管理 (データ消去証明書)
+- 廃棄レポート自動生成
+
+### Changed
+- 資産ライフサイクル管理の完全化 (調達→運用→廃棄)
+
+## [0.32.0] - 2026-03-27
+
+### Added
+- デバイスグループ管理 (`/api/v1/device-groups`)
+- グループベースのポリシー適用
+- デバイスグループ一括操作 API
+- グループ階層管理 (親子関係)
+
+### Changed
+- 資産管理 UI にグループフィルタ追加
+
+## [0.31.0] - 2026-03-27
+
+### Added
+- パッチ管理基盤 (`/api/v1/patches`)
+- OS/SW パッチ適用状況トラッキング
+- パッチ配信スケジュール管理
+- パッチコンプライアンスレポート
+
+### Changed
+- セキュリティダッシュボードにパッチ適用率表示追加
+
 ## [0.30.0] - 2026-03-27
 
 ### Added
@@ -327,7 +383,12 @@
 
 ---
 
-[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.34.0...v0.35.0
+[0.34.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.33.0...v0.34.0
+[0.33.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.32.0...v0.33.0
+[0.32.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.31.0...v0.32.0
+[0.31.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/Kensan196948G/AEGIS-SIGHT/compare/v0.27.0...v0.28.0
