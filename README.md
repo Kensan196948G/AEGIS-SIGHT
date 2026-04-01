@@ -370,7 +370,7 @@ gantt
 | 📊 SLA管理ダッシュボード | ✅ Done | SLA目標設定・達成率モニタリング・レポート |
 | 🎯 最終統合 v0.48.0 | ✅ Done | 全48 Phase完了・最終リリース |
 | 🚀 **Phase50 本番デプロイ準備** | ✅ **Done** | deploy-prod.yml・Grafanaアラート強化 (22ルール)・IAMSデータ移行スクリプト (PR#117 merged) |
-| 🔧 **Phase51 依存関係更新・ステージング** | 📋 **Backlog** | Dependabot Actions PR統合・ステージング環境・pytest変換計画 (Issue#118) |
+| 🔧 **Phase51 依存関係更新・ステージング** | 🔄 **In Progress** | Actions PR#13,#15,#17,#18 マージ済み・npm major PRリスク評価済み・ドキュメント更新 (PR#119 merged) (Issue#118) |
 
 ### GitHub Issues トラッカー
 
@@ -413,7 +413,7 @@ gantt
 | - | Phase47 SLA管理ダッシュボード | Done | ✅ |
 | - | Phase48 最終統合・リリース v0.48.0 | Done | ✅ |
 | [#116](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/116) | **Phase50 本番デプロイ準備・IAMS統合完成** | Done | ✅ |
-| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | **Backlog** | 📋 |
+| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | **In Progress** | 🔄 |
 
 ---
 
@@ -510,7 +510,12 @@ graph LR
 | 08:35 JST | 🚀 Build | PR#117 push (Phase50 本番デプロイ準備) | #117 | ✅ |
 | 08:40 JST | ✅ Verify | STABLE N=2 達成・PR#117 merged | #117 | ✅ |
 | 08:42 JST | 🔧 Improve | Phase51 Issue#118作成・監視設計書更新・PR#16マージ | #118 | ✅ |
-| 08:21-16:21 JST | 🔧 Improve | Improvement継続: Dependabot整理・ドキュメント整備 | - | 🔄 |
+| 08:50 JST | 🔧 Improve | npm major PR #22,#24,#25,#26 リスクコメント | - | ✅ |
+| 09:00 JST | 🔧 Improve | PR#119 docs フェーズ完了・Phase51計画 push | #119 | ✅ |
+| 09:05 JST | 🔧 Improve | Actions PR #13,#15,#17,#18 CI確認・マージ | - | ✅ |
+| 09:10 JST | 🔧 Improve | npm major PR #19,#20,#21,#23,#27,#28 リスクコメント | - | ✅ |
+| 09:15 JST | 🔧 Improve | PR#119 CI全通過・マージ完了 (docs Phase51) | #119 | ✅ |
+| 09:15-16:21 JST | 🔧 Improve | Improvement継続: Phase51実装・依存関係更新 | - | 🔄 |
 
 ### STABLE 判定条件
 
