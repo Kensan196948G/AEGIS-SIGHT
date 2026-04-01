@@ -1,5 +1,6 @@
 groups:
   - name: aegis-sight-infrastructure
+    interval: 60s
     rules:
       - alert: HighCPUUsage
         expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
@@ -11,6 +12,16 @@ groups:
           summary: "High CPU usage on {{ $labels.instance }}"
           description: "CPU usage has been above 90% for more than 5 minutes. Current value: {{ $value | printf \"%.1f\" }}%"
 
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 98
+        for: 2m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: "CPU usage exceeded 98% for 2 minutes. Immediate action required. Current value: {{ $value | printf \"%.1f\" }}%"
+
       - alert: LowDiskSpace
         expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
         for: 5m
@@ -21,7 +32,58 @@ groups:
           summary: "Low disk space on {{ $labels.instance }}"
           description: "Available disk space is below 10%. Current value: {{ $value | printf \"%.1f\" }}%"
 
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Disk space warning on {{ $labels.instance }}"
+          description: "Available disk space is below 20%. Current value: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage exceeded 90% for 5 minutes. Current value: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: ServiceDown
+        expr: up{job=~"aegis-sight.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL instance is unreachable. All API operations will fail."
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis instance is unreachable. Session and cache operations will fail."
+
   - name: aegis-sight-application
+    interval: 30s
     rules:
       - alert: LicenseOveruse
         expr: aegis_license_active_count > aegis_license_total_count
@@ -33,6 +95,26 @@ groups:
           summary: "License overuse detected"
           description: "Active licenses ({{ $value }}) exceed total allocated licenses. Immediate action required."
 
+      - alert: LicenseExpiryWarning
+        expr: (aegis_license_expiry_timestamp - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          team: compliance
+        annotations:
+          summary: "License expiring soon: {{ $labels.software }}"
+          description: "License for {{ $labels.software }} expires in less than 30 days. Days remaining: {{ $value | printf \"%.0f\" }}"
+
+      - alert: LicenseExpiryCritical
+        expr: (aegis_license_expiry_timestamp - time()) / 86400 < 7
+        for: 30m
+        labels:
+          severity: critical
+          team: compliance
+        annotations:
+          summary: "License expiring in 7 days: {{ $labels.software }}"
+          description: "License for {{ $labels.software }} expires in less than 7 days. Immediate renewal required."
+
       - alert: APIHighLatency
         expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="aegis-sight-api"}[5m])) by (le)) > 0.5
         for: 5m
@@ -43,6 +125,16 @@ groups:
           summary: "API p95 latency is high"
           description: "95th percentile response time has exceeded 500ms for 5 minutes. Current p95: {{ $value | printf \"%.3f\" }}s"
 
+      - alert: APICriticalLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="aegis-sight-api"}[5m])) by (le)) > 2.0
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "API p95 latency is critical"
+          description: "95th percentile response time exceeded 2s. SLO breach imminent. Current p95: {{ $value | printf \"%.3f\" }}s"
+
       - alert: APIErrorRate
         expr: (sum(rate(http_requests_total{job="aegis-sight-api", status=~"5.."}[5m])) / sum(rate(http_requests_total{job="aegis-sight-api"}[5m]))) * 100 > 5
         for: 5m
@@ -52,3 +144,101 @@ groups:
         annotations:
           summary: "API error rate is high"
           description: "HTTP 5xx error rate has exceeded 5% for 5 minutes. Current rate: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: APIErrorRateWarning
+        expr: (sum(rate(http_requests_total{job="aegis-sight-api", status=~"5.."}[5m])) / sum(rate(http_requests_total{job="aegis-sight-api"}[5m]))) * 100 > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API error rate elevated"
+          description: "HTTP 5xx error rate has exceeded 1% for 10 minutes. Current rate: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HighRequestRate
+        expr: sum(rate(http_requests_total{job="aegis-sight-api"}[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Unusually high API request rate"
+          description: "API is receiving more than 1000 req/s. Possible load spike or DDoS. Current rate: {{ $value | printf \"%.0f\" }} req/s"
+
+      - alert: ProcurementPendingOverdue
+        expr: aegis_procurement_pending_days > 14
+        for: 1h
+        labels:
+          severity: warning
+          team: procurement
+        annotations:
+          summary: "Procurement request overdue: {{ $labels.request_id }}"
+          description: "Procurement request {{ $labels.request_id }} has been pending for {{ $value | printf \"%.0f\" }} days."
+
+  - name: aegis-sight-security
+    interval: 60s
+    rules:
+      - alert: MultipleFailedLogins
+        expr: sum(rate(aegis_auth_failures_total[5m])) by (username) > 5
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Multiple failed login attempts for {{ $labels.username }}"
+          description: "More than 5 failed login attempts per minute for user {{ $labels.username }}. Possible brute force attack."
+
+      - alert: BruteForceDetected
+        expr: sum(rate(aegis_auth_failures_total[5m])) by (source_ip) > 20
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Brute force attack detected from {{ $labels.source_ip }}"
+          description: "More than 20 failed auth attempts/min from {{ $labels.source_ip }}. Consider blocking this IP."
+
+      - alert: UnauthorizedAccessAttempt
+        expr: sum(rate(http_requests_total{job="aegis-sight-api", status="403"}[5m])) > 10
+        for: 3m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High rate of unauthorized access attempts"
+          description: "More than 10 HTTP 403 responses per minute. Current rate: {{ $value | printf \"%.0f\" }}/min"
+
+      - alert: AuditLogFailure
+        expr: aegis_audit_log_write_failures_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Audit log write failure detected"
+          description: "Audit log is failing to record events. Compliance requirements may not be met."
+
+  - name: aegis-sight-slo
+    interval: 60s
+    rules:
+      - alert: SLOAvailabilityBreach
+        expr: (1 - (sum(rate(http_requests_total{job="aegis-sight-api", status=~"5.."}[1h])) / sum(rate(http_requests_total{job="aegis-sight-api"}[1h])))) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          slo: availability
+        annotations:
+          summary: "SLO Availability breach: below 99.9%"
+          description: "Service availability dropped below 99.9% SLO target. Current: {{ $value | printf \"%.4f\" }}"
+
+      - alert: SLOLatencyBreach
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="aegis-sight-api"}[1h])) by (le)) > 1.0
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          slo: latency
+        annotations:
+          summary: "SLO Latency breach: p99 above 1s"
+          description: "p99 response time exceeded 1s SLO target. Current p99: {{ $value | printf \"%.3f\" }}s"

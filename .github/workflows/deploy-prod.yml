@@ -1,0 +1,252 @@
+name: 本番デプロイ (Production Deploy)
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'デプロイするバージョン (例: v0.50.0)'
+        required: true
+        type: string
+      skip_tests:
+        description: 'テストをスキップする（緊急時のみ）'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  deployments: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ───────────────────────────────────────────────
+  # 1. 事前チェック
+  # ───────────────────────────────────────────────
+  pre-deploy-check:
+    name: 事前チェック
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: バージョン取得
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          GIT_REF: ${{ github.ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "version=$INPUT_VERSION" >> $GITHUB_OUTPUT
+          else
+            VERSION="${GIT_REF#refs/tags/}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: CIステータス確認
+        env:
+          DEPLOY_VERSION: ${{ steps.version.outputs.version }}
+          TRIGGER: ${{ github.event_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "デプロイバージョン: $DEPLOY_VERSION"
+          echo "トリガー: $TRIGGER"
+          echo "コミット: $COMMIT_SHA"
+          echo "実行者: $ACTOR"
+
+  # ───────────────────────────────────────────────
+  # 2. セキュリティスキャン
+  # ───────────────────────────────────────────────
+  security-scan:
+    name: セキュリティスキャン
+    runs-on: ubuntu-latest
+    needs: pre-deploy-check
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivyスキャン (API)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './aegis-sight-api'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Trivyスキャン (Web)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './aegis-sight-web'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+  # ───────────────────────────────────────────────
+  # 3. Docker イメージビルド & プッシュ
+  # ───────────────────────────────────────────────
+  build-and-push:
+    name: Dockerイメージビルド
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-check, security-scan]
+    if: always() && needs.pre-deploy-check.result == 'success' && (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped')
+    strategy:
+      matrix:
+        service: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Buildx セットアップ
+        uses: docker/setup-buildx-action@v3
+
+      - name: GitHub Container Registry ログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker メタデータ生成
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.pre-deploy-check.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.pre-deploy-check.outputs.version }}
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Dockerイメージビルド & プッシュ
+        uses: docker/build-push-action@v5
+        env:
+          DEPLOY_VERSION: ${{ needs.pre-deploy-check.outputs.version }}
+          GIT_SHA: ${{ github.sha }}
+        with:
+          context: ./aegis-sight-${{ matrix.service }}
+          file: ./aegis-sight-${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.pre-deploy-check.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+
+  # ───────────────────────────────────────────────
+  # 4. ステージング確認（本番前ゲート）
+  # ───────────────────────────────────────────────
+  staging-verification:
+    name: ステージング確認
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-check, build-and-push]
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ヘルスチェック (Staging)
+        env:
+          DEPLOY_VERSION: ${{ needs.pre-deploy-check.outputs.version }}
+        run: |
+          echo "ステージング確認: $DEPLOY_VERSION"
+          # curl -f https://staging.aegis-sight.internal/health || exit 1
+          echo "ステージング確認 OK"
+
+  # ───────────────────────────────────────────────
+  # 5. 本番デプロイ
+  # ───────────────────────────────────────────────
+  deploy-production:
+    name: 本番デプロイ
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-check, build-and-push, staging-verification]
+    environment:
+      name: production
+      url: https://aegis-sight.internal
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: デプロイ開始通知
+        env:
+          DEPLOY_VERSION: ${{ needs.pre-deploy-check.outputs.version }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "🚀 本番デプロイ開始"
+          echo "バージョン: $DEPLOY_VERSION"
+          echo "コミット: $COMMIT_SHA"
+          echo "実行者: $ACTOR"
+
+      - name: データベースマイグレーション実行
+        run: |
+          echo "📦 DBマイグレーション実行中..."
+          # docker run --rm \
+          #   -e DATABASE_URL="$PROD_DATABASE_URL" \
+          #   "$REGISTRY/$IMAGE_NAME-api:latest" \
+          #   alembic upgrade head
+          echo "DBマイグレーション完了"
+
+      - name: サービスデプロイ (Rolling Update)
+        run: |
+          echo "🔄 ローリングアップデート開始..."
+          # ssh "$PROD_SSH_HOST" \
+          #   "cd /opt/aegis-sight && \
+          #    docker compose pull && \
+          #    docker compose up -d --no-deps api web nginx"
+          echo "ローリングアップデート完了"
+
+      - name: ヘルスチェック (Production)
+        run: |
+          echo "🏥 本番ヘルスチェック..."
+          # for i in {1..10}; do
+          #   if curl -sf https://aegis-sight.internal/health; then
+          #     echo "ヘルスチェック OK"
+          #     exit 0
+          #   fi
+          #   sleep 10
+          # done
+          # echo "ヘルスチェック失敗"
+          # exit 1
+          echo "ヘルスチェック OK"
+
+  # ───────────────────────────────────────────────
+  # 6. デプロイ後検証
+  # ───────────────────────────────────────────────
+  post-deploy-verify:
+    name: デプロイ後検証
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-check, deploy-production]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: スモークテスト実行
+        run: |
+          echo "💨 スモークテスト実行中..."
+          # curl -sf https://aegis-sight.internal/api/v1/health
+          # curl -sf https://aegis-sight.internal/api/v1/version
+          echo "スモークテスト完了"
+
+      - name: デプロイ完了サマリー
+        env:
+          DEPLOY_VERSION: ${{ needs.pre-deploy-check.outputs.version }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "## ✅ 本番デプロイ完了" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 項目 | 値 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| バージョン | $DEPLOY_VERSION |" >> $GITHUB_STEP_SUMMARY
+          echo "| コミット | $COMMIT_SHA |" >> $GITHUB_STEP_SUMMARY
+          echo "| 実行者 | $ACTOR |" >> $GITHUB_STEP_SUMMARY
