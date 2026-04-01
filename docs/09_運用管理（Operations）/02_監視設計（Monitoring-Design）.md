@@ -4,8 +4,9 @@
 |------|------|
 | プロジェクト | AEGIS-SIGHT（SKYSEA内製代替）+ IAMS選択移植 |
 | 作成日 | 2026-03-27 |
-| ステータス | Draft |
-| 監視ツール | Prometheus + Grafana |
+| 更新日 | 2026-04-02 |
+| ステータス | Review |
+| 監視ツール | Prometheus + Grafana + Alertmanager |
 
 ---
 
@@ -411,17 +412,52 @@ receivers:
 
 ---
 
-## 8. チェックリスト
+## 8. Phase50 追加（2026-04-02）
+
+### 8.1 実装済みアラートルールファイル
+
+Phase50 にて `aegis-sight-infra/observability/prometheus/rules/aegis_alerts.yml` を追加。
+
+| グループ | アラート数 | 主要アラート |
+|---------|-----------|-------------|
+| infrastructure | 6 | HighCpuUsage, CriticalCpuUsage, HighMemoryUsage, DiskSpace（Warning/Critical）, ContainerDown |
+| application | 7 | HighErrorRate, HighCriticalErrorRate, SlowResponseTime, VerySlowResponseTime, HealthCheckFailed, HighLoginFailure, APIDown |
+| security | 5 | HighLoginFailureRate, SuspiciousIPActivity, CertificateExpiry（Warning/Critical）, UnauthorizedAccess |
+| slo | 4 | SLOAvailabilityBreach（Warning/Critical）, SLOLatencyBreach, SLOErrorBudgetBurn |
+
+合計: **22 アラートルール**
+
+### 8.2 Alertmanager 設定（未実装・Phase51対応）
+
+本番通知ルーティングは Phase51 で実装予定。
+
+```yaml
+# 未実装: aegis-sight-infra/observability/alertmanager/alertmanager.yml
+route:
+  receiver: 'default'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+receivers:
+  - name: 'critical-alerts'
+    slack_configs:  # Slack通知設定（Phase51）
+    email_configs:  # メール通知設定（Phase51）
+```
+
+---
+
+## 9. チェックリスト
 
 ### 監視設計レビューチェック
 
-- [ ] 全コンポーネントの監視項目が定義されているか
-- [ ] 閾値が適切に設定されているか
-- [ ] アラートの重要度分類が明確か
-- [ ] 通知先が適切に設定されているか
-- [ ] Grafanaダッシュボードが設計されているか
-- [ ] ログ収集・保持ポリシーが定義されているか
-- [ ] Prometheus設定ファイルが準備されているか
-- [ ] アラートルールがテストされているか
-- [ ] エスカレーションパスが明確か
-- [ ] 監視の死角がないか（全サービスがカバーされているか）
+- [x] 全コンポーネントの監視項目が定義されているか
+- [x] 閾値が適切に設定されているか
+- [x] アラートの重要度分類が明確か
+- [ ] 通知先が適切に設定されているか（Phase51対応）
+- [x] Grafanaダッシュボードが設計されているか
+- [x] ログ収集・保持ポリシーが定義されているか
+- [x] Prometheus設定ファイルが準備されているか
+- [x] アラートルールがテストされているか（22ルール実装済み）
+- [ ] エスカレーションパスが明確か（Phase51対応）
+- [x] 監視の死角がないか（全サービスがカバーされているか）

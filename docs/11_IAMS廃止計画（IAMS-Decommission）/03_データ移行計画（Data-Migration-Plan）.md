@@ -454,8 +454,42 @@ CREATE INDEX IX_mapping_aegis ON migration_id_mapping (aegis_id);
 
 ---
 
-## 11. 文書管理
+## 11. 移行ツール（Phase50追加）
+
+### 11.1 自動移行スクリプト
+
+Phase50 で本番移行スクリプトを追加済み：
+
+| ファイル | 説明 |
+|---------|------|
+| `scripts/migrate-iams-data.sh` | IAMS → AEGIS-SIGHT 自動データ移行スクリプト |
+
+**主要機能：**
+- SAMライセンスデータ移行（`software_licenses` テーブル）
+- 調達管理データ移行（`procurement_requests` テーブル）
+- 冪等設計（`ON CONFLICT DO NOTHING`）— 何度実行しても安全
+- PostgreSQL `dblink` 拡張を使用したクロスDB参照
+- Dry-run モード対応（`--dry-run` オプション）
+
+**実行例：**
+
+```bash
+# 確認用 dry-run
+DRY_RUN=true ./scripts/migrate-iams-data.sh
+
+# SAMライセンスのみ移行
+./scripts/migrate-iams-data.sh --sam-only
+
+# 全データ移行
+IAMS_DATABASE_URL="postgresql://..." DATABASE_URL="postgresql://..." \
+  ./scripts/migrate-iams-data.sh
+```
+
+---
+
+## 12. 文書管理
 
 | 版数 | 日付 | 変更内容 | 承認者 |
 |------|------|---------|--------|
 | 1.0 | 2026-03-27 | 初版作成 | — |
+| 1.1 | 2026-04-02 | Phase50: 移行スクリプト追加（migrate-iams-data.sh） | — |
