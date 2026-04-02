@@ -536,7 +536,8 @@ graph LR
 | 14:05-14:20 JST | 🔧 Improve | Phase63: IAMS pytest Phase11 パッチ管理・脆弱性追跡テスト40件 | #134 | ✅ |
 | 14:20-14:35 JST | 🔧 Improve | Phase64: IAMS pytest Phase12 レポート生成・セキュリティ監査テスト36件 | #135 | ✅ |
 | 14:35-14:50 JST | 🔧 Improve | Phase65: IAMS pytest Phase13 デバイスポリシー管理・コンプライアンステスト40件 | #136 | 🔄 |
-| 14:50-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase14〜 | - | 🔄 |
+| 14:50-15:05 JST | 🔧 Improve | Phase66: IAMS pytest Phase14 印刷管理・プリンタ・印刷ポリシーテスト38件 | #137 | 🔄 |
+| 15:05-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase15〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
