@@ -531,8 +531,10 @@ graph LR
 | 12:50-13:10 JST | 🔧 Improve | Phase58: IAMS pytest Phase6 調達管理テスト33件 | #129 | ✅ |
 | 13:10-13:20 JST | 🔧 Improve | Phase59: IAMS pytest Phase7 監査ログ・コンプライアンステスト40件 | #130 | ✅ |
 | 13:20-13:35 JST | 🔧 Improve | Phase60: IAMS pytest Phase8 資産ライフサイクル・廃棄管理テスト38件 | #131 | ✅ |
-| 13:35-13:50 JST | 🔧 Improve | Phase61: IAMS pytest Phase9 DLPポリシー・イベントテスト35件 | #132 | 🔄 |
-| 13:50-16:21 JST | 🔧 Improve | Improvement継続: Systemd登録・IAMS変換Phase10〜 | - | 🔄 |
+| 13:35-13:50 JST | 🔧 Improve | Phase61: IAMS pytest Phase9 DLPポリシー・イベントテスト35件 | #132 | ✅ |
+| 13:50-14:05 JST | 🔧 Improve | Phase62: IAMS pytest Phase10 ネットワーク探索・ソフトウェアインベントリテスト38件 | #133 | 🔄 |
+| 14:05-14:20 JST | 🔧 Improve | Phase63: IAMS pytest Phase11 パッチ管理・脆弱性追跡テスト40件 | #134 | 🔄 |
+| 14:20-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase12〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
