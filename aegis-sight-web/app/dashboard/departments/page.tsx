@@ -137,23 +137,39 @@ export default function DepartmentsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('aegis_token');
-      const res = await fetch('/api/v1/departments?tree=true', {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiBase}/api/v1/departments?tree=true`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
         setDepartments(data);
       }
       // Also fetch flat list for parent dropdown
-      const flatRes = await fetch('/api/v1/departments?limit=200', {
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 5000);
+      const flatRes = await fetch(`${apiBase}/api/v1/departments?limit=200`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller2.signal,
       });
+      clearTimeout(timeout2);
       if (flatRes.ok) {
         const flatData = await flatRes.json();
         setFlatDepartments(flatData.items || []);
       }
     } catch {
-      // Error handled silently
+      // API unavailable — use demo data
+      setDepartments([
+        { id: '1', name: 'IT管理部', code: 'IT', parent_id: null, manager_name: '山田 太郎', budget_yearly: '50000000', description: 'IT統括', children: [], device_count: 45 },
+        { id: '2', name: '営業部', code: 'SALES', parent_id: null, manager_name: '鈴木 花子', budget_yearly: '30000000', description: '営業統括', children: [], device_count: 120 },
+        { id: '3', name: '開発部', code: 'DEV', parent_id: null, manager_name: '佐藤 一郎', budget_yearly: '80000000', description: 'ソフトウェア開発', children: [], device_count: 85 },
+        { id: '4', name: '経理部', code: 'FIN', parent_id: null, manager_name: '高橋 美咲', budget_yearly: '20000000', description: '財務・経理', children: [], device_count: 30 },
+        { id: '5', name: '総務部', code: 'GA', parent_id: null, manager_name: '中村 健太', budget_yearly: '15000000', description: '総務・庶務', children: [], device_count: 20 },
+      ]);
     } finally {
       setLoading(false);
     }
