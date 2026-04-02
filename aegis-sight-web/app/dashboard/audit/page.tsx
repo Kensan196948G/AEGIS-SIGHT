@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Mock Data
@@ -150,6 +151,43 @@ export default function AuditLogPage() {
           </button>
         </div>
       </div>
+
+      {/* 監査ログ概要チャート */}
+      {(() => {
+        const actionCounts: Record<string, number> = {};
+        mockLogs.forEach(log => {
+          actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+        });
+        const uniqueUsers = new Set(mockLogs.map(l => l.user)).size;
+        const userCoverage = Math.round((uniqueUsers / 5) * 100); // 5 = total registered users estimate
+        const coverageColor = userCoverage >= 80 ? '#10b981' : userCoverage >= 60 ? '#f59e0b' : '#ef4444';
+        const topActions = Object.entries(actionCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([action, count], i) => ({
+            label: actionLabel(action),
+            value: count,
+            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-gray-500'][i] || 'bg-gray-400',
+          }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">監査ログ概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ユーザーカバレッジ</p>
+                <DonutChart value={userCoverage} max={100} size={140} strokeWidth={14} color={coverageColor} label={`${uniqueUsers}人`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {uniqueUsers} ユーザーの操作を記録中
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクション種別別件数</p>
+                <BarChart data={topActions} maxValue={Math.max(...topActions.map(a => a.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Filters */}
       <div className="aegis-card">
