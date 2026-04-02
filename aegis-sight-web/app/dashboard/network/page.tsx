@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 import { useState } from 'react';
 
 // ---------------------------------------------------------------------------
@@ -219,6 +220,36 @@ export default function NetworkPage() {
           IPアドレスレンジ、割当管理、ネットワークトポロジー
         </p>
       </div>
+
+      {/* ネットワーク概要チャート */}
+      {(() => {
+        const totalHosts = ipRanges.reduce((s, r) => s + r.totalHosts, 0);
+        const activeRate = Math.round((totalActive / Math.max(totalHosts, 1)) * 100);
+        const activeRateColor = activeRate >= 60 ? '#10b981' : activeRate >= 30 ? '#f59e0b' : '#ef4444';
+        const locationBarData = ipRanges.map(r => ({
+          label: r.name.split(' ')[0],
+          value: Math.round(r.utilization),
+          color: r.utilization >= 60 ? 'bg-amber-500' : r.utilization >= 30 ? 'bg-emerald-500' : 'bg-blue-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ネットワーク概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">IP アクティブ率</p>
+                <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeRateColor} label={`${activeRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {totalHosts} ホスト中 {totalActive} アクティブ
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">レンジ別使用率 (%)</p>
+                <BarChart data={locationBarData} maxValue={100} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
