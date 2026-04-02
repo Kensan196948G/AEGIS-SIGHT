@@ -16,6 +16,11 @@ const navigation = [
     icon: DevicesIcon,
   },
   {
+    name: 'デバイス管理',
+    href: '/dashboard/devices',
+    icon: DevicesIcon,
+  },
+  {
     name: 'SAM',
     href: '/dashboard/sam',
     icon: LicenseIcon,
