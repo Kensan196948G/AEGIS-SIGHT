@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type DisposalStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 type DisposalMethod = 'recycle' | 'destroy' | 'donate' | 'return_to_vendor';
@@ -62,6 +63,16 @@ export default function LifecyclePage() {
     { label: '稼働中', value: 285, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
     { label: '保守中', value: 23, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
     { label: '廃棄済', value: 34, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+  ];
+
+  const totalAssets = stats[0].value; // 調達済が総数基準
+  const operationalRate = Math.round((stats[1].value / totalAssets) * 100);
+  const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
+
+  const lifecycleBarData = [
+    { label: '稼働中', value: 285, color: 'bg-emerald-500' },
+    { label: '保守中', value:  23, color: 'bg-amber-500'  },
+    { label: '廃棄済', value:  34, color: 'bg-red-500'    },
   ];
 
   // Sample disposal requests
@@ -140,6 +151,38 @@ export default function LifecyclePage() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Lifecycle Chart Overview */}
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ライフサイクル概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Operational Rate Donut */}
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">稼働中率</p>
+                <DonutChart
+                  value={operationalRate}
+                  max={100}
+                  size={140}
+                  strokeWidth={14}
+                  color={donutColor}
+                  label={`${operationalRate}%`}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  管理対象 {totalAssets} 台中 {stats[1].value} 台稼働中
+                </p>
+              </div>
+              {/* Stage Distribution Bar */}
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ステージ別台数</p>
+                <BarChart
+                  data={lifecycleBarData}
+                  maxValue={totalAssets}
+                  height={160}
+                  showValues
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
