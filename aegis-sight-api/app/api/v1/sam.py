@@ -1,7 +1,8 @@
 import uuid
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -12,6 +13,7 @@ from app.models.license import SoftwareLicense
 from app.models.user import User
 from app.schemas.license import (
     ComplianceCheckResponse,
+    ExpiringLicenseResponse,
     LicenseCreate,
     LicenseResponse,
     LicenseUpdate,
@@ -121,6 +123,57 @@ async def update_license(
     await db.flush()
     await db.refresh(license_obj)
     return license_obj
+
+
+@router.get(
+    "/licenses/expiring",
+    response_model=list[ExpiringLicenseResponse],
+    summary="Get expiring licenses",
+    description=(
+        "Retrieve licenses expiring within the specified number of days. "
+        "Returns licenses sorted by expiry date ascending. "
+        "Useful for proactive license renewal management (IAMS migration feature)."
+    ),
+)
+async def get_expiring_licenses(
+    days: int = Query(30, ge=1, le=365, description="Days threshold for expiry alert"),
+    db: AsyncSession = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Get licenses expiring within the specified number of days."""
+    threshold_date = date.today() + timedelta(days=days)
+    result = await db.execute(
+        select(SoftwareLicense)
+        .where(
+            and_(
+                SoftwareLicense.expiry_date.is_not(None),
+                SoftwareLicense.expiry_date <= threshold_date,
+                SoftwareLicense.expiry_date >= date.today(),
+            )
+        )
+        .order_by(SoftwareLicense.expiry_date)
+    )
+    licenses = result.scalars().all()
+
+    response = []
+    today = date.today()
+    for lic in licenses:
+        days_until = (lic.expiry_date - today).days
+        response.append(
+            ExpiringLicenseResponse(
+                id=lic.id,
+                software_name=lic.software_name,
+                vendor=lic.vendor,
+                license_type=lic.license_type,
+                expiry_date=lic.expiry_date,
+                days_until_expiry=days_until,
+                purchased_count=lic.purchased_count,
+                cost_per_unit=lic.cost_per_unit,
+                currency=lic.currency,
+                vendor_contract_id=lic.vendor_contract_id,
+            )
+        )
+    return response
 
 
 @router.get(
