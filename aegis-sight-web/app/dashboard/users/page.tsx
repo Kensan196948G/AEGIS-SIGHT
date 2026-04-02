@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type Role = 'admin' | 'operator' | 'auditor' | 'readonly';
 
@@ -90,6 +91,38 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      {/* ユーザー概要チャート */}
+      {(() => {
+        const activeCount = demoUsers.filter(u => u.is_active).length;
+        const activeRate = Math.round((activeCount / demoUsers.length) * 100);
+        const activeColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+        const roleCounts: Record<string, number> = {};
+        demoUsers.forEach(u => { roleCounts[roleLabel[u.role]] = (roleCounts[roleLabel[u.role]] || 0) + 1; });
+        const roleBarData = Object.entries(roleCounts).map(([role, count], i) => ({
+          label: role,
+          value: count,
+          color: ['bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-400'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ユーザー概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ率</p>
+                <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeColor} label={`${activeRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {demoUsers.length} ユーザー中 {activeCount} 名有効
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ロール別ユーザー数</p>
+                <BarChart data={roleBarData} maxValue={Math.max(...roleBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
