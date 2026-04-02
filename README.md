@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.63.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.65.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -85,8 +85,8 @@
 |:---|:---|:---:|
 | 📈 Prometheus/Grafana | インフラ可観測性・監視ダッシュボード | ✅ Done |
 | 📱 PWA対応 | オフラインUI（建設現場対応） | ✅ Done |
-| 🛒 調達管理 | 調達→受領→廃棄ライフサイクル | ✅ Done |
-| 📦 SAMライセンス管理 | ライセンス超過・期限アラート | ✅ Done |
+| 🛒 調達管理 | 調達承認ワークフロー・ライフサイクルステッパー（Phase D-2） | ✅ Done |
+| 📦 SAMライセンス管理 | 期限追跡・月額コスト分析・Badge統一（Phase D-1） | ✅ Done |
 | 🧪 テスト資産変換 | **1,798件** Jest → pytest 変換 (Phase101-112完結) | ✅ Done |
 | 🌐 国際化基盤 (i18n) | 日英メッセージカタログ + useTranslation hook | ✅ Done |
 | 📝 Backendメッセージ | エラー/ドメインメッセージ日本語化 | ✅ Done |
@@ -594,10 +594,14 @@ graph LR
 | 15:18 JST | 🔍 Monitor | Phase117: README v0.63.0更新・Session9フェーズ進捗記録 | #189 | ✅ |
 | 15:25 JST | 🔨 Build | Phase118: IT資産一覧ページ インタラクティブ化（フィルタ・ページネーション・デモデータ10件） | #190 | 🔄 |
 | 15:35 JST | 🔨 Build | Phase119: 調達管理ページ改善（Badge統一・フィルタ3種・ページネーション・サマリーカード4件） | #191 | 🔄 |
-| 15:40 JST | 🔨 Build | Phase120: SAMライセンスページ改善（期限警告・使用率バー・Badge統一・デモ12件） | #192 | 🔄 |
-| 15:42 JST | 🔧 Improve | Phase121: ライフサイクルページ Badge コンポーネント統一（最小差分修正） | #193 | 🔄 |
-| 15:42 JST | 🔧 Improve | Phase122: ダッシュボードページ Badge統一（severityBadge/Label→severityConfig統合・型安全化） | #194 | 🔄 |
+| 15:40 JST | 🔨 Build | Phase120: SAMライセンスページ改善（期限警告・使用率バー・Badge統一・デモ12件） | #192 | ❌ 代替 |
+| 15:42 JST | 🔧 Improve | Phase121: ライフサイクルページ Badge コンポーネント統一（最小差分修正） | #193 | ✅ |
+| 15:42 JST | 🔧 Improve | Phase122: ダッシュボードページ Badge統一（severityBadge/Label→severityConfig統合・型安全化） | #194 | 🔄 CI中 |
 | 16:00 JST | 🔍 Monitor | **8時間終了** v0.64.0 最終報告・Session9完了 | - | ✅ |
+| 2026-04-02 | 🟢 **Session 10** | **Phase D-1/D-2 IAMS選択移植・SAM/調達強化セッション** | - | 🔄 |
+| 13:02 JST | 🔍 Monitor | Session10開始・PR #193 マージ完了・CI状態確認 | #193 | ✅ |
+| 13:10 JST | 🔨 Build | Phase D-1: SAMライセンス管理強化（期限追跡・月額コスト・フィルタ・Badge統一・5種ステータス） | #197 | 🔄 CI中 |
+| 13:15 JST | 🔨 Build | Phase D-2: 調達承認ワークフロー・ライフサイクルステッパー（承認/却下Modal・状態管理） | #198 | 🔄 CI中 |
 
 ### STABLE 判定条件
 
@@ -663,7 +667,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 | **Phase A** | 🏗️ 基盤構築 | 〜2026-04-21 | ✅ 完了 |
 | **Phase B** | ⚙️ コア機能実装 | 〜2026-05-31 | 🔄 進行中 |
 | **Phase C** | 🔄 IAMS選択移植 | 〜2026-06-30 | 🔄 進行中 |
-| **Phase D** | 📊 監視・PWA統合 | 〜2026-07-31 | ⏳ 未開始 |
+| **Phase D** | 📊 監視・PWA統合 | 〜2026-07-31 | 🔄 進行中 |
 | **Phase E** | 🛡️ QA・セキュリティ | 〜2026-08-31 | ⏳ 未開始 |
 | **Phase F** | 🚀 リリース準備 | 〜2026-09-22 | ⏳ 未開始 |
 
