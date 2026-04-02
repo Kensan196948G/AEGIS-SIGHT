@@ -1,4 +1,41 @@
+'use client';
+
 import Link from 'next/link';
+import { DonutChart, BarChart } from '@/components/ui/chart';
+import { Badge } from '@/components/ui/badge';
+
+// ライセンスデータ集計（sam/licenses/page.tsxのデータと整合）
+const licenses = [
+  { vendor: 'Microsoft', total: 500, used: 487, status: 'compliant',        costPerLicense: 2750 },
+  { vendor: 'Adobe',     total:  50, used:  58, status: 'over-deployed',    costPerLicense: 6578 },
+  { vendor: 'Salesforce',total: 600, used: 412, status: 'under-utilized',   costPerLicense:  998 },
+  { vendor: 'Autodesk',  total:  30, used:  28, status: 'compliant',        costPerLicense: 5500 },
+  { vendor: 'Microsoft', total:  20, used:  18, status: 'compliant',        costPerLicense: 8250 },
+  { vendor: 'Atlassian', total: 200, used: 195, status: 'expiring-soon',    costPerLicense:  750 },
+  { vendor: 'Microsoft', total:  15, used:  14, status: 'compliant',        costPerLicense: 45000 },
+  { vendor: 'Gen Digital',total: 600, used: 320, status: 'under-utilized',  costPerLicense:  420 },
+];
+
+// 集計
+const totalItems = licenses.length;
+const compliantCount  = licenses.filter(l => l.status === 'compliant').length;
+const overDeployed    = licenses.filter(l => l.status === 'over-deployed').length;
+const underUtilized   = licenses.filter(l => l.status === 'under-utilized').length;
+const expiringSoon    = licenses.filter(l => l.status === 'expiring-soon').length;
+const complianceRate  = Math.round((compliantCount / totalItems) * 100);
+const totalMonthlyCost = licenses.reduce((sum, l) => sum + l.costPerLicense * l.total, 0);
+
+// ベンダー別月額コスト集計
+const vendorCosts = Object.entries(
+  licenses.reduce<Record<string, number>>((acc, l) => {
+    acc[l.vendor] = (acc[l.vendor] ?? 0) + l.costPerLicense * l.total;
+    return acc;
+  }, {})
+)
+  .map(([vendor, cost]) => ({ label: vendor, value: Math.round(cost / 10000) }))
+  .sort((a, b) => b.value - a.value);
+
+const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
 
 export default function SAMPage() {
   return (
@@ -13,19 +50,64 @@ export default function SAMPage() {
         </p>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">総ライセンス数</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">342</p>
+      {/* Overview: DonutChart + Stats */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Compliance Donut */}
+        <div className="aegis-card flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-col items-center">
+            <DonutChart
+              value={complianceRate}
+              max={100}
+              size={140}
+              strokeWidth={14}
+              color={donutColor}
+              label={`${complianceRate}%`}
+            />
+            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              ライセンス遵守率
+            </p>
+          </div>
+          <div className="flex-1 space-y-3">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">ステータス内訳</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <Badge variant="success" dot size="sm">準拠</Badge>
+                <span className="font-semibold text-gray-900 dark:text-white">{compliantCount} 件</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <Badge variant="danger" dot size="sm">超過</Badge>
+                <span className="font-semibold text-red-600 dark:text-red-400">{overDeployed} 件</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <Badge variant="warning" dot size="sm">低利用</Badge>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">{underUtilized} 件</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <Badge variant="warning" dot size="sm">期限間近</Badge>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">{expiringSoon} 件</span>
+              </div>
+            </div>
+            <p className="pt-2 text-xs text-gray-400 dark:text-gray-500">
+              全 {totalItems} 製品 / 月額総コスト ¥{totalMonthlyCost.toLocaleString()}
+            </p>
+          </div>
         </div>
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">コンプライアント</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">322</p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">要対応</p>
-          <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">20</p>
+
+        {/* Vendor Cost BarChart */}
+        <div className="aegis-card">
+          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+            ベンダー別月額コスト（万円）
+          </h2>
+          <BarChart
+            data={vendorCosts.map((v) => ({
+              label: v.label,
+              value: v.value,
+              color: 'bg-primary-500',
+            }))}
+            maxValue={Math.max(...vendorCosts.map(v => v.value)) + 10}
+            showValues
+            className="h-48"
+          />
         </div>
       </div>
 
