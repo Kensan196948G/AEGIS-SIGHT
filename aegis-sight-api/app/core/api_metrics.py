@@ -3,32 +3,57 @@
 import time
 
 from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import REGISTRY
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
+
+def _get_or_create_counter(name: str, documentation: str, labelnames: list[str]) -> Counter:
+    """Return existing Counter or create a new one (safe for test re-imports)."""
+    if name in REGISTRY._names_to_collectors:
+        return REGISTRY._names_to_collectors[name]  # type: ignore[return-value]
+    return Counter(name, documentation, labelnames)
+
+
+def _get_or_create_histogram(
+    name: str, documentation: str, labelnames: list[str], buckets: tuple
+) -> Histogram:
+    """Return existing Histogram or create a new one (safe for test re-imports)."""
+    if name in REGISTRY._names_to_collectors:
+        return REGISTRY._names_to_collectors[name]  # type: ignore[return-value]
+    return Histogram(name, documentation, labelnames, buckets=buckets)
+
+
+def _get_or_create_gauge(name: str, documentation: str, labelnames: list[str]) -> Gauge:
+    """Return existing Gauge or create a new one (safe for test re-imports)."""
+    if name in REGISTRY._names_to_collectors:
+        return REGISTRY._names_to_collectors[name]  # type: ignore[return-value]
+    return Gauge(name, documentation, labelnames)
+
+
 # -- Prometheus metrics -------------------------------------------------------
 
-REQUEST_COUNT = Counter(
+REQUEST_COUNT = _get_or_create_counter(
     "aegis_http_requests_total",
     "Total number of HTTP requests",
     ["method", "endpoint", "status_code"],
 )
 
-REQUEST_LATENCY = Histogram(
+REQUEST_LATENCY = _get_or_create_histogram(
     "aegis_http_request_duration_seconds",
     "HTTP request duration in seconds",
     ["method", "endpoint"],
     buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
 )
 
-REQUEST_ERRORS = Counter(
+REQUEST_ERRORS = _get_or_create_counter(
     "aegis_http_request_errors_total",
     "Total number of HTTP request errors (status >= 400)",
     ["method", "endpoint", "status_code"],
 )
 
-ACTIVE_REQUESTS = Gauge(
+ACTIVE_REQUESTS = _get_or_create_gauge(
     "aegis_http_active_requests",
     "Number of currently active HTTP requests",
     ["method"],
