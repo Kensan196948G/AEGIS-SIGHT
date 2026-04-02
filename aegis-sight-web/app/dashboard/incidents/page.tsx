@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -292,6 +293,15 @@ export default function IncidentsPage() {
   const [formSeverity, setFormSeverity] = useState<Severity>('P3_medium');
   const [formCategory, setFormCategory] = useState<Category>('other');
 
+  const resolvedRate = Math.round((demoStats.resolved_incidents / demoStats.total) * 100);
+  const resolvedRateColor = resolvedRate >= 80 ? '#10b981' : resolvedRate >= 60 ? '#f59e0b' : '#ef4444';
+  const severityBarData = [
+    { label: 'P1 重大', value: demoStats.p1_critical, color: 'bg-red-500'    },
+    { label: 'P2 高',   value: demoStats.p2_high,     color: 'bg-orange-500' },
+    { label: 'P3 中',   value: demoStats.p3_medium,   color: 'bg-amber-500'  },
+    { label: 'P4 低',   value: demoStats.p4_low,      color: 'bg-blue-400'   },
+  ];
+
   const filtered = demoIncidents.filter((inc) => {
     if (severityFilter !== 'all' && inc.severity !== severityFilter) return false;
     if (statusFilter !== 'all' && inc.status !== statusFilter) return false;
@@ -324,6 +334,24 @@ export default function IncidentsPage() {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           セキュリティインシデントの検出・対応・管理とフォレンジック
         </p>
+      </div>
+
+      {/* Incident Overview Charts */}
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">インシデント概要</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">解決率</p>
+            <DonutChart value={resolvedRate} max={100} size={140} strokeWidth={14} color={resolvedRateColor} label={`${resolvedRate}%`} />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              全 {demoStats.total} 件中 {demoStats.resolved_incidents} 件解決済
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">重要度別件数</p>
+            <BarChart data={severityBarData} maxValue={demoStats.total} height={160} showValues />
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
