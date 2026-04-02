@@ -32,6 +32,13 @@ scrape_configs:
           service: "alertmanager"
           environment: "production"
 
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+        labels:
+          service: "host"
+          environment: "production"
+
   - job_name: "postgres-exporter"
     static_configs:
       - targets: ["postgres-exporter:9187"]
