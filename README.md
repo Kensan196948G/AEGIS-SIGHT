@@ -540,9 +540,11 @@ graph LR
 | 15:05-15:20 JST | 🔧 Improve | Phase67: IAMS pytest Phase15 IPアドレス管理・タグ管理テスト38件 | #138 | ✅ |
 | 15:20-15:35 JST | 🔧 Improve | Phase68: IAMS pytest Phase16 VPN・ソフトウェア・部署管理テスト38件 | #139 | ✅ |
 | 15:35-15:50 JST | 🔧 Improve | Phase69: IAMS pytest Phase17 デバイスグループ・全文検索テスト36件 | #140 | ✅ |
-| 15:50-16:05 JST | 🔧 Improve | Phase70: IAMS pytest Phase18 エクスポート・セッション管理テスト36件 | #141 | 🔄 |
-| 16:05-16:20 JST | 🔧 Improve | Phase71: IAMS pytest Phase19 ナレッジ・カスタムビュー・ダッシュボードテスト38件 | #142 | 🔄 |
-| 16:20-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase20〜 | - | 🔄 |
+| 15:50-16:05 JST | 🔧 Improve | Phase70: IAMS pytest Phase18 エクスポート・セッション管理テスト36件 | #141 | ✅ |
+| 16:05-16:20 JST | 🔧 Improve | Phase71: IAMS pytest Phase19 ナレッジ・カスタムビュー・ダッシュボードテスト38件 | #142 | ✅ |
+| 16:20-16:35 JST | 🔧 Improve | Phase72: IAMS pytest Phase20 スケジューラー・M365・システム設定管理テスト36件 | #143 | 🔄 |
+| 16:35-16:50 JST | 🔧 Improve | Phase73: IAMS pytest Phase21 アラート・インシデント・変更管理テスト38件 | #144 | 🔄 |
+| 16:50-17:00 JST | 🔧 Improve | Improvement継続: IAMS変換Phase22〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
