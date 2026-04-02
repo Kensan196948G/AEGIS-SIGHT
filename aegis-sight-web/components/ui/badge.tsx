@@ -2,7 +2,7 @@
 
 import { clsx } from 'clsx';
 
-type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'default' | 'purple';
+type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'default' | 'purple' | 'outline';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   default: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
   purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  outline: 'border border-gray-300 text-gray-600 dark:border-gray-600 dark:text-gray-400',
 };
 
 const dotStyles: Record<BadgeVariant, string> = {
@@ -28,6 +29,7 @@ const dotStyles: Record<BadgeVariant, string> = {
   info: 'bg-blue-500',
   default: 'bg-gray-500',
   purple: 'bg-purple-500',
+  outline: 'bg-gray-400',
 };
 
 const sizeStyles = {
