@@ -1,5 +1,8 @@
+'use client';
+
 import { StatCard } from '@/components/ui/stat-card';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // Mock data - will be replaced with API calls
 const stats = {
@@ -80,6 +83,35 @@ export default function DashboardPage() {
           IT資産管理の概要とアラート
         </p>
       </div>
+
+      {/* ダッシュボード概要チャート */}
+      {(() => {
+        const compRate = Math.round(stats.licenseComplianceRate);
+        const compColor = compRate >= 90 ? '#10b981' : compRate >= 70 ? '#f59e0b' : '#ef4444';
+        const overviewBarData = [
+          { label: '管理端末', value: stats.totalDevices, color: 'bg-blue-500' },
+          { label: 'アラート', value: stats.activeAlerts, color: 'bg-red-500' },
+          { label: '調達待ち', value: stats.pendingProcurements, color: 'bg-amber-500' },
+        ];
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">システム概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ライセンスコンプライアンス率</p>
+                <DonutChart value={compRate} max={100} size={140} strokeWidth={14} color={compColor} label={`${compRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {stats.totalDevices} 管理端末 / {stats.activeAlerts} アクティブアラート
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">主要指標</p>
+                <BarChart data={overviewBarData} maxValue={Math.max(...overviewBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
