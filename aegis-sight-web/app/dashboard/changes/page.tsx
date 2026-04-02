@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -175,6 +176,36 @@ export default function ChangesPage() {
           {error}
         </div>
       )}
+
+      {/* 変更管理概要チャート */}
+      {summary && (() => {
+        const total = summary.total_changes || 1;
+        const modifiedRate = Math.round(((summary.by_change_type?.modified ?? 0) / total) * 100);
+        const modColor = modifiedRate >= 70 ? '#f59e0b' : modifiedRate >= 40 ? '#10b981' : '#2563eb';
+        const typeBarData = Object.entries(summary.by_snapshot_type || {}).map(([type, count], i) => ({
+          label: type,
+          value: count as number,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-aegis-border dark:bg-aegis-dark">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">変更概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">変更タイプ: Modified率</p>
+                <DonutChart value={modifiedRate} max={100} size={140} strokeWidth={14} color={modColor} label={`${modifiedRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {total} 件中 modified {summary.by_change_type?.modified ?? 0} 件
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">スナップショット種別</p>
+                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map(d => d.value), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary cards */}
       {summary && (
