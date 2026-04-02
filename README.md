@@ -612,7 +612,7 @@ graph LR
 | 16:35 JST | 🔨 Build | Phase D-9: compliance DonutChart+BarChart（ISO27001スコア・NIST CSF） | #205 | ✅ Merged |
 | 16:48 JST | 🔨 Build | Phase D-10: incidents DonutChart+BarChart（解決率・重要度別件数） | #206 | ✅ Merged |
 | 16:49 JST | 🔨 Build | Phase D-11: devices DonutChart+BarChart（オンライン率・ステータス別台数） | #207 | ✅ Merged |
-| 2026-04-02 | 🟢 **Session 12** | **Phase D-12〜D-19 チャート可視化拡張・全ページ網羅セッション** | - | ✅ |
+| 2026-04-02 | 🟢 **Session 12** | **Phase D チャート100%完了・E2E検証・バグ修正・Systemd登録** | - | 🔄 |
 | 16:55 JST | 🔍 Monitor | Session12開始・PR #200〜#207 状態確認・カスケードコンフリクト解消 | #200-208 | ✅ |
 | 17:05 JST | 🔨 Build | Phase D-12: DLP DonutChart+BarChart（ブロック率・重要度別イベント数） | #209 | ✅ Merged |
 | 17:05 JST | 🔨 Build | Phase D-13: ネットワーク管理 DonutChart+BarChart（IPアクティブ率・レンジ別使用率） | #210 | ✅ Merged |
@@ -622,6 +622,14 @@ graph LR
 | 17:11 JST | 🔨 Build | Phase D-17: SLA管理 DonutChart+BarChart（全体達成率・メトリクス種別別） | #214 | ✅ Merged |
 | 17:12 JST | 🔨 Build | Phase D-18: リモートワーク DonutChart+BarChart（VPN接続率・プロトコル別） | #215 | ✅ Merged |
 | 17:13 JST | 🔨 Build | Phase D-19: 印刷管理 DonutChart+BarChart（成功率・ユーザー別ページ数） | #216 | ✅ Merged |
+| 17:28 JST | 🔨 Build | Phase D-20〜D-27: 残8ページ一括チャート追加（changes/departments/policies/users/sessions/notifications/reports/dashboard） | #221-228 | ✅ Merged |
+| 17:35 JST | 🔧 Fix | TypeScriptエラー2件修正（Badge variant + i18n as const） | #229 | ✅ Merged |
+| 17:43 JST | 🚀 Deploy | Systemd登録 aegis-sight-web.service → http://192.168.0.185:3080 | - | ✅ |
+| 17:45 JST | 🔧 Fix | デモログインcookie認証修正（middleware リダイレクトループ解消） | #230 | ✅ Merged |
+| 17:50 JST | ✅ Verify | E2E全24ページ Playwright巡回検証 | - | ✅ |
+| 17:55 JST | 🔧 Fix | departments APIタイムアウト対策（5秒制限+デモデータ） | #231 | ✅ Merged |
+| 18:00 JST | 🔧 Fix | SLA/変更管理デモデータフォールバック追加 | #232 | ✅ Merged |
+| 18:05 JST | 🔍 Monitor | GitHub Projects #14 更新（9件Done + 1件InProgress） | - | ✅ |
 
 ### STABLE 判定条件
 
