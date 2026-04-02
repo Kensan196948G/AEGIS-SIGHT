@@ -557,8 +557,9 @@ graph LR
 | 19:20-19:35 JST | 🔧 Improve | Phase84: IAMS pytest Phase32 スケジューラー・タグ・デバイスグループ・IPAM テスト36件 | #155 | ✅ |
 | 19:35-19:50 JST | 🔧 Improve | Phase85: IAMS pytest Phase33 ナレッジベース・SAMライセンス・調達管理・ソフトウェア在庫テスト36件 | #156 | ✅ |
 | 19:50-20:05 JST | 🔧 Improve | Phase86: IAMS pytest Phase34 インシデント管理・SLA管理・ポリシー管理・DLPテスト36件 | #157 | ✅ |
-| 20:05-20:20 JST | 🔧 Improve | Phase87: IAMS pytest Phase35 印刷管理・リモートワーク・セキュリティ監査・ログ管理テスト36件 | #158 | 🔄 |
-| 20:20-20:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase36〜 | - | 🔄 |
+| 20:05-20:20 JST | 🔧 Improve | Phase87: IAMS pytest Phase35 印刷管理・リモートワーク・セキュリティ監査・ログ管理テスト36件 | #158 | ✅ |
+| 20:20-20:35 JST | 🔧 Improve | Phase88: IAMS pytest Phase36 セッション管理・設定変更・カスタムビュー・アラート詳細テスト36件 | #159 | 🔄 |
+| 20:35-20:36 JST | 🔧 Improve | Improvement継続: IAMS変換Phase37〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
