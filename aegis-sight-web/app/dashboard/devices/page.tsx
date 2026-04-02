@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 
@@ -312,7 +313,7 @@ export default function DevicesPage() {
                       className="transition-colors hover:bg-gray-50/70 dark:hover:bg-aegis-dark/40"
                     >
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
+                        <Link href={`/dashboard/devices/${device.id}`} className="flex items-center gap-2 hover:underline">
                           <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
                             device.status === 'online' ? 'bg-green-500' :
                             device.status === 'warning' ? 'bg-yellow-500' :
@@ -322,7 +323,7 @@ export default function DevicesPage() {
                           <span className="font-medium text-gray-900 dark:text-white">
                             {device.hostname}
                           </span>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <div>
