@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type DeviceStatus = 'online' | 'offline' | 'warning' | 'maintenance';
 type OsType = 'Windows' | 'macOS' | 'Linux' | 'Other';
@@ -156,6 +157,14 @@ export default function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState<DeviceStatus | 'all'>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
 
+  const onlineRate = Math.round((demoStats.online / demoStats.total) * 100);
+  const onlineRateColor = onlineRate >= 80 ? '#10b981' : onlineRate >= 60 ? '#f59e0b' : '#ef4444';
+  const statusBarData = [
+    { label: 'オンライン', value: demoStats.online,  color: 'bg-emerald-500' },
+    { label: 'オフライン', value: demoStats.offline, color: 'bg-gray-400'    },
+    { label: '要注意',     value: demoStats.warning, color: 'bg-amber-500'   },
+  ];
+
   const filtered = demoDevices.filter((d) => {
     if (search && !d.hostname.toLowerCase().includes(search.toLowerCase()) && !d.ip_address.includes(search)) {
       return false;
@@ -189,6 +198,24 @@ export default function DevicesPage() {
             </svg>
             デバイスを追加
           </button>
+        </div>
+      </div>
+
+      {/* Device Overview Charts */}
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">デバイス概要</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">オンライン率</p>
+            <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRateColor} label={`${onlineRate}%`} />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              全 {demoStats.total.toLocaleString()} 台中 {demoStats.online.toLocaleString()} 台オンライン
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ステータス別台数</p>
+            <BarChart data={statusBarData} maxValue={demoStats.total} height={160} showValues />
+          </div>
         </div>
       </div>
 
