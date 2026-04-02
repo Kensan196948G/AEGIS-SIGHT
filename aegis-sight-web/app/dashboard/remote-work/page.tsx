@@ -605,7 +605,7 @@ export default function RemoteWorkPage() {
                       {policy.name}
                     </h3>
                     <Badge
-                      variant={policy.is_enabled ? 'default' : 'secondary'}
+                      variant={policy.is_enabled ? 'default' : 'outline'}
                       className={policy.is_enabled ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : ''}
                     >
                       {policy.is_enabled ? 'Enabled' : 'Disabled'}
