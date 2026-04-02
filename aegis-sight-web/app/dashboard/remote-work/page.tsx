@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -407,6 +408,38 @@ export default function RemoteWorkPage() {
           Monitor VPN connections, telework utilization, and remote access policies
         </p>
       </div>
+
+      {/* リモートワーク概要チャート */}
+      {(() => {
+        const maxActive = 50; // 想定最大同時接続
+        const activeRate = Math.round((mockAnalytics.active_connections / maxActive) * 100);
+        const activeColor = activeRate >= 80 ? '#ef4444' : activeRate >= 50 ? '#f59e0b' : '#10b981';
+        const protocolBarData = Object.entries(mockAnalytics.by_protocol)
+          .sort((a, b) => b[1] - a[1])
+          .map(([proto, count], i) => ({
+            label: proto.toUpperCase(),
+            value: count,
+            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
+          }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">リモートワーク概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">VPN同時接続率</p>
+                <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeColor} label={`${mockAnalytics.active_connections}接続`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  想定上限 {maxActive} に対して {activeRate}% 使用中
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">プロトコル別累計接続数</p>
+                <BarChart data={protocolBarData} maxValue={Math.max(...protocolBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
