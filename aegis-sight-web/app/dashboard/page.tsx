@@ -1,4 +1,5 @@
 import { StatCard } from '@/components/ui/stat-card';
+import { Badge } from '@/components/ui/badge';
 
 // Mock data - will be replaced with API calls
 const stats = {
@@ -61,16 +62,12 @@ const severityStyles = {
   info: 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10',
 };
 
-const severityBadge = {
-  critical: 'aegis-badge-danger',
-  warning: 'aegis-badge-warning',
-  info: 'aegis-badge-info',
-};
+type AlertSeverity = 'critical' | 'warning' | 'info';
 
-const severityLabel = {
-  critical: '重大',
-  warning: '警告',
-  info: '情報',
+const severityConfig: Record<AlertSeverity, { variant: 'danger' | 'warning' | 'info'; label: string }> = {
+  critical: { variant: 'danger',  label: '重大' },
+  warning:  { variant: 'warning', label: '警告' },
+  info:     { variant: 'info',    label: '情報' },
 };
 
 export default function DashboardPage() {
@@ -152,9 +149,9 @@ export default function DashboardPage() {
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={severityBadge[alert.severity]}>
-                      {severityLabel[alert.severity]}
-                    </span>
+                    <Badge variant={severityConfig[alert.severity].variant} dot size="sm">
+                      {severityConfig[alert.severity].label}
+                    </Badge>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                       {alert.title}
                     </h3>
