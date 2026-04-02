@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -288,6 +289,35 @@ function StatsCards() {
 
   return (
     <div className="space-y-6">
+      {/* 印刷概要チャート */}
+      {(() => {
+        const successRate = totalJobs > 0 ? Math.round((totalJobs / mockJobs.length) * 100) : 0;
+        const successColor = successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444';
+        const userBarData = mockUserStats.slice(0, 5).map((u, i) => ({
+          label: u.user_name.split(/(?=[太花一次美])/)[0] || u.user_name.substring(0, 4),
+          value: u.total_pages,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">印刷概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ジョブ成功率</p>
+                <DonutChart value={successRate} max={100} size={140} strokeWidth={14} color={successColor} label={`${successRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {mockJobs.length} ジョブ中 {totalJobs} 件成功
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ユーザー別印刷ページ数 Top 5</p>
+                <BarChart data={userBarData} maxValue={Math.max(...userBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
