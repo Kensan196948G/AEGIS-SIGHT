@@ -544,9 +544,10 @@ graph LR
 | 16:05-16:20 JST | 🔧 Improve | Phase71: IAMS pytest Phase19 ナレッジ・カスタムビュー・ダッシュボードテスト38件 | #142 | ✅ |
 | 16:20-16:35 JST | 🔧 Improve | Phase72: IAMS pytest Phase20 スケジューラー・M365・システム設定管理テスト36件 | #143 | ✅ |
 | 16:35-16:50 JST | 🔧 Improve | Phase73: IAMS pytest Phase21 アラート・インシデント・変更管理テスト38件 | #144 | ✅ |
-| 16:50-17:05 JST | 🔧 Improve | Phase74: IAMS pytest Phase22 コンプライアンス・セキュリティ・メトリクス・ログテスト36件 | #145 | 🔄 |
+| 16:50-17:05 JST | 🔧 Improve | Phase74: IAMS pytest Phase22 コンプライアンス・セキュリティ・メトリクス・ログテスト36件 | #145 | ✅ |
 | 17:05-17:20 JST | 🔧 Improve | Phase75: IAMS pytest Phase23 バッチ処理・DB管理・部署管理テスト36件 | #146 | 🔄 |
-| 17:20-17:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase24〜 | - | 🔄 |
+| 17:20-17:35 JST | 🔧 Improve | Phase76: IAMS pytest Phase24 ヘルス・バージョン・テレメトリー・ソフトウェアテスト36件 | #147 | 🔄 |
+| 17:35-17:36 JST | 🔧 Improve | Improvement継続: IAMS変換Phase25〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
