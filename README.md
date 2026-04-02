@@ -562,8 +562,9 @@ graph LR
 | 20:35-20:50 JST | 🔧 Improve | Phase89: IAMS pytest Phase37 通知管理・M365統合・エクスポート・部署管理テスト36件 | #160 | ✅ |
 | 20:50-21:05 JST | 🔧 Improve | Phase90: IAMS pytest Phase38 設定管理・ネットワーク管理・ソフトウェア管理・ダッシュボードテスト36件 | #161 | ✅ |
 | 21:05-21:20 JST | 🔧 Improve | Phase91: IAMS pytest Phase39 ユーザー管理・資産管理・監査ログ・セキュリティ詳細テスト36件 | #162 | ✅ |
-| 21:20-21:35 JST | 🔧 Improve | Phase92: IAMS pytest Phase40 SAMライセンス・調達管理・ナレッジベース・ライフサイクル詳細テスト36件 | #163 | 🔄 |
-| 21:35-21:36 JST | 🔧 Improve | Improvement継続: IAMS変換Phase41〜 | - | 🔄 |
+| 21:20-21:35 JST | 🔧 Improve | Phase92: IAMS pytest Phase40 SAMライセンス・調達管理・ナレッジベース・ライフサイクル詳細テスト36件 | #163 | ✅ |
+| 21:35-21:50 JST | 🔧 Improve | Phase93: IAMS pytest Phase41 データベース管理・メトリクス・セキュリティ監査・レポート詳細テスト36件 | #164 | 🔄 |
+| 21:50-21:51 JST | 🔧 Improve | Improvement継続: IAMS変換Phase42〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
