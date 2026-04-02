@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -292,6 +293,41 @@ export default function SLAPage() {
       {/* Dashboard Tab */}
       {!loading && !error && activeTab === 'dashboard' && dashboard && (
         <div className="space-y-6">
+          {/* SLA 概要チャート */}
+          {(() => {
+            const rate = dashboard.overall_achievement_rate ?? 0;
+            const rateColor = rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
+            const metricBarData = (['availability', 'response_time', 'resolution_time', 'patch_compliance'] as MetricType[]).map(type => {
+              const typeItems = dashboard.items.filter(i => i.metric_type === type);
+              const avg = typeItems.length > 0
+                ? Math.round(typeItems.reduce((s, i) => s + (i.achievement_rate ?? 0), 0) / typeItems.length)
+                : 0;
+              return {
+                label: metricTypeLabel[type],
+                value: avg,
+                color: avg >= 90 ? 'bg-emerald-500' : avg >= 70 ? 'bg-amber-500' : 'bg-red-500',
+              };
+            });
+            return (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-aegis-border dark:bg-aegis-surface">
+                <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">SLA 概要</h2>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">全体達成率</p>
+                    <DonutChart value={rate} max={100} size={140} strokeWidth={14} color={rateColor} label={`${rate}%`} />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      定義 {dashboard.total_definitions} 件（有効: {dashboard.active_definitions}）
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">メトリクス種別別達成率</p>
+                    <BarChart data={metricBarData} maxValue={100} height={160} showValues />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Summary cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-aegis-border dark:bg-aegis-surface">
