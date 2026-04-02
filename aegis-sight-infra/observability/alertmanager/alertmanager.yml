@@ -1,0 +1,123 @@
+global:
+  resolve_timeout: 5m
+  # Slack 通知設定（GitHub Secrets で管理）
+  # slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+route:
+  group_by: ['alertname', 'severity', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+
+  routes:
+    # Critical アラートは即時通知
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 1h
+
+    # セキュリティアラートは security チームに通知
+    - match:
+        team: security
+      receiver: 'security-alerts'
+      group_wait: 0s
+      repeat_interval: 30m
+
+    # SLO アラートは即時通知
+    - match:
+        team: slo
+      receiver: 'slo-alerts'
+      group_wait: 10s
+      repeat_interval: 2h
+
+    # インフラ/アプリ warning は通常通知
+    - match_re:
+        severity: warning|info
+      receiver: 'default'
+
+receivers:
+  - name: 'default'
+    # Slack 通知（#aegis-alerts チャンネル）
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#aegis-alerts'
+        username: 'AEGIS-SIGHT Alertmanager'
+        icon_emoji: ':shield:'
+        title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          *Severity:* `{{ .Labels.severity }}`
+          *Team:* `{{ .Labels.team }}`
+          {{ end }}
+        send_resolved: true
+
+  - name: 'critical-alerts'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#aegis-critical'
+        username: 'AEGIS-SIGHT CRITICAL'
+        icon_emoji: ':rotating_light:'
+        title: '🚨 CRITICAL: {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          *Started:* {{ .StartsAt | since }}
+          {{ end }}
+        send_resolved: true
+    # メール通知（設定後有効化）
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        from: '${ALERT_EMAIL_FROM}'
+        smarthost: '${SMTP_HOST}:587'
+        auth_username: '${SMTP_USER}'
+        auth_password: '${SMTP_PASSWORD}'
+        send_resolved: true
+
+  - name: 'security-alerts'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#aegis-security'
+        username: 'AEGIS-SIGHT Security'
+        icon_emoji: ':lock:'
+        title: '🔐 Security Alert: {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          *Severity:* `{{ .Labels.severity }}`
+          {{ end }}
+        send_resolved: true
+
+  - name: 'slo-alerts'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#aegis-slo'
+        username: 'AEGIS-SIGHT SLO'
+        icon_emoji: ':chart_with_downwards_trend:'
+        title: '📉 SLO Alert: {{ .CommonLabels.alertname }}'
+        text: >-
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Details:* {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+
+inhibit_rules:
+  # Critical が発生している場合、同じ instance の Warning を抑制
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'instance']
+
+  # アプリがダウンしている場合、その他のアプリアラートを抑制
+  - source_match:
+      alertname: 'APIServiceDown'
+    target_match_re:
+      alertname: '^AEGIS.*'
+    equal: ['instance']
