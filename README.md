@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.61.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.62.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -52,7 +52,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全50フェーズ完了（Phase 0-50 Done）・Phase51 依存関係更新・ステージング環境予定 |
+| 📅 **開発期間** | 全113フェーズ完了（Phase 0-113 Done）・IAMS pytest 1,798件移植完結・フロントエンド強化継続中 |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -76,6 +76,7 @@
 | 📋 ログ管理 | ログオン/USB/ファイル操作追跡 | ✅ Done |
 | 🛡️ セキュリティ監視 | Defender/BitLocker/パッチ管理 | ✅ Done |
 | 📊 統合ダッシュボード | Next.js 14 リアルタイム可視化 | ✅ Done |
+| 🖥️ デバイス管理画面 | デバイス一覧・詳細・フィルタ・HW情報（Phase B-5） | ✅ Done |
 | 🔐 認証・RBAC | Entra ID SSO + 4ロール制御 | ✅ Done |
 
 ### 🔄 IAMS 選択移植機能
@@ -86,7 +87,7 @@
 | 📱 PWA対応 | オフラインUI（建設現場対応） | ✅ Done |
 | 🛒 調達管理 | 調達→受領→廃棄ライフサイクル | ✅ Done |
 | 📦 SAMライセンス管理 | ライセンス超過・期限アラート | ✅ Done |
-| 🧪 テスト資産変換 | 1,157件 Jest → pytest 変換 | ✅ Done |
+| 🧪 テスト資産変換 | **1,798件** Jest → pytest 変換 (Phase101-112完結) | ✅ Done |
 | 🌐 国際化基盤 (i18n) | 日英メッセージカタログ + useTranslation hook | ✅ Done |
 | 📝 Backendメッセージ | エラー/ドメインメッセージ日本語化 | ✅ Done |
 | 📊 コンプライアンスダッシュボード | ISO 27001/J-SOX準拠状況可視化 | ✅ Done |
@@ -370,7 +371,9 @@ gantt
 | 📊 SLA管理ダッシュボード | ✅ Done | SLA目標設定・達成率モニタリング・レポート |
 | 🎯 最終統合 v0.48.0 | ✅ Done | 全48 Phase完了・最終リリース |
 | 🚀 **Phase50 本番デプロイ準備** | ✅ **Done** | deploy-prod.yml・Grafanaアラート強化 (22ルール)・IAMSデータ移行スクリプト (PR#117 merged) |
-| 🔧 **Phase51 依存関係更新・ステージング** | 🔄 **In Progress** | Actions PR#13,#15,#17,#18 マージ済み・npm major PRリスク評価済み・ドキュメント更新 (PR#119 merged) (Issue#118) |
+| 🔧 **Phase51 依存関係更新・ステージング** | ✅ **Done** | Actions PR#13,#15,#17,#18 マージ済み・npm major PRリスク評価済み・ドキュメント更新 (PR#119 merged) (Issue#118) |
+| 🧪 **Phase101-112 IAMS pytest移植完結** | ✅ **Done** | 累計1,798件テスト (PR#173-184) — 1,157件目標比 +641件超過達成 |
+| 🖥️ **Phase113 フロントエンドPhase B-5** | ✅ **Done** | デバイス管理画面実装（一覧・詳細・サイドバー追加）(PR#185) |
 
 ### GitHub Issues トラッカー
 
@@ -570,7 +573,21 @@ graph LR
 | 22:35-22:50 JST | 🔧 Improve | Phase97: IAMS pytest Phase45 ポリシー管理・アラート管理・セッション管理・設定管理詳細テスト36件 | #168 | ✅ |
 | 22:50-23:05 JST | 🔧 Improve | Phase98: IAMS pytest Phase46 ログ管理・エクスポート・印刷管理・リモートワーク詳細テスト36件 | #169 | ✅ |
 | 23:05-23:20 JST | 🔧 Improve | Phase99: IAMS pytest Phase47 M365統合・通知管理・部署管理・ソフトウェア管理詳細テスト36件 | #170 | ✅ |
-| 23:20-23:35 JST | 🔧 Improve | Phase100: IAMS pytest Phase48 ナレッジベース詳細・調達ワークフロー・SAM詳細テスト36件 | #171 | 🔄 |
+| 23:20-23:35 JST | 🔧 Improve | Phase100: IAMS pytest Phase48 ナレッジベース詳細・調達ワークフロー・SAM詳細テスト36件 | #171 | ✅ |
+| 2026-04-02 | 🟢 **Session 9** | **Phase101-113 IAMS pytest完結・フロントエンド強化セッション** | - | ✅ |
+| 08:00 JST | 🔧 Improve | Phase101: IAMS pytest SLA管理・コンプライアンス・レポート・テレメトリ36件 + Prometheus修正 | #173 | ✅ |
+| 08:15 JST | 🔧 Improve | Phase102: IAMS pytest タグ/スケジューラ/IP管理/ダッシュボード36件 | #174 | ✅ |
+| 08:30 JST | 🔧 Improve | Phase103: IAMS pytest 監査ログ・統合検索・パッチ管理・ライフサイクル36件 | #175 | ✅ |
+| 08:45 JST | 🔧 Improve | Phase104: IAMS pytest 資産管理・バッチ処理・設定変更追跡・デバイスグループ36件 | #176 | ✅ |
+| 09:00 JST | 🔧 Improve | Phase105: IAMS pytest DLP・インシデント管理・セキュリティ監査・カスタムビュー36件 | #177 | ✅ |
+| 09:15 JST | 🔧 Improve | Phase106: IAMS pytest セキュリティ概要・セッション・通知・ユーザー管理36件 | #178 | ✅ |
+| 09:30 JST | 🔧 Improve | Phase107: IAMS pytest ポリシー・アラート・調達・ソフトウェア管理36件 | #179 | ✅ |
+| 09:45 JST | 🔧 Improve | Phase108: IAMS pytest 印刷管理・リモートワーク・M365連携・ログ管理36件 | #180 | ✅ |
+| 10:00 JST | 🔧 Improve | Phase109: IAMS pytest システム設定・部門管理・エクスポート・レポート36件 | #181 | ✅ |
+| 10:15 JST | 🔧 Improve | Phase110: IAMS pytest 認証・SAM・ナレッジ・DB管理36件 | #182 | ✅ |
+| 10:30 JST | 🔧 Improve | Phase111: IAMS pytest ヘルスチェック・バージョン・メトリクス・テレメトリー36件 | #183 | ✅ |
+| 10:45 JST | 🔧 Improve | Phase112: IAMS pytest IPアドレス管理・セキュリティ監査・バッチ処理36件（IAMS移植**完結**・累計1,798件） | #184 | ✅ |
+| 11:00 JST | 🔨 Build | Phase113: フロントエンドPhase B-5 デバイス管理画面実装（一覧・詳細・サイドバー追加） | #185 | ✅ |
 
 ### STABLE 判定条件
 
