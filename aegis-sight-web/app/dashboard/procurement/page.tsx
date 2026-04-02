@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type ProcurementStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
 type ProcurementPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -169,6 +170,40 @@ export default function ProcurementPage() {
           新規申請
         </Link>
       </div>
+
+      {/* 調達概要チャート */}
+      {(() => {
+        const completedCount = demoRequests.filter(r => ['delivered', 'completed'].includes(r.status)).length;
+        const approvalRate = Math.round((completedCount / demoRequests.length) * 100);
+        const approvalColor = approvalRate >= 60 ? '#10b981' : approvalRate >= 40 ? '#f59e0b' : '#ef4444';
+        const categoryCounts: Record<string, number> = {};
+        demoRequests.forEach(r => { categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1; });
+        const categoryBarData = Object.entries(categoryCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([cat, count], i) => ({
+            label: cat,
+            value: count,
+            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] || 'bg-gray-400',
+          }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">調達概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">完了率</p>
+                <DonutChart value={approvalRate} max={100} size={140} strokeWidth={14} color={approvalColor} label={`${approvalRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {demoRequests.length} 件中 {completedCount} 件完了
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">カテゴリ別申請件数</p>
+                <BarChart data={categoryBarData} maxValue={Math.max(...categoryBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
