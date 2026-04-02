@@ -603,10 +603,12 @@ graph LR
 | 13:10 JST | 🔨 Build | Phase D-1: SAMライセンス管理強化（期限追跡・月額コスト・フィルタ・Badge統一・5種ステータス） | #197 | ✅ |
 | 13:15 JST | 🔨 Build | Phase D-2: 調達承認ワークフロー・ライフサイクルステッパー（承認/却下Modal・状態管理） | #198 | ✅ |
 | 2026-04-02 | 🟢 **Session 11** | **Phase D-3〜D-11 チャートビジュアライゼーション強化セッション** | - | 🔄 |
+>>>>>>> f0a521a (feat: Phase D-4 監視ダッシュボードPrometheusメトリクス可視化（ProgressBar・BarChart・タブ切替）)
 | 07:13 JST | 🔨 Build | Phase D-3: 調達詳細ページ動的ルーティング（useParams・全10申請データ対応） | #199 | ✅ Merged |
 | 07:25 JST | 🔨 Build | Phase D-4: 監視ダッシュボードPrometheusメトリクス可視化（ProgressBar・BarChart） | #200 | 🔄 CI中 |
 | 07:29 JST | 🔨 Build | Phase D-5: SAM OverviewページDonutChart遵守率・BarChartベンダー別コスト | #201 | 🔄 CI中 |
 | 07:43 JST | 🔨 Build | Phase D-6: パッチ管理ページDonutChart適用率・ProgressBar重要度別可視化 | #202 | 🔄 CI中 |
+<<<<<<< HEAD
 | 07:55 JST | 🔨 Build | Phase D-7: ライフサイクル管理DonutChart稼働中率・BarChartステージ別台数 | #203 | ✅ Merged |
 | 08:10 JST | 🔨 Build | Phase D-8: IT資産一覧DonutChartアクティブ率・BarChart種別別台数 | #204 | 🔄 CI中 |
 | 14:XX JST | 🔨 Build | Phase D-3: dashboard/page.tsx DonutChart+BarChart（資産稼働率・インシデントTop5） | #199 | ✅ |
@@ -625,6 +627,9 @@ graph LR
 | 16:35 JST | 🔨 Build | Phase D-9: compliance/page.tsx DonutChart+BarChart（ISO27001スコア・NIST CSF） | #205 | 🔄 CI中 |
 | 16:48 JST | 🔨 Build | Phase D-10: incidents/page.tsx DonutChart+BarChart（解決率・重要度別件数） | #206 | 🔄 CI中 |
 | 16:49 JST | 🔨 Build | Phase D-11: devices/page.tsx DonutChart+BarChart（オンライン率・ステータス別台数） | #207 | 🔄 CI中 |
+=======
+| 07:55 JST | 🔨 Build | Phase D-7: ライフサイクル管理DonutChart稼働中率・BarChartステージ別台数 | #203 | 🔄 CI中 |
+| 16:13 JST | 🔨 Build | Phase D-3: 調達詳細ページ動的ルーティング（useParams・全10申請データ・not found状態） | #199 | 🔄 CI中 |
 
 ### STABLE 判定条件
 
