@@ -1,0 +1,156 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "総管理デバイス数",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "targets": [{ "expr": "aegis_total_devices", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } }
+      }
+    },
+    {
+      "title": "アクティブデバイス",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "targets": [{ "expr": "aegis_active_devices_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } }
+      }
+    },
+    {
+      "title": "オフラインデバイス",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "targets": [{ "expr": "aegis_offline_devices_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "orange", "value": null }, { "color": "red", "value": 200 }] } }
+      }
+    },
+    {
+      "title": "警告デバイス",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [{ "expr": "aegis_warning_devices_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "yellow", "value": null }, { "color": "red", "value": 100 }] } }
+      }
+    },
+    {
+      "title": "ライセンスコンプライアンス率",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 16, "y": 0 },
+      "targets": [{ "expr": "aegis_license_compliance_rate", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 70 }, { "color": "green", "value": 90 }] }
+        }
+      }
+    },
+    {
+      "title": "セキュリティスコア",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 4 },
+      "targets": [{ "expr": "aegis_security_score", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 70 }, { "color": "green", "value": 85 }] }
+        }
+      }
+    },
+    {
+      "title": "パッチ適用率",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 4 },
+      "targets": [{ "expr": "aegis_patch_compliance_rate", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 70 }, { "color": "green", "value": 85 }] }
+        }
+      }
+    },
+    {
+      "title": "SLA達成率",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 4 },
+      "targets": [{ "expr": "aegis_sla_achievement_rate", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 70 }, { "color": "green", "value": 85 }] }
+        }
+      }
+    },
+    {
+      "title": "アクティブアラート",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 10 },
+      "targets": [{ "expr": "aegis_active_alerts_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 10 }] } }
+      }
+    },
+    {
+      "title": "重大アラート",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 10 },
+      "targets": [{ "expr": "aegis_critical_alerts_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } }
+      }
+    },
+    {
+      "title": "DLPブロック数",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 10 },
+      "targets": [{ "expr": "aegis_dlp_blocked_events_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 5 }] } }
+      }
+    },
+    {
+      "title": "未解決脆弱性",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 10 },
+      "targets": [{ "expr": "aegis_open_vulnerabilities_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 3 }, { "color": "red", "value": 10 }] } }
+      }
+    },
+    {
+      "title": "調達申請（保留）",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 10 },
+      "targets": [{ "expr": "aegis_pending_procurement_total", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 20 }] } }
+      }
+    },
+    {
+      "title": "調達総額 (JPY)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 10 },
+      "targets": [{ "expr": "aegis_procurement_total_cost_yen", "legendFormat": "" }],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyJPY", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["aegis-sight", "asset-management", "iams"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "AEGIS-SIGHT 資産管理ダッシュボード",
+  "uid": "aegis-asset-mgmt",
+  "version": 1
+}

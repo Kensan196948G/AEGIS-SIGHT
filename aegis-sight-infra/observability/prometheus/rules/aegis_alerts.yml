@@ -218,6 +218,59 @@ groups:
           summary: "Audit log write failure detected"
           description: "Audit log is failing to record events. Compliance requirements may not be met."
 
+  - name: aegis-sight-business-kpi
+    interval: 60s
+    rules:
+      - alert: LowComplianceRate
+        expr: aegis_license_compliance_rate < 90
+        for: 10m
+        labels:
+          severity: warning
+          team: compliance
+        annotations:
+          summary: "ライセンスコンプライアンス率が90%を下回っています"
+          description: "現在のコンプライアンス率: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: CriticalComplianceRate
+        expr: aegis_license_compliance_rate < 80
+        for: 5m
+        labels:
+          severity: critical
+          team: compliance
+        annotations:
+          summary: "ライセンスコンプライアンス率が80%未満（危険）"
+          description: "即時対応が必要です。現在: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: LowSecurityScore
+        expr: aegis_security_score < 80
+        for: 10m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "セキュリティスコアが80未満"
+          description: "セキュリティ対策の見直しが必要です。現在: {{ $value | printf \"%.0f\" }}"
+
+      - alert: SLAAchievementLow
+        expr: aegis_sla_achievement_rate < 85
+        for: 10m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "SLA達成率が85%を下回っています"
+          description: "SLA違反リスクがあります。現在: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: HighDLPBlockCount
+        expr: aegis_dlp_blocked_events_total > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "DLPブロック数が多発"
+          description: "情報漏洩リスクが高まっています。ブロック数: {{ $value | printf \"%.0f\" }}"
+
   - name: aegis-sight-slo
     interval: 60s
     rules:
