@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type AssetType = 'hardware' | 'software' | 'network' | 'peripheral';
 type AssetStatus = 'active' | 'inactive' | 'maintenance' | 'retired';
@@ -232,6 +233,20 @@ export default function AssetsPage() {
     return diffDays >= 0 && diffDays <= 90;
   }).length;
 
+  const activeRate = Math.round((totalActive / demoAssets.length) * 100);
+  const activeRateColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+
+  const typeCounts = demoAssets.reduce<Record<AssetType, number>>(
+    (acc, a) => { acc[a.type]++; return acc; },
+    { hardware: 0, software: 0, network: 0, peripheral: 0 }
+  );
+  const typeBarData = [
+    { label: 'ハードウェア', value: typeCounts.hardware, color: 'bg-blue-500'    },
+    { label: 'ソフトウェア', value: typeCounts.software, color: 'bg-purple-500'  },
+    { label: 'ネットワーク', value: typeCounts.network,  color: 'bg-amber-500'   },
+    { label: '周辺機器',     value: typeCounts.peripheral, color: 'bg-gray-400'  },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -248,6 +263,36 @@ export default function AssetsPage() {
           </svg>
           資産を追加
         </button>
+      </div>
+
+      {/* Asset Overview Charts */}
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">資産概要</h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ率</p>
+            <DonutChart
+              value={activeRate}
+              max={100}
+              size={140}
+              strokeWidth={14}
+              color={activeRateColor}
+              label={`${activeRate}%`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              総資産 {demoAssets.length} 件中 {totalActive} 件アクティブ
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">種別別台数</p>
+            <BarChart
+              data={typeBarData}
+              maxValue={demoAssets.length}
+              height={160}
+              showValues
+            />
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
