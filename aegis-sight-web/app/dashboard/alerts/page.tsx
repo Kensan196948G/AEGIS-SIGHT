@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 type Severity = 'critical' | 'warning' | 'info';
 type Category = 'security' | 'license' | 'hardware' | 'network';
@@ -150,6 +151,36 @@ export default function AlertsPage() {
           システムアラートの一覧と管理
         </p>
       </div>
+
+      {/* アラート概要チャート */}
+      {(() => {
+        const resolvedCount = demoStats.total - demoStats.unresolved;
+        const resolveRate = Math.round((resolvedCount / Math.max(demoStats.total, 1)) * 100);
+        const resolveRateColor = resolveRate >= 80 ? '#10b981' : resolveRate >= 60 ? '#f59e0b' : '#ef4444';
+        const severityBarData = [
+          { label: '重大', value: demoStats.critical, color: 'bg-red-500' },
+          { label: '警告', value: demoStats.warning, color: 'bg-amber-500' },
+          { label: '情報', value: demoStats.info, color: 'bg-blue-400' },
+        ];
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">アラート概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">解決率</p>
+                <DonutChart value={resolveRate} max={100} size={140} strokeWidth={14} color={resolveRateColor} label={`${resolveRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {demoStats.total} 件中 {resolvedCount} 件解決済（未解決: {demoStats.unresolved}）
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">重要度別アラート数</p>
+                <BarChart data={severityBarData} maxValue={Math.max(demoStats.critical, demoStats.warning, demoStats.info)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
