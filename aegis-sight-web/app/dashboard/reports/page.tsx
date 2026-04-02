@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types & Mock Data
@@ -131,6 +132,38 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      {/* レポート概要チャート */}
+      {(() => {
+        const typeCounts: Record<string, number> = {};
+        reportHistory.forEach(h => { typeCounts[typeLabel(h.type)] = (typeCounts[typeLabel(h.type)] || 0) + 1; });
+        const totalReports = reportHistory.length;
+        const latestRate = Math.round((totalReports / 20) * 100); // 20 = target monthly reports
+        const rateColor = latestRate >= 80 ? '#10b981' : latestRate >= 50 ? '#f59e0b' : '#ef4444';
+        const typeBarData = Object.entries(typeCounts).map(([type, count], i) => ({
+          label: type,
+          value: count,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-red-500', 'bg-purple-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">レポート概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">レポート生成実績</p>
+                <DonutChart value={latestRate} max={100} size={140} strokeWidth={14} color={rateColor} label={`${totalReports}件`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {reportTypes.length} 種類のレポートテンプレート
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">種別別レポート件数</p>
+                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map(d => d.value), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
