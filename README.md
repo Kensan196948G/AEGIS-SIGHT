@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.55.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.56.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -523,8 +523,10 @@ graph LR
 | 10:45 JST | 🔧 Improve | PR#124 CI全通過・main マージ完了 (Phase53) | #124 | ✅ |
 | 11:00-11:20 JST | 🔧 Improve | Phase54: IAMS pytest Phase2 資産管理テスト52件 | #125 | ✅ |
 | 11:20 JST | 🔧 Improve | PR#125 CI全通過・main マージ完了 (Phase54) | #125 | ✅ |
-| 11:30-11:50 JST | 🔧 Improve | Phase55: IAMS pytest Phase3 SAMライセンス管理テスト48件 | #126 | 🔄 |
-| 11:50-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase4〜・npm major評価 | - | 🔄 |
+| 11:30-11:50 JST | 🔧 Improve | Phase55: IAMS pytest Phase3 SAMライセンス管理テスト48件 | #126 | ✅ |
+| 11:50 JST | 🔧 Improve | PR#126 CI全通過・main マージ完了 (Phase55) | #126 | ✅ |
+| 12:00-12:20 JST | 🔧 Improve | Phase56: IAMS pytest Phase4 ユーザー管理テスト45件 | #127 | 🔄 |
+| 12:20-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase5〜・npm major評価 | - | 🔄 |
 
 ### STABLE 判定条件
 
