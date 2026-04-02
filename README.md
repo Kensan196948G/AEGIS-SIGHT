@@ -589,8 +589,8 @@ graph LR
 | 10:45 JST | 🔧 Improve | Phase112: IAMS pytest IPアドレス管理・セキュリティ監査・バッチ処理36件（IAMS移植**完結**・累計1,798件） | #184 | ✅ |
 | 11:00 JST | 🔨 Build | Phase113: フロントエンドPhase B-5 デバイス管理画面実装（一覧・詳細・サイドバー追加） | #185 | ✅ |
 | 14:00 JST | 🔨 Build | Phase114: 監視ダッシュボード実装（monitoring/page.tsx・サービス状態・アラートイベント・Grafana埋め込み） | #186 | ✅ |
-| 14:30 JST | 🔧 Improve | Phase115: alembic lint修正（UP007/UP035/I001・型アノテーション近代化・インポート整列） | #187 | 🔄 |
-| 14:45 JST | 🔧 Improve | Phase116: Badge variant `'outline'` 追加（TypeScript型エラー修正・ボーダースタイル定義） | #188 | 🔄 |
+| 14:30 JST | 🔧 Improve | Phase115: alembic lint修正（UP007/UP035/I001・型アノテーション近代化・インポート整列） | #187 | ✅ |
+| 14:45 JST | 🔧 Improve | Phase116: Badge variant `'outline'` 追加（TypeScript型エラー修正・ボーダースタイル定義） | #188 | ✅ |
 | 15:18 JST | 🔍 Monitor | Phase117: README v0.63.0更新・Session9フェーズ進捗記録 | - | ✅ |
 
 ### STABLE 判定条件
