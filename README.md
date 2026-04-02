@@ -13,7 +13,7 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.57.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.58.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -528,7 +528,8 @@ graph LR
 | 12:00-12:20 JST | 🔧 Improve | Phase56: IAMS pytest Phase4 ユーザー管理テスト45件 | #127 | ✅ |
 | 12:20 JST | 🔧 Improve | PR#127 CI全通過・main マージ完了 (Phase56) | #127 | ✅ |
 | 12:30-12:50 JST | 🔧 Improve | Phase57: IAMS pytest Phase5 通知管理テスト50件 | #128 | 🔄 |
-| 12:50-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase6〜・npm major評価 | - | 🔄 |
+| 12:50-13:10 JST | 🔧 Improve | Phase58: IAMS pytest Phase6 調達管理テスト33件 | #129 | 🔄 |
+| 13:10-16:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase7〜・npm major評価 | - | 🔄 |
 
 ### STABLE 判定条件
 
