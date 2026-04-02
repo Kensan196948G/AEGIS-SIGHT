@@ -77,19 +77,25 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
-          cache-dependency-path: "aegis-sight-api/requirements.txt"
+          cache-dependency-path: |
+            aegis-sight-api/requirements.txt
+            aegis-sight-api/requirements-dev.txt
 
       - name: Install Python dependencies
         run: |
           if [ -f aegis-sight-api/requirements.txt ]; then
             pip install -r aegis-sight-api/requirements.txt
           fi
-          pip install pytest pytest-asyncio pytest-cov httpx
+          if [ -f aegis-sight-api/requirements-dev.txt ]; then
+            pip install -r aegis-sight-api/requirements-dev.txt
+          else
+            pip install pytest pytest-asyncio pytest-cov httpx factory-boy
+          fi
 
       - name: Run pytest
         id: pytest
         env:
-          DATABASE_URL: postgresql://aegis:aegis_test@localhost:5432/aegis_test
+          DATABASE_URL: postgresql+asyncpg://aegis:aegis_test@localhost:5432/aegis_test
         run: |
           if [ -d aegis-sight-api/tests ]; then
             cd aegis-sight-api && pytest --cov=app --cov-report=xml --cov-report=html --junitxml=../test-results/pytest-results.xml -v 2>&1 | tee ../test-results/pytest-output.txt || true
