@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 interface Department {
   id: string;
@@ -227,6 +228,41 @@ export default function DepartmentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* 部門概要チャート */}
+      {!loading && departments.length > 0 && (() => {
+        const totalDevices = departments.reduce((s, d) => s + (d.device_count || 0), 0);
+        const withDevices = departments.filter(d => (d.device_count || 0) > 0).length;
+        const coverageRate = departments.length > 0 ? Math.round((withDevices / departments.length) * 100) : 0;
+        const coverageColor = coverageRate >= 80 ? '#10b981' : coverageRate >= 50 ? '#f59e0b' : '#ef4444';
+        const deptBarData = departments
+          .filter(d => (d.device_count || 0) > 0)
+          .sort((a, b) => (b.device_count || 0) - (a.device_count || 0))
+          .slice(0, 6)
+          .map((d, i) => ({
+            label: d.name.substring(0, 6),
+            value: d.device_count || 0,
+            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] || 'bg-gray-400',
+          }));
+        return (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-aegis-border dark:bg-aegis-dark">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">部門概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">デバイス配置率</p>
+                <DonutChart value={coverageRate} max={100} size={140} strokeWidth={14} color={coverageColor} label={`${totalDevices}台`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {departments.length} 部門中 {withDevices} 部門にデバイス配置
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">部門別デバイス数 Top</p>
+                <BarChart data={deptBarData} maxValue={Math.max(...deptBarData.map(d => d.value), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
