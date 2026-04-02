@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -169,6 +170,38 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      {/* 通知概要チャート */}
+      {(() => {
+        const enabledChannels = demoChannels.filter(c => c.is_enabled).length;
+        const enabledRate = Math.round((enabledChannels / demoChannels.length) * 100);
+        const enabledColor = enabledRate >= 80 ? '#10b981' : enabledRate >= 50 ? '#f59e0b' : '#ef4444';
+        const channelTypeCounts: Record<string, number> = {};
+        demoChannels.forEach(c => { channelTypeCounts[channelTypeLabel[c.channel_type]] = (channelTypeCounts[channelTypeLabel[c.channel_type]] || 0) + 1; });
+        const channelBarData = Object.entries(channelTypeCounts).map(([type, count], i) => ({
+          label: type,
+          value: count,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">通知概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">チャネル有効率</p>
+                <DonutChart value={enabledRate} max={100} size={140} strokeWidth={14} color={enabledColor} label={`${enabledRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {demoChannels.length} チャネル中 {enabledChannels} 有効 / ルール {demoRules.length} 件
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">チャネル種別別件数</p>
+                <BarChart data={channelBarData} maxValue={Math.max(...channelBarData.map(d => d.value), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
