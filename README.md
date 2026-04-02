@@ -515,7 +515,9 @@ graph LR
 | 09:05 JST | 🔧 Improve | Actions PR #13,#15,#17,#18 CI確認・マージ | - | ✅ |
 | 09:10 JST | 🔧 Improve | npm major PR #19,#20,#21,#23,#27,#28 リスクコメント | - | ✅ |
 | 09:15 JST | 🔧 Improve | PR#119 CI全通過・マージ完了 (docs Phase51) | #119 | ✅ |
-| 09:15-16:21 JST | 🔧 Improve | Improvement継続: Phase51実装・依存関係更新 | - | 🔄 |
+| 09:30 JST | 🔧 Improve | AlertManager設定・docker-compose更新・Secrets手順書作成 | - | ✅ |
+| 09:50 JST | 🔧 Improve | PR#120 CI全通過・マージ完了 (AlertManager+docs) | #120 | ✅ |
+| 09:50-16:21 JST | 🔧 Improve | Improvement継続: Phase51残タスク実装 | - | 🔄 |
 
 ### STABLE 判定条件
 
