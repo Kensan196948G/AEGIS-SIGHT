@@ -33,6 +33,14 @@ export function useAuth() {
 
 const STORAGE_KEY = 'aegis-sight-auth';
 
+function setAuthCookie(token: string) {
+  document.cookie = `aegis-sight-auth=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+}
+
+function removeAuthCookie() {
+  document.cookie = 'aegis-sight-auth=; path=/; max-age=0';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored);
         if (parsed.user && parsed.token) {
           setUser(parsed.user);
+          setAuthCookie(parsed.token);
         }
       }
     } catch {
@@ -81,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           const demoToken = 'demo-token-' + Date.now();
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: demoUser, token: demoToken }));
+          setAuthCookie(demoToken);
           setUser(demoUser);
           router.push('/dashboard');
           return;
@@ -90,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: data.user, token: data.token }));
+      setAuthCookie(data.token);
       setUser(data.user);
       router.push('/dashboard');
     } catch (err) {
@@ -105,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         const demoToken = 'demo-token-' + Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: demoUser, token: demoToken }));
+        setAuthCookie(demoToken);
         setUser(demoUser);
         router.push('/dashboard');
         return;
@@ -117,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    removeAuthCookie();
     setUser(null);
     router.push('/login');
   }, [router]);
