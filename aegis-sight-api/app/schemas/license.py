@@ -69,3 +69,18 @@ class ComplianceCheckResponse(BaseModel):
     total_used: int
     is_compliant: bool
     over_deployed: int
+
+
+class ExpiringLicenseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    software_name: str
+    vendor: str
+    license_type: LicenseType
+    expiry_date: date
+    days_until_expiry: int
+    purchased_count: int
+    cost_per_unit: Decimal | None = None
+    currency: str
+    vendor_contract_id: str | None = None

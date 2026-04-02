@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -290,3 +291,82 @@ async def test_compliance_m365_causes_over_deployment(
     assert len(m365_over) == 1
     assert m365_over[0]["is_compliant"] is False
     assert m365_over[0]["over_deployed"] == 5
+
+
+# ---- Expiring Licenses ----
+
+
+@pytest.mark.asyncio
+async def test_expiring_licenses_unauthorized(client: AsyncClient):
+    """Test that expiring licenses endpoint requires authentication."""
+    response = await client.get("/api/v1/sam/licenses/expiring")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_expiring_licenses_empty(client: AsyncClient, auth_headers: dict):
+    """Test that expiring endpoint returns empty list when no licenses expire soon."""
+    response = await client.get(
+        "/api/v1/sam/licenses/expiring?days=30", headers=auth_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+@pytest.mark.asyncio
+async def test_expiring_licenses_within_threshold(
+    client: AsyncClient, auth_headers: dict
+):
+    """Test that a license expiring within the threshold is returned."""
+    expiry = (date.today() + timedelta(days=10)).isoformat()
+    payload = {
+        "software_name": "ExpiringSoon",
+        "vendor": "SomeVendor",
+        "license_type": "subscription",
+        "purchased_count": 10,
+        "expiry_date": expiry,
+    }
+    create_resp = await client.post(
+        "/api/v1/sam/licenses", json=payload, headers=auth_headers
+    )
+    assert create_resp.status_code == 201
+
+    response = await client.get(
+        "/api/v1/sam/licenses/expiring?days=30", headers=auth_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    names = [item["software_name"] for item in data]
+    assert "ExpiringSoon" in names
+
+    item = next(i for i in data if i["software_name"] == "ExpiringSoon")
+    assert item["days_until_expiry"] >= 0
+    assert item["days_until_expiry"] <= 30
+    assert item["expiry_date"] == expiry
+
+
+@pytest.mark.asyncio
+async def test_expiring_licenses_outside_threshold(
+    client: AsyncClient, auth_headers: dict
+):
+    """Test that a license expiring outside the threshold is not returned."""
+    far_expiry = (date.today() + timedelta(days=90)).isoformat()
+    payload = {
+        "software_name": "ExpiringFarFuture",
+        "vendor": "FarVendor",
+        "license_type": "perpetual",
+        "purchased_count": 5,
+        "expiry_date": far_expiry,
+    }
+    await client.post(
+        "/api/v1/sam/licenses", json=payload, headers=auth_headers
+    )
+
+    response = await client.get(
+        "/api/v1/sam/licenses/expiring?days=30", headers=auth_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    names = [item["software_name"] for item in data]
+    assert "ExpiringFarFuture" not in names
