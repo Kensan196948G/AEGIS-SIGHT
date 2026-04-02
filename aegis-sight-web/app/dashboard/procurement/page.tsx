@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 type ProcurementStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
@@ -51,8 +51,47 @@ const priorityConfig: Record<ProcurementPriority, { color: string; label: string
 
 const ITEMS_PER_PAGE = 8;
 
+// ライフサイクルステップ（申請→承認→発注→納品→完了）
+const LIFECYCLE_STEPS: ProcurementStatus[] = ['submitted', 'approved', 'ordered', 'delivered', 'completed'];
+
 function formatCost(cost: number): string {
   return `¥${cost.toLocaleString('ja-JP')}`;
+}
+
+function LifecycleStepper({ status }: { status: ProcurementStatus }) {
+  if (status === 'draft' || status === 'rejected') return null;
+  const currentIndex = LIFECYCLE_STEPS.indexOf(status);
+  const stepLabels: Record<ProcurementStatus, string> = {
+    submitted: '申請', approved: '承認', ordered: '発注', delivered: '納品', completed: '完了',
+    draft: '', rejected: '',
+  };
+  return (
+    <div className="flex items-center gap-0.5">
+      {LIFECYCLE_STEPS.map((step, i) => {
+        const isDone    = i < currentIndex;
+        const isCurrent = i === currentIndex;
+        return (
+          <div key={step} className="flex items-center">
+            <div
+              title={stepLabels[step]}
+              className={`h-2 w-2 rounded-full ${
+                isDone ? 'bg-emerald-500' : isCurrent ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+            />
+            {i < LIFECYCLE_STEPS.length - 1 && (
+              <div className={`h-0.5 w-3 ${isDone ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-gray-700'}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+interface ApprovalModal {
+  id: string;
+  title: string;
+  action: 'approve' | 'reject';
 }
 
 export default function ProcurementPage() {
@@ -61,10 +100,27 @@ export default function ProcurementPage() {
   const [priorityFilter, setPriorityFilter] = useState<ProcurementPriority | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [statuses, setStatuses] = useState<Record<string, ProcurementStatus>>(
+    Object.fromEntries(demoRequests.map((r) => [r.id, r.status]))
+  );
+  const [modal, setModal] = useState<ApprovalModal | null>(null);
+  const [comment, setComment] = useState('');
+
+  const handleApprovalConfirm = useCallback(() => {
+    if (!modal) return;
+    setStatuses((prev) => ({
+      ...prev,
+      [modal.id]: modal.action === 'approve' ? 'approved' : 'rejected',
+    }));
+    setModal(null);
+    setComment('');
+  }, [modal]);
+
+  const requests = demoRequests.map((r) => ({ ...r, status: statuses[r.id] ?? r.status }));
 
   const categories = Array.from(new Set(demoRequests.map((r) => r.category))).sort();
 
-  const filtered = demoRequests.filter((req) => {
+  const filtered = requests.filter((req) => {
     const matchesSearch =
       search === '' ||
       req.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -89,12 +145,12 @@ export default function ProcurementPage() {
 
   const hasFilters = search || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all';
 
-  // Summary counts
-  const totalBudget = demoRequests
+  // Summary counts (reactive to local approval state)
+  const totalBudget = requests
     .filter((r) => ['approved', 'ordered', 'delivered', 'completed'].includes(r.status))
     .reduce((sum, r) => sum + r.cost, 0);
-  const pendingCount = demoRequests.filter((r) => r.status === 'submitted').length;
-  const urgentCount = demoRequests.filter((r) => r.priority === 'urgent' && !['rejected', 'completed'].includes(r.status)).length;
+  const pendingCount = requests.filter((r) => r.status === 'submitted').length;
+  const urgentCount = requests.filter((r) => r.priority === 'urgent' && !['rejected', 'completed'].includes(r.status)).length;
 
   return (
     <div className="space-y-6">
@@ -190,7 +246,7 @@ export default function ProcurementPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                {['申請番号', 'タイトル', 'カテゴリ', '申請者', '見積額', '優先度', 'ステータス', '申請日'].map((h) => (
+                {['申請番号', 'タイトル', 'カテゴリ', '申請者', '見積額', '優先度', 'ステータス', '申請日', 'アクション'].map((h) => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     {h}
                   </th>
@@ -233,16 +289,37 @@ export default function ProcurementPage() {
                       <span className={`text-sm font-semibold ${color}`}>{priorityLabel}</span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <Badge variant={variant} dot size="sm">{statusLabel}</Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant={variant} dot size="sm">{statusLabel}</Badge>
+                        <LifecycleStepper status={req.status} />
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {req.submitted_at}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                      {req.status === 'submitted' && (
+                        <div className="flex gap-1">
+                          <button
+                            className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                            onClick={() => { setModal({ id: req.id, title: req.title, action: 'approve' }); setComment(''); }}
+                          >
+                            承認
+                          </button>
+                          <button
+                            className="rounded bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                            onClick={() => { setModal({ id: req.id, title: req.title, action: 'reject' }); setComment(''); }}
+                          >
+                            却下
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
               }) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={9} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     条件に一致する申請が見つかりません
                   </td>
                 </tr>
@@ -285,6 +362,41 @@ export default function ProcurementPage() {
           </div>
         </div>
       </div>
+
+      {/* Approval / Rejection Modal */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-aegis-surface">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {modal.action === 'approve' ? '申請を承認しますか？' : '申請を却下しますか？'}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{modal.title}</p>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                コメント（任意）
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                placeholder={modal.action === 'approve' ? '承認理由を入力...' : '却下理由を入力...'}
+                className="aegis-input mt-1 resize-none"
+              />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button className="aegis-btn-secondary" onClick={() => setModal(null)}>
+                キャンセル
+              </button>
+              <button
+                className={modal.action === 'approve' ? 'aegis-btn-primary' : 'rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700'}
+                onClick={handleApprovalConfirm}
+              >
+                {modal.action === 'approve' ? '承認する' : '却下する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
