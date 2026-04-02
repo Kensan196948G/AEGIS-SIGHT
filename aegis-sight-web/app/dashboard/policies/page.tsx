@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -183,6 +184,35 @@ export default function PoliciesPage() {
 
   return (
     <div className="space-y-6">
+      {/* ポリシー概要チャート */}
+      {(() => {
+        const compRate = Math.round(complianceSummary.complianceRate);
+        const compColor = compRate >= 80 ? '#10b981' : compRate >= 50 ? '#f59e0b' : '#ef4444';
+        const typeBarData = Object.entries(complianceSummary.byType).map(([type, count], i) => ({
+          label: type.replace('_', '\n').substring(0, 10),
+          value: count as number,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ポリシー概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">コンプライアンス率</p>
+                <DonutChart value={compRate} max={100} size={140} strokeWidth={14} color={compColor} label={`${compRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  未解決違反: {complianceSummary.unresolvedViolations} 件
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ポリシー種別別件数</p>
+                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map(d => d.value), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
