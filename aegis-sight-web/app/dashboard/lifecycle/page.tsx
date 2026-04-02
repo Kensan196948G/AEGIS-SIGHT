@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 type DisposalStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 type DisposalMethod = 'recycle' | 'destroy' | 'donate' | 'return_to_vendor';
@@ -33,19 +34,13 @@ const methodLabel: Record<DisposalMethod, string> = {
   return_to_vendor: 'ベンダー返却',
 };
 
-const statusBadge: Record<DisposalStatus, string> = {
-  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  approved: 'aegis-badge-success',
-  rejected: 'aegis-badge-danger',
-  completed: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+const statusConfig: Record<DisposalStatus, { variant: 'warning' | 'success' | 'danger' | 'default'; label: string }> = {
+  pending:   { variant: 'warning', label: '承認待ち' },
+  approved:  { variant: 'success', label: '承認済' },
+  rejected:  { variant: 'danger',  label: '却下' },
+  completed: { variant: 'default', label: '完了' },
 };
 
-const statusLabel: Record<DisposalStatus, string> = {
-  pending: '承認待ち',
-  approved: '承認済',
-  rejected: '却下',
-  completed: '完了',
-};
 
 const eventTypeIcon: Record<string, { color: string; label: string }> = {
   procured: { color: 'bg-blue-500', label: '調達' },
@@ -232,9 +227,9 @@ export default function LifecyclePage() {
                       {d.requester}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <span className={`aegis-badge ${statusBadge[d.status]}`}>
-                        {statusLabel[d.status]}
-                      </span>
+                      <Badge variant={statusConfig[d.status].variant} dot size="sm">
+                        {statusConfig[d.status].label}
+                      </Badge>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {d.createdAt}
