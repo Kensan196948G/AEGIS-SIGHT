@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, ProgressBar } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Mock data (to be replaced with API calls)
@@ -97,6 +98,95 @@ export default function PatchesPage() {
           </svg>
           スキャン実行
         </button>
+      </div>
+
+      {/* Patch Compliance Overview */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* DonutChart: Compliance Rate */}
+        <div className="aegis-card flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-col items-center">
+            <DonutChart
+              value={complianceSummary.complianceRate}
+              max={100}
+              size={140}
+              strokeWidth={14}
+              color={
+                complianceSummary.complianceRate >= 90
+                  ? '#10b981'
+                  : complianceSummary.complianceRate >= 70
+                    ? '#f59e0b'
+                    : '#ef4444'
+              }
+              label={`${complianceSummary.complianceRate}%`}
+            />
+            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              パッチ適用率
+            </p>
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+              適用状況（{complianceSummary.fullyPatchedDevices} / {complianceSummary.totalDevices} 台）
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              未適用パッチ総数: {complianceSummary.totalUpdates} 件
+            </p>
+            <div className="space-y-2 pt-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Critical</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">
+                  {complianceSummary.criticalMissing} 件
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Important</span>
+                <span className="font-semibold text-orange-600 dark:text-orange-400">
+                  {complianceSummary.importantMissing} 件
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Moderate</span>
+                <span className="font-semibold text-yellow-600 dark:text-yellow-400">
+                  {complianceSummary.moderateMissing} 件
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-600 dark:text-gray-400">Low</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                  {complianceSummary.lowMissing} 件
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ProgressBar: Severity Breakdown */}
+        <div className="aegis-card">
+          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+            重要度別 未適用パッチ比率
+          </h2>
+          <div className="space-y-4">
+            {[
+              { label: 'Critical',  value: complianceSummary.criticalMissing,  color: 'red'   as const },
+              { label: 'Important', value: complianceSummary.importantMissing, color: 'amber' as const },
+              { label: 'Moderate',  value: complianceSummary.moderateMissing,  color: 'amber' as const },
+              { label: 'Low',       value: complianceSummary.lowMissing,       color: 'blue'  as const },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{item.value} 件</span>
+                </div>
+                <ProgressBar
+                  value={item.value}
+                  max={complianceSummary.importantMissing + complianceSummary.criticalMissing + complianceSummary.moderateMissing + complianceSummary.lowMissing}
+                  color={item.color}
+                  size="sm"
+                  showLabel={false}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Compliance Summary Cards */}
