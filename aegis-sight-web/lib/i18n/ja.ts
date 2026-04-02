@@ -157,7 +157,7 @@ export const ja = {
     loginWithEntraId: 'Entra IDでログイン',
     sessionExpired: 'セッションが切れました。再度ログインしてください。',
   },
-} as const;
+};
 
 export type MessageCatalog = typeof ja;
 export type MessageKey = keyof typeof ja;
