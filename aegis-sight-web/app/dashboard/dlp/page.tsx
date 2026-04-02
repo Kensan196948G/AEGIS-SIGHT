@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -252,6 +253,36 @@ export default function DLPPage() {
           </button>
         </div>
       </div>
+
+      {/* DLP 概要チャート */}
+      {(() => {
+        const blockRate = Math.round((mockSummary.blocked / Math.max(mockSummary.totalEvents, 1)) * 100);
+        const blockRateColor = blockRate >= 50 ? '#ef4444' : blockRate >= 30 ? '#f59e0b' : '#10b981';
+        const severityBarData = [
+          { label: 'Critical', value: mockSummary.bySeverity.critical, color: 'bg-red-500' },
+          { label: 'High', value: mockSummary.bySeverity.high, color: 'bg-orange-500' },
+          { label: 'Medium', value: mockSummary.bySeverity.medium, color: 'bg-amber-500' },
+          { label: 'Low', value: mockSummary.bySeverity.low, color: 'bg-blue-400' },
+        ];
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">DLP 概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ブロック率</p>
+                <DonutChart value={blockRate} max={100} size={140} strokeWidth={14} color={blockRateColor} label={`${blockRate}%`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  全 {mockSummary.totalEvents} イベント中 {mockSummary.blocked} 件ブロック
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">重要度別イベント数</p>
+                <BarChart data={severityBarData} maxValue={Math.max(...Object.values(mockSummary.bySeverity), 1)} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
