@@ -550,8 +550,9 @@ graph LR
 | 17:35-17:50 JST | 🔧 Improve | Phase77: IAMS pytest Phase25 セキュリティ・SLA管理・統合検索テスト36件 | #148 | ✅ |
 | 17:50-18:05 JST | 🔧 Improve | Phase78: IAMS pytest Phase26 認証詳細・DLP・印刷管理テスト36件 | #149 | ✅ |
 | 18:05-18:20 JST | 🔧 Improve | Phase79: IAMS pytest Phase27 リモートワーク・ネットワーク・ログイベントテスト36件 | #150 | ✅ |
-| 18:20-18:35 JST | 🔧 Improve | Phase80: IAMS pytest Phase28 レポート・通知管理・アセット管理テスト36件 | #151 | 🔄 |
-| 18:35-18:36 JST | 🔧 Improve | Improvement継続: IAMS変換Phase29〜 | - | 🔄 |
+| 18:20-18:35 JST | 🔧 Improve | Phase80: IAMS pytest Phase28 レポート・通知管理・アセット管理テスト36件 | #151 | ✅ |
+| 18:35-18:50 JST | 🔧 Improve | Phase81: IAMS pytest Phase29 ユーザー管理・ダッシュボード・監査ログ・カスタムビューテスト36件 | #152 | 🔄 |
+| 18:50-18:51 JST | 🔧 Improve | Improvement継続: IAMS変換Phase30〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
