@@ -545,9 +545,10 @@ graph LR
 | 16:20-16:35 JST | 🔧 Improve | Phase72: IAMS pytest Phase20 スケジューラー・M365・システム設定管理テスト36件 | #143 | ✅ |
 | 16:35-16:50 JST | 🔧 Improve | Phase73: IAMS pytest Phase21 アラート・インシデント・変更管理テスト38件 | #144 | ✅ |
 | 16:50-17:05 JST | 🔧 Improve | Phase74: IAMS pytest Phase22 コンプライアンス・セキュリティ・メトリクス・ログテスト36件 | #145 | ✅ |
-| 17:05-17:20 JST | 🔧 Improve | Phase75: IAMS pytest Phase23 バッチ処理・DB管理・部署管理テスト36件 | #146 | 🔄 |
-| 17:20-17:35 JST | 🔧 Improve | Phase76: IAMS pytest Phase24 ヘルス・バージョン・テレメトリー・ソフトウェアテスト36件 | #147 | 🔄 |
-| 17:35-17:36 JST | 🔧 Improve | Improvement継続: IAMS変換Phase25〜 | - | 🔄 |
+| 17:05-17:20 JST | 🔧 Improve | Phase75: IAMS pytest Phase23 バッチ処理・DB管理・部署管理テスト36件 | #146 | ✅ |
+| 17:20-17:35 JST | 🔧 Improve | Phase76: IAMS pytest Phase24 ヘルス・バージョン・テレメトリー・ソフトウェアテスト36件 | #147 | ✅ |
+| 17:35-17:50 JST | 🔧 Improve | Phase77: IAMS pytest Phase25 セキュリティ・SLA管理・統合検索テスト36件 | #148 | 🔄 |
+| 17:50-17:51 JST | 🔧 Improve | Improvement継続: IAMS変換Phase26〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
