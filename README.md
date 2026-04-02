@@ -564,8 +564,9 @@ graph LR
 | 21:05-21:20 JST | 🔧 Improve | Phase91: IAMS pytest Phase39 ユーザー管理・資産管理・監査ログ・セキュリティ詳細テスト36件 | #162 | ✅ |
 | 21:20-21:35 JST | 🔧 Improve | Phase92: IAMS pytest Phase40 SAMライセンス・調達管理・ナレッジベース・ライフサイクル詳細テスト36件 | #163 | ✅ |
 | 21:35-21:50 JST | 🔧 Improve | Phase93: IAMS pytest Phase41 データベース管理・メトリクス・セキュリティ監査・レポート詳細テスト36件 | #164 | ✅ |
-| 21:50-22:05 JST | 🔧 Improve | Phase94: IAMS pytest Phase42 変更管理・パッチ管理・コンプライアンス・IPAM詳細テスト36件 | #165 | 🔄 |
-| 22:05-22:06 JST | 🔧 Improve | Improvement継続: IAMS変換Phase43〜 | - | 🔄 |
+| 21:50-22:05 JST | 🔧 Improve | Phase94: IAMS pytest Phase42 変更管理・パッチ管理・コンプライアンス・IPAM詳細テスト36件 | #165 | ✅ |
+| 22:05-22:20 JST | 🔧 Improve | Phase95: IAMS pytest Phase43 デバイスグループ・カスタムビュー・検索・スケジューラー詳細テスト36件 | #166 | 🔄 |
+| 22:20-22:21 JST | 🔧 Improve | Improvement継続: IAMS変換Phase44〜 | - | 🔄 |
 
 ### STABLE 判定条件
 
