@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -389,6 +390,35 @@ export default function SessionsPage() {
           Monitor remote desktop sessions, VPN connections, and user behavior
         </p>
       </div>
+
+      {/* セッション概要チャート */}
+      {(() => {
+        const activeRate = Math.round((mockAnalytics.active_sessions / 50) * 100); // 50 = estimated max
+        const activeColor = activeRate >= 80 ? '#ef4444' : activeRate >= 50 ? '#f59e0b' : '#10b981';
+        const typeBarData = Object.entries(mockAnalytics.by_type).map(([type, count], i) => ({
+          label: type.toUpperCase(),
+          value: count,
+          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
+        }));
+        return (
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">セッション概要</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブセッション率</p>
+                <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeColor} label={`${mockAnalytics.active_sessions}件`} />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  累計 {mockAnalytics.total_sessions.toLocaleString()} セッション
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">セッション種別別件数</p>
+                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map(d => d.value))} height={160} showValues />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
