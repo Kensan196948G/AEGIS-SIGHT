@@ -54,3 +54,16 @@ secrets.json
 # Reports
 bandit-report.json
 .secrets-report.json
+
+# ClaudeOS runtime files
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# E2E test screenshots
+e2e-*.png
+
+# vitest coverage output
+aegis-sight-web/coverage/
+
+# TypeScript build info
+aegis-sight-web/tsconfig.tsbuildinfo
