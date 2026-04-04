@@ -10,6 +10,18 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     css: true,
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['app/**', 'components/**', 'lib/**'],
+      exclude: [
+        '**/node_modules/**',
+        '**/e2e/**',
+        '**/tests/**',
+        '**/*.config.*',
+        '**/*.d.ts',
+      ],
+    },
   },
   resolve: {
     alias: {
