@@ -1,0 +1,82 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "aegis-sight-web/**"
+      - ".github/workflows/frontend-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "aegis-sight-web/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  frontend-lint:
+    name: Lint (Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "aegis-sight-web/package-lock.json"
+
+      - name: Install dependencies
+        run: cd aegis-sight-web && npm ci
+
+      - name: Run ESLint
+        run: cd aegis-sight-web && npx next lint
+
+      - name: TypeScript type check
+        run: cd aegis-sight-web && npx tsc --noEmit
+
+  frontend-test:
+    name: Test (Frontend)
+    runs-on: ubuntu-latest
+    needs: frontend-lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "aegis-sight-web/package-lock.json"
+
+      - name: Install dependencies
+        run: cd aegis-sight-web && npm ci
+
+      - name: Run Vitest
+        run: cd aegis-sight-web && npx vitest run --reporter=verbose
+
+  frontend-build:
+    name: Build (Frontend)
+    runs-on: ubuntu-latest
+    needs: frontend-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "aegis-sight-web/package-lock.json"
+
+      - name: Install dependencies
+        run: cd aegis-sight-web && npm ci
+
+      - name: Build Next.js
+        run: cd aegis-sight-web && npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
