@@ -21,6 +21,7 @@
 ![ISO 27001](https://img.shields.io/badge/ISO%2027001-Compliant-1A7A4A?style=for-the-badge)
 
 [![CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/claudeos-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
+[![Frontend CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
 [![Project](https://img.shields.io/badge/Project-司令盤-blue?style=flat-square)](https://github.com/users/Kensan196948G/projects/14)
 
 </div>
@@ -256,7 +257,7 @@ graph TB
 │   └── 11_IAMS廃止計画/          #   移植チェック・データ移行
 │
 ├── 🔧 scripts/                   # ClaudeOS 自動化スクリプト
-├── 🔄 .github/workflows/         # CI/CD パイプライン
+├── 🔄 .github/workflows/         # CI/CD パイプライン (claudeos-ci / frontend-ci / security-scan / deploy-prod)
 ├── 🐳 docker-compose.yml         # 全サービス起動
 ├── 🐳 docker-compose.dev.yml     # 開発用 (ホットリロード)
 ├── 🐳 docker-compose.test.yml    # テスト用
@@ -344,7 +345,7 @@ gantt
 | 🧪 テスト (850+ケース) | ✅ Done | pytest 100+ファイル + Vitest + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
-| 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) |
+| 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|
 | 📋 監査証跡・レポート | ✅ Done | 監査API + CSV/JSONエクスポート + 通知サービス |
 | 🔔 アラート・ユーザー管理 | ✅ Done | CRUD + acknowledge/resolve + ロール管理 |
 | 🏢 部門・バッチ・ヘルスチェック | ✅ Done | 階層部門 + CSV一括処理 + K8s probe |
@@ -374,6 +375,7 @@ gantt
 | 🔧 **Phase51 依存関係更新・ステージング** | ✅ **Done** | Actions PR#13,#15,#17,#18 マージ済み・npm major PRリスク評価済み・ドキュメント更新 (PR#119 merged) (Issue#118) |
 | 🧪 **Phase101-112 IAMS pytest移植完結** | ✅ **Done** | 累計1,798件テスト (PR#173-184) — 1,157件目標比 +641件超過達成 |
 | 🖥️ **Phase113 フロントエンドPhase B-5** | ✅ **Done** | デバイス管理画面実装（一覧・詳細・サイドバー追加）(PR#185) |
+| 🔧 **CI品質強化・テスト追加** | ✅ **Done** | ESLint修正・SearchPageテスト追加・Frontend CI専用ワークフロー (PR#236, #237) |
 
 ### GitHub Issues トラッカー
 
@@ -416,7 +418,10 @@ gantt
 | - | Phase47 SLA管理ダッシュボード | Done | ✅ |
 | - | Phase48 最終統合・リリース v0.48.0 | Done | ✅ |
 | [#116](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/116) | **Phase50 本番デプロイ準備・IAMS統合完成** | Done | ✅ |
-| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | **In Progress** | 🔄 |
+| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | Done | ✅ |
+| [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | **依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 / React 19** | Backlog | 📋 |
+| [#239](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/239) | **依存関係移行計画: vitest 4 / jsdom 29 / @vitejs/plugin-react 6** | Backlog | 📋 |
+| [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | In Progress | 🔄 |
 
 ---
 
