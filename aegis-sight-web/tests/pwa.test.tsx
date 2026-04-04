@@ -173,28 +173,28 @@ describe('offline-storage', () => {
   });
 
   it('should export saveOfflineOperation function', async () => {
-    const module = await import('@/lib/offline-storage');
-    expect(typeof module.saveOfflineOperation).toBe('function');
+    const imported = await import('@/lib/offline-storage');
+    expect(typeof imported.saveOfflineOperation).toBe('function');
   });
 
   it('should export getOfflineOperations function', async () => {
-    const module = await import('@/lib/offline-storage');
-    expect(typeof module.getOfflineOperations).toBe('function');
+    const imported = await import('@/lib/offline-storage');
+    expect(typeof imported.getOfflineOperations).toBe('function');
   });
 
   it('should export clearOfflineOperations function', async () => {
-    const module = await import('@/lib/offline-storage');
-    expect(typeof module.clearOfflineOperations).toBe('function');
+    const imported = await import('@/lib/offline-storage');
+    expect(typeof imported.clearOfflineOperations).toBe('function');
   });
 
   it('should export getOfflineOperationCount function', async () => {
-    const module = await import('@/lib/offline-storage');
-    expect(typeof module.getOfflineOperationCount).toBe('function');
+    const imported = await import('@/lib/offline-storage');
+    expect(typeof imported.getOfflineOperationCount).toBe('function');
   });
 
   it('should export requestSync function', async () => {
-    const module = await import('@/lib/offline-storage');
-    expect(typeof module.requestSync).toBe('function');
+    const imported = await import('@/lib/offline-storage');
+    expect(typeof imported.requestSync).toBe('function');
   });
 });
 

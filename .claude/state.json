@@ -1,0 +1,61 @@
+{
+  "project": {
+    "name": "AEGIS-SIGHT",
+    "version": "v0.65.0",
+    "start_date": "2026-03-25",
+    "target_release": "2026-09-25",
+    "current_phase": "Post-IAMS Integration / Maintenance"
+  },
+  "execution": {
+    "loop_count": 2,
+    "current_loop_phase": "Improvement",
+    "start_time": "2026-04-04T14:55:00+09:00",
+    "last_update": "2026-04-04T15:20:00+09:00",
+    "remaining_time_minutes": 380
+  },
+  "task": {
+    "current_issue": "PR #236",
+    "current_branch": "fix/lint-build-test-improvements",
+    "current_worktree": "",
+    "priority": "Medium",
+    "status": "CIWaiting"
+  },
+  "ci": {
+    "last_status": "pending",
+    "retry_count": 0,
+    "error_count": 0,
+    "last_error": "",
+    "last_failed_step": ""
+  },
+  "quality": {
+    "test_count": 87,
+    "test_status": "success",
+    "lint_status": "success",
+    "build_status": "success",
+    "security_status": "success",
+    "stable_judgment": "achieved"
+  },
+  "decision": {
+    "next_action": "Wait CI pass for PR #236, then merge. Next: Dependabot minor version PRs (@types/node, @testing-library/react)",
+    "blocker": "",
+    "risk_level": "low",
+    "requires_human": false
+  },
+  "learning": {
+    "last_failure_pattern": "pwa.test.tsx used `module` variable name - conflicts with Node.js global, blocked by next/core-web-vitals lint rule",
+    "improvement_notes": "1) Always test with `next lint` in CI dir, not project root. 2) Suspense wrapping needed for useSearchParams. 3) Use getAllByText() when component has duplicate text nodes",
+    "prevented_issues": ["Merging Next.js 14->16 without migration", "Merging Tailwind 3->4 without config update"]
+  },
+  "session_history": [
+    {
+      "date": "2026-04-02",
+      "work": "IAMS Prometheus/Grafana基盤強化（PR #235）",
+      "result": "STABLE - CI success"
+    },
+    {
+      "date": "2026-04-04",
+      "work": "lint/build/test品質修正: ESLint設定・Suspense境界・vitest除外・SearchPageテスト追加（PR #236）",
+      "result": "STABLE local - CI pending"
+    }
+  ]
+}
