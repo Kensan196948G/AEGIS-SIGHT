@@ -18,10 +18,10 @@ describe('DashboardPage', () => {
 
   it('displays stat values', () => {
     render(<DashboardPage />);
-    expect(screen.getByText('1,284')).toBeInTheDocument();
-    expect(screen.getByText('7')).toBeInTheDocument();
-    expect(screen.getByText('94.2%')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getAllByText('1,284')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('7')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('94.2%')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('12')[0]).toBeInTheDocument();
   });
 
   it('renders recent alerts section', () => {

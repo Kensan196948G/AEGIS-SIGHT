@@ -1,0 +1,54 @@
+{
+  "project": {
+    "name": "AEGIS-SIGHT",
+    "version": "v0.65.0",
+    "start_date": "2026-03-25",
+    "target_release": "2026-09-25",
+    "current_phase": "Post-IAMS Integration / Maintenance"
+  },
+  "execution": {
+    "loop_count": 1,
+    "current_loop_phase": "Development",
+    "start_time": "2026-04-04T14:55:00+09:00",
+    "last_update": "2026-04-04T15:00:00+09:00",
+    "remaining_time_minutes": 480
+  },
+  "task": {
+    "current_issue": "220 (closing)",
+    "current_branch": "main",
+    "current_worktree": "",
+    "priority": "High",
+    "status": "InProgress"
+  },
+  "ci": {
+    "last_status": "success",
+    "retry_count": 0,
+    "error_count": 0,
+    "last_error": "",
+    "last_failed_step": ""
+  },
+  "quality": {
+    "test_status": "success",
+    "lint_status": "success",
+    "build_status": "success",
+    "security_status": "success"
+  },
+  "decision": {
+    "next_action": "Dependabot PRs evaluation - defer major version bumps (Next.js 16, Tailwind 4, ESLint 10, vitest 4)",
+    "blocker": "",
+    "risk_level": "medium",
+    "requires_human": false
+  },
+  "learning": {
+    "last_failure_pattern": "",
+    "improvement_notes": "Dependabot major version PRs require manual intervention - cannot auto-merge breaking changes",
+    "prevented_issues": ["Merging Next.js 14->16 without migration", "Merging Tailwind 3->4 without config update"]
+  },
+  "session_history": [
+    {
+      "date": "2026-04-02",
+      "work": "IAMS Prometheus/Grafana基盤強化（PR #235）",
+      "result": "STABLE - CI success"
+    }
+  ]
+}
