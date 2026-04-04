@@ -418,9 +418,10 @@ gantt
 | - | Phase47 SLA管理ダッシュボード | Done | ✅ |
 | - | Phase48 最終統合・リリース v0.48.0 | Done | ✅ |
 | [#116](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/116) | **Phase50 本番デプロイ準備・IAMS統合完成** | Done | ✅ |
-| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | **In Progress** | 🔄 |
+| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | Done | ✅ |
 | [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | **依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 / React 19** | Backlog | 📋 |
 | [#239](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/239) | **依存関係移行計画: vitest 4 / jsdom 29 / @vitejs/plugin-react 6** | Backlog | 📋 |
+| [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | In Progress | 🔄 |
 
 ---
 
