@@ -7,18 +7,18 @@
     "current_phase": "Post-IAMS Integration / Maintenance"
   },
   "execution": {
-    "loop_count": 3,
+    "loop_count": 5,
     "current_loop_phase": "Improvement",
     "start_time": "2026-04-04T14:55:00+09:00",
-    "last_update": "2026-04-04T16:15:00+09:00",
-    "remaining_time_minutes": 310
+    "last_update": "2026-04-04T17:15:00+09:00",
+    "remaining_time_minutes": 225
   },
   "task": {
-    "current_issue": "docs/ci-readme-update (PR作成中) / Issue #240 (actions/checkout@v6対応)",
-    "current_branch": "docs/ci-readme-update",
+    "current_issue": "Issue #245 (auth-context test) - Backlog",
+    "current_branch": "main",
     "current_worktree": "",
-    "priority": "Low",
-    "status": "InProgress"
+    "priority": "Medium",
+    "status": "STABLE"
   },
   "ci": {
     "last_status": "success",
@@ -36,15 +36,15 @@
     "stable_judgment": "achieved"
   },
   "decision": {
-    "next_action": "PR #237 merged. Create docs PR for README/state.json. Then: actions/checkout@v6 upgrade (Issue #240). Dependabot PR #23/#20 Test CI pending.",
+    "next_action": "Issue #245 (auth-context.tsx テスト追加) を次の実装対象とする。Issue #238/#239 は将来対応（Backlog）。",
     "blocker": "",
     "risk_level": "low",
     "requires_human": false
   },
   "learning": {
-    "last_failure_pattern": "pwa.test.tsx used `module` variable name - conflicts with Node.js global, blocked by next/core-web-vitals lint rule",
-    "improvement_notes": "1) Always test with `next lint` in CI dir, not project root. 2) Suspense wrapping needed for useSearchParams. 3) Use getAllByText() when component has duplicate text nodes",
-    "prevented_issues": ["Merging Next.js 14->16 without migration", "Merging Tailwind 3->4 without config update"]
+    "last_failure_pattern": "@vitest/coverage-v8 peer dependency: v4.x requires vitest@4, must pin to v1.6.1 to match vitest@1.6.1",
+    "improvement_notes": "1) vitest coverage include pattern needed to avoid Next.js source map errors. 2) PR branch rebased onto main triggers CI; first PR creation may not trigger if branch is far behind. 3) Use git stash + rebase + force-push to resolve conflicts and trigger CI. 4) Current coverage: Statements 8%, Branches 48.9%, Functions 23.6%.",
+    "prevented_issues": ["Merging Next.js 14->16 without migration", "Merging Tailwind 3->4 without config update", "Installing @vitest/coverage-v8@4 with vitest@1"]
   },
   "session_history": [
     {
@@ -61,6 +61,16 @@
       "date": "2026-04-04",
       "work": "フロントエンド専用CIワークフロー追加（PR #237）・Dependabot高リスクPR分類（Issue #238/#239）・Issue #240 actions/checkout@v6対応計画",
       "result": "STABLE - PR #237 merged - Improvement継続中"
+    },
+    {
+      "date": "2026-04-04",
+      "work": "docs PR #241マージ・actions/checkout@v6 PR #242マージ（#240 close）・@testing-library/react v16 PR #20マージ・vitestカバレッジ追加 PR #244作成（#243対応）",
+      "result": "STABLE local - PR #244 CI待ち"
+    },
+    {
+      "date": "2026-04-04",
+      "work": "PR #244 CI完了（全チェックpass: pytest 18m34s）・マージ・Issue #243クローズ・Issue #245起票（auth-context.tsx テスト追加）",
+      "result": "STABLE - PR #244 merged - Issue #245 Backlog登録"
     }
   ]
 }
