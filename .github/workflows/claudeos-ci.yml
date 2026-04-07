@@ -54,6 +54,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     needs: lint
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -99,6 +100,7 @@ jobs:
         run: |
           if [ -d aegis-sight-api/tests ]; then
             cd aegis-sight-api && pytest -n auto --dist=loadfile \
+              --timeout=120 \
               --cov=app --cov-report=xml --cov-report=html \
               --junitxml=../test-results/pytest-results.xml \
               -q 2>&1 | tee ../test-results/pytest-output.txt || true
