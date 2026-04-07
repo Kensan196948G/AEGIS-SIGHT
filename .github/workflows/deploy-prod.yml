@@ -128,7 +128,7 @@ jobs:
             type=raw,value=latest
 
       - name: Dockerイメージビルド & プッシュ
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         env:
           DEPLOY_VERSION: ${{ needs.pre-deploy-check.outputs.version }}
           GIT_SHA: ${{ github.sha }}
