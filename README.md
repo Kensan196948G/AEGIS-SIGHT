@@ -376,6 +376,9 @@ gantt
 | 🧪 **Phase101-112 IAMS pytest移植完結** | ✅ **Done** | 累計1,798件テスト (PR#173-184) — 1,157件目標比 +641件超過達成 |
 | 🖥️ **Phase113 フロントエンドPhase B-5** | ✅ **Done** | デバイス管理画面実装（一覧・詳細・サイドバー追加）(PR#185) |
 | 🔧 **CI品質強化・テスト追加** | ✅ **Done** | ESLint修正・SearchPageテスト追加・Frontend CI専用ワークフロー (PR#236, #237) |
+| 🐛 **Ruff lint 修正 (UP035/UP007/F401/I001)** | 🔄 **In Review** | alembic/app 全67件 auto-fix・Dependabot CI ブロック解除 (PR#265) |
+| 📦 **vitest 1→3 アップグレード** | 🔄 **In Review** | peer dep 不整合解消・全96テスト pass・jsdom 24→26 (PR#267) |
+| 🤖 **Dependabot groups 設定** | 🔄 **In Review** | vitest/React/Next.js/build-tools グループ化・再発防止 (PR#268) |
 
 ### GitHub Issues トラッカー
 
@@ -421,7 +424,9 @@ gantt
 | [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | Done | ✅ |
 | [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | **依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 / React 19** | Backlog | 📋 |
 | [#239](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/239) | **依存関係移行計画: vitest 4 / jsdom 29 / @vitejs/plugin-react 6** | Backlog | 📋 |
-| [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | In Progress | 🔄 |
+| [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | Done | ✅ |
+| [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | In Review | 🔄 |
+| [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3 / @vitest/coverage-v8 1→3 / jsdom 24→26 アップグレード** | In Review | 🔄 |
 
 ---
 
