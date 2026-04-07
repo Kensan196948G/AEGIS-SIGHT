@@ -59,13 +59,20 @@ async def health_detail():
             "error": str(e),
         }
 
-    # Redis check
+    # Redis check (3-second connect/read timeout to prevent CI hangs)
     try:
+        import asyncio
+
         import redis.asyncio as aioredis
 
-        r = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        r = aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=3,
+            socket_timeout=3,
+        )
         redis_start = time.monotonic()
-        pong = await r.ping()
+        pong = await asyncio.wait_for(r.ping(), timeout=5.0)
         redis_latency_ms = round((time.monotonic() - redis_start) * 1000, 2)
         await r.aclose()
         checks["redis"] = {
