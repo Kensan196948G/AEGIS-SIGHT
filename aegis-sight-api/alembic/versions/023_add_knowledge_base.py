@@ -5,7 +5,8 @@ Revises: 022_add_sla
 Create Date: 2026-03-27
 """
 
-from typing import Sequence, Union
+from typing import Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -14,8 +15,8 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 # revision identifiers, used by Alembic.
 revision: str = "023_add_knowledge_base"
 down_revision: str = "022_add_sla"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

@@ -5,7 +5,8 @@ Revises: 009_add_notification_channels
 Create Date: 2026-03-27
 """
 
-from typing import Sequence, Union
+from typing import Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -14,8 +15,8 @@ from sqlalchemy.dialects.postgresql import UUID
 # revision identifiers, used by Alembic.
 revision: str = "010_add_tags"
 down_revision: str = "009_add_notification_channels"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
