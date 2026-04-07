@@ -29,6 +29,33 @@ updates:
       - "Kensan196948G"
     commit-message:
       prefix: "deps(npm):"
+    groups:
+      # vitest ecosystem: must stay at same major version (peer dependency)
+      vitest-ecosystem:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "jsdom"
+      # React ecosystem: major upgrades need coordinated testing
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      # Next.js ecosystem: must align with eslint-config-next
+      nextjs-ecosystem:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+      # Build tools
+      build-tools:
+        patterns:
+          - "@vitejs/*"
+          - "vite"
+          - "autoprefixer"
+          - "postcss"
+          - "tailwindcss"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
