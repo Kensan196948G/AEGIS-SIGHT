@@ -377,8 +377,9 @@ gantt
 | 🖥️ **Phase113 フロントエンドPhase B-5** | ✅ **Done** | デバイス管理画面実装（一覧・詳細・サイドバー追加）(PR#185) |
 | 🔧 **CI品質強化・テスト追加** | ✅ **Done** | ESLint修正・SearchPageテスト追加・Frontend CI専用ワークフロー (PR#236, #237) |
 | 🐛 **Ruff lint 修正 (UP035/UP007/F401/I001)** | ✅ **Done** | alembic/app 全67件 auto-fix・Dependabot CI ブロック解除 (PR#265 merged) |
-| 📦 **vitest 1→3 アップグレード** | ✅ **Done** | peer dep 不整合解消・全96テスト pass (1.71s)・jsdom 24→26 (PR#267 merged) |
+| 📦 **vitest 1→3→4 アップグレード** | ✅ **Done** | peer dep 不整合解消・全96テスト pass (1.58s)・jsdom 24→29 (PR#267/#269 merged) |
 | 🤖 **Dependabot groups 設定** | ✅ **Done** | vitest/React/Next.js/build-tools グループ化・再発防止 (PR#268 merged) |
+| 🔧 **GitHub Actions アップデート** | ✅ **Done** | codecov@6/docker actions v4→7/github-script@8 (PR#254-258 merged) |
 
 ### GitHub Issues トラッカー
 
