@@ -380,6 +380,10 @@ gantt
 | 📦 **vitest 1→3→4 アップグレード** | ✅ **Done** | peer dep 不整合解消・全96テスト pass (1.58s)・jsdom 24→29 (PR#267/#269 merged) |
 | 🤖 **Dependabot groups 設定** | ✅ **Done** | vitest/React/Next.js/build-tools グループ化・再発防止 (PR#268 merged) |
 | 🔧 **GitHub Actions アップデート** | ✅ **Done** | codecov@6/docker actions v4→7/github-script@8 (PR#254-258 merged) |
+| 🔒 **vite セキュリティ修正** | ✅ **Done** | vite 7.3.1→7.3.2 HIGH×4+MODERATE修正・96テスト pass (PR#276 merged) |
+| 📦 **Dependabot type-tools グループ** | ✅ **Done** | typescript/eslint/@types/* グループ化 (PR#274 merged) |
+| 📋 **Issue #238 移行計画詳細化** | ✅ **Done** | Step 1-6 段階移行ロードマップ策定・セキュリティ残存影響記録 |
+| 🐌 **Issue #273 pytest 高速化計画** | 📋 **Backlog** | pytest-xdist 並列化 18分→5分短縮・Issue作成済み |
 
 ### GitHub Issues トラッカー
 
