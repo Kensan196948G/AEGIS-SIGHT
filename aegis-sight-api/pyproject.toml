@@ -19,7 +19,10 @@ select = [
     "UP",  # pyupgrade
     "RUF", # ruff-specific
 ]
-ignore = ["E501"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # FastAPI Depends() in function defaults is correct usage (false positive)
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
