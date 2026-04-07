@@ -43,8 +43,8 @@ def validate_ip_address(value: str) -> str:
         raise ValueError("IP address must be a non-empty string")
     try:
         return str(ipaddress.ip_address(value.strip()))
-    except ValueError:
-        raise ValueError(f"Invalid IP address: {value}")
+    except ValueError as exc:
+        raise ValueError(f"Invalid IP address: {value}") from exc
 
 
 # ---------------------------------------------------------------------------

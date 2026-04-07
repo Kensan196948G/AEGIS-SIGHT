@@ -72,8 +72,8 @@ async def import_devices_csv(
     content = await file.read()
     try:
         text = content.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise BadRequestError("File must be UTF-8 encoded")
+    except UnicodeDecodeError as exc:
+        raise BadRequestError("File must be UTF-8 encoded") from exc
 
     reader = csv.DictReader(io.StringIO(text))
     rows = list(reader)
@@ -168,8 +168,8 @@ async def import_licenses_csv(
     content = await file.read()
     try:
         text = content.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise BadRequestError("File must be UTF-8 encoded")
+    except UnicodeDecodeError as exc:
+        raise BadRequestError("File must be UTF-8 encoded") from exc
 
     reader = csv.DictReader(io.StringIO(text))
     rows = list(reader)

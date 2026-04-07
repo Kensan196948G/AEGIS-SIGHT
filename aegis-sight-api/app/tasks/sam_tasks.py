@@ -127,7 +127,7 @@ def daily_reconciliation(self) -> dict:
         return result
     except Exception as exc:
         logger.error("SAM reconciliation failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -154,4 +154,4 @@ def check_license_expiry(self) -> dict:
         return result
     except Exception as exc:
         logger.error("License expiry check failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc

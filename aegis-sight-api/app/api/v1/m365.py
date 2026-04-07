@@ -46,7 +46,7 @@ async def list_m365_licenses(
         raw_licenses = await graph.get_m365_licenses()
     except Exception as exc:
         logger.error("Failed to fetch M365 licenses: %s", exc)
-        raise ServiceUnavailableError("Microsoft Graph API")
+        raise ServiceUnavailableError("Microsoft Graph API") from exc
 
     items = []
     for lic in raw_licenses:
@@ -80,7 +80,7 @@ async def list_m365_users(
         raw_users = await graph.get_m365_users()
     except Exception as exc:
         logger.error("Failed to fetch M365 users: %s", exc)
-        raise ServiceUnavailableError("Microsoft Graph API")
+        raise ServiceUnavailableError("Microsoft Graph API") from exc
 
     items = []
     for user in raw_users:
