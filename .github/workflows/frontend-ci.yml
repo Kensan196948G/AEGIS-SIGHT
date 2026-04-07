@@ -34,7 +34,7 @@ jobs:
         run: cd aegis-sight-web && npm ci
 
       - name: Run ESLint
-        run: cd aegis-sight-web && npx next lint
+        run: cd aegis-sight-web && npm run lint
 
       - name: TypeScript type check
         run: cd aegis-sight-web && npx tsc --noEmit
