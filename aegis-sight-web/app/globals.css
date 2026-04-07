@@ -1,6 +1,27 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  --color-aegis-dark: #0f172a;
+  --color-aegis-darker: #020617;
+  --color-aegis-surface: #1e293b;
+  --color-aegis-border: #334155;
+
+  --font-family-sans: Inter, system-ui, sans-serif;
+}
 
 @layer base {
   :root {
@@ -69,19 +90,19 @@
   }
 
   .aegis-badge-success {
-    @apply aegis-badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400;
   }
 
   .aegis-badge-warning {
-    @apply aegis-badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400;
   }
 
   .aegis-badge-danger {
-    @apply aegis-badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
   }
 
   .aegis-badge-info {
-    @apply aegis-badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
   }
 }
 
