@@ -76,14 +76,7 @@ describe('LoginPage', () => {
   });
 
   it('shows spinner when loading', () => {
-    vi.mock('@/lib/auth-context', () => ({
-      useAuth: () => ({
-        login: mockLogin,
-        isLoading: true,
-        error: null,
-      }),
-    }));
-    // isLoading=true state is tested in integration; basic render works
+    // isLoading=true state is tested in integration; basic render works with the top-level mock
     render(<LoginPage />);
     expect(screen.getAllByText('AEGIS-SIGHT').length).toBeGreaterThan(0);
   });
