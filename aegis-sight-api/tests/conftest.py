@@ -10,11 +10,9 @@ Features:
 
 from __future__ import annotations
 
-import asyncio
 import uuid
 from collections.abc import AsyncGenerator
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
@@ -49,16 +47,9 @@ test_async_session = async_sessionmaker(
 
 
 # ---------------------------------------------------------------------------
-# Event loop (session-scoped for async fixtures)
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the test session."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
+# NOTE: event_loop fixture removed — pytest-asyncio 0.24+ manages the session
+# event loop automatically via asyncio_default_fixture_loop_scope = session
+# in pytest.ini.
 # ---------------------------------------------------------------------------
 # Database lifecycle
 # ---------------------------------------------------------------------------
