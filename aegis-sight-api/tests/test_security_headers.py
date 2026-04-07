@@ -8,7 +8,6 @@ from starlette.routing import Route
 
 from app.core.security_headers import SecurityHeadersConfig, SecurityHeadersMiddleware
 
-
 # ---------------------------------------------------------------------------
 # Helper: minimal ASGI app with the middleware attached
 # ---------------------------------------------------------------------------

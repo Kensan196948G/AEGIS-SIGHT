@@ -22,7 +22,6 @@ NOTE -- Monthly partitioning (PostgreSQL Declarative Partitioning):
   volume justifies the additional operational complexity.
 """
 
-from typing import Union
 from collections.abc import Sequence
 
 from alembic import op

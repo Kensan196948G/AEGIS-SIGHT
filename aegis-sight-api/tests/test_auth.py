@@ -14,7 +14,6 @@ from app.core.security import (
 )
 from app.models.user import User, UserRole
 
-
 # ---- Password hashing ----
 
 

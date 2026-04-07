@@ -5,7 +5,6 @@ Revises: 019_add_print_management
 Create Date: 2026-03-27
 """
 
-from typing import Union
 from collections.abc import Sequence
 
 import sqlalchemy as sa

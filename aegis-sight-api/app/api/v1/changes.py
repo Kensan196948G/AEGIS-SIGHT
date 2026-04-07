@@ -6,10 +6,10 @@ and registering new configuration snapshots (with automatic change detection).
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, cast, func, select, Date
+from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -27,13 +27,13 @@ from app.schemas.change_tracking import (
     ChangeSummaryResponse,
     ChangeTypeSummary,
     ConfigChangeResponse,
+    ConfigSnapshotBrief,
     ConfigSnapshotCreate,
     ConfigSnapshotResponse,
     DailySummary,
     DiffEntry,
     SnapshotDiffResponse,
     SnapshotTypeSummary,
-    ConfigSnapshotBrief,
     TimelineEntry,
 )
 from app.services.change_detector import ChangeDetector

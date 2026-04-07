@@ -5,7 +5,6 @@ Revises: 012_add_lifecycle_disposal
 Create Date: 2026-03-27
 """
 
-from typing import Union
 from collections.abc import Sequence
 
 import sqlalchemy as sa

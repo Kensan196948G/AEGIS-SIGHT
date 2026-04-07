@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_active_user
 from app.core.exceptions import ConflictError, NotFoundError
-from app.core.pagination import PaginatedResponse, create_paginated_response
+from app.core.pagination import create_paginated_response
 from app.models.department import Department
 from app.models.device import Device
 from app.models.user import User
@@ -15,7 +15,6 @@ from app.schemas.department import (
     DepartmentCostResponse,
     DepartmentCreate,
     DepartmentResponse,
-    DepartmentTreeResponse,
     DepartmentUpdate,
 )
 

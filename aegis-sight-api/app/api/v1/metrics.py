@@ -2,10 +2,10 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
+    REGISTRY,
     Gauge,
     Info,
     generate_latest,
-    REGISTRY,
 )
 
 router = APIRouter(tags=["metrics"])

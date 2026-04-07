@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.policy import PolicyType
 
-
 # ---------------------------------------------------------------------------
 # DevicePolicy schemas
 # ---------------------------------------------------------------------------

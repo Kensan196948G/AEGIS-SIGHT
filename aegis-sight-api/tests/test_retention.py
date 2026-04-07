@@ -5,14 +5,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import pytest
-import pytest_asyncio
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.hardware_snapshot import HardwareSnapshot
 from app.models.log_event import FileAction, FileEvent, LogonEvent, UsbAction, UsbEvent
 from app.services.retention_service import RetentionService
-
 
 # ---------------------------------------------------------------------------
 # Helpers

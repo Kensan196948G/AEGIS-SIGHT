@@ -6,7 +6,12 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.knowledge_base import ArticleCategory, ArticleStatus, KBArticle, KBCategory
+from app.models.knowledge_base import (
+    ArticleCategory,
+    ArticleStatus,
+    KBArticle,
+    KBCategory,
+)
 from app.models.user import User
 
 

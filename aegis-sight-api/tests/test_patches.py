@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -15,7 +14,6 @@ from app.models.patch import (
     VulnerabilitySeverity,
     WindowsUpdate,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -7,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.device import Device, DeviceStatus
 from app.models.policy import DevicePolicy, PolicyType, PolicyViolation
-
 
 # ---------------------------------------------------------------------------
 # Helpers

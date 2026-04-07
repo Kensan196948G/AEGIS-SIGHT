@@ -2,8 +2,7 @@
 
 import time
 
-from prometheus_client import Counter, Gauge, Histogram
-from prometheus_client import REGISTRY
+from prometheus_client import REGISTRY, Counter, Gauge, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response

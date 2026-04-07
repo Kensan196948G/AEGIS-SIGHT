@@ -19,7 +19,6 @@ from app.models.dlp import (
     DLPSeverity,
 )
 
-
 # Map DLPAction -> DLPActionTaken
 _ACTION_MAP = {
     DLPAction.alert: DLPActionTaken.alerted,

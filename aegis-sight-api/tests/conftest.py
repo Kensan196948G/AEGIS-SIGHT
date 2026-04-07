@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 from app.core.database import Base, get_db
-from app.core.security import create_access_token, get_password_hash
+from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User, UserRole
 from tests.factories import (

@@ -10,7 +10,6 @@ from app.models.notification_channel import (
     NotificationEventType,
     NotificationRule,
 )
-from app.models.user import User
 
 
 async def _create_channel(

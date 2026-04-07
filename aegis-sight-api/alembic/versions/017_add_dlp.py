@@ -5,7 +5,6 @@ Revises: 016_add_change_tracking
 Create Date: 2026-03-27
 """
 
-from typing import Union
 from collections.abc import Sequence
 
 import sqlalchemy as sa

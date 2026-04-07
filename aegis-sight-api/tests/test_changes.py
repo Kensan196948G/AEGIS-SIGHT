@@ -15,7 +15,6 @@ from app.models.change_tracking import (
 )
 from app.models.device import Device, DeviceStatus
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

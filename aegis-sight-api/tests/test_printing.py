@@ -6,7 +6,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.print_management import PrintJob, PrintJobStatus, Printer, PrintPolicy
+from app.models.print_management import Printer, PrintJob, PrintJobStatus, PrintPolicy
 
 
 async def _create_printer(

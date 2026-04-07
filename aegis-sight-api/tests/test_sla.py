@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -14,7 +14,6 @@ from app.models.sla import (
     SLAViolation,
     ViolationSeverity,
 )
-from app.models.user import User
 
 
 async def _create_sla_definition(

@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict
 
 from app.models.log_event import FileAction, UsbAction
 
-
 # ---------- Logon Events ----------
 
 class LogonEventResponse(BaseModel):

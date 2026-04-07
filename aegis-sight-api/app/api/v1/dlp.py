@@ -12,7 +12,6 @@ from app.core.deps import get_current_active_user
 from app.core.exceptions import NotFoundError
 from app.core.pagination import PaginatedResponse, create_paginated_response
 from app.models.dlp import (
-    DLPAction,
     DLPActionTaken,
     DLPEvent,
     DLPRule,

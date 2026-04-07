@@ -10,8 +10,6 @@ from app.models.alert import Alert, AlertCategory, AlertSeverity
 from app.models.audit_log import AuditAction, AuditLog
 from app.models.device import Device, DeviceStatus
 from app.models.license import LicenseType, SoftwareLicense
-from app.models.user import User
-
 
 # ---------------------------------------------------------------------------
 # Helpers
