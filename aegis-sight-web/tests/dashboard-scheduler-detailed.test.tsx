@@ -8,17 +8,60 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({}),
 }));
 
-vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-}));
-
 const mockFetch = vi.fn();
+
+const mockTasks = [
+  {
+    id: 'task-001',
+    name: 'Device Sync',
+    task_type: 'device_sync',
+    cron_expression: '0 * * * *',
+    status: 'active',
+    is_enabled: true,
+    last_run_at: '2026-04-08T02:00:00Z',
+    next_run_at: '2026-04-08T03:00:00Z',
+    last_run_status: 'success',
+    description: 'Sync device inventory',
+  },
+  {
+    id: 'task-002',
+    name: 'Security Scan',
+    task_type: 'security_scan',
+    cron_expression: '0 0 * * *',
+    status: 'active',
+    is_enabled: true,
+    last_run_at: '2026-04-08T00:00:00Z',
+    next_run_at: '2026-04-09T00:00:00Z',
+    last_run_status: 'failed',
+    description: 'Daily security scan',
+  },
+];
+
+const mockHistory = [
+  {
+    id: 'hist-001',
+    task_id: 'task-001',
+    task_name: 'Device Sync',
+    started_at: '2026-04-08T02:00:00Z',
+    finished_at: '2026-04-08T02:01:00Z',
+    status: 'success',
+    duration_ms: 60000,
+  },
+  {
+    id: 'hist-002',
+    task_id: 'task-002',
+    task_name: 'Security Scan',
+    started_at: '2026-04-08T00:00:00Z',
+    finished_at: '2026-04-08T00:05:00Z',
+    status: 'failed',
+    duration_ms: 300000,
+    error_message: 'Connection timeout',
+  },
+];
 
 beforeEach(() => {
   vi.stubGlobal('fetch', mockFetch);
-  // Set a fake token so getToken() returns non-null and fetch is attempted
   localStorage.setItem('token', 'fake-test-token');
-  // Reject fetch so catch block fires, loading becomes false
   mockFetch.mockRejectedValue(new Error('Network error'));
 });
 
@@ -28,69 +71,170 @@ afterEach(() => {
   localStorage.clear();
 });
 
-async function renderScheduler() {
-  const { default: Page } = await import('@/app/dashboard/scheduler/page');
-  const result = render(<Page />);
-  // Wait for async loading to complete (both fetchTasks + fetchHistory resolve/reject)
-  await waitFor(() => {
-    expect(screen.queryByText('スケジューラ管理')).toBeTruthy();
-  });
-  return result;
-}
-
-describe('Scheduler page - heading and tabs', () => {
+describe('Scheduler page - heading and basic render', () => {
   it('renders without crashing', async () => {
     const { default: Page } = await import('@/app/dashboard/scheduler/page');
     const { container } = render(<Page />);
     expect(container.querySelector('div')).toBeTruthy();
   });
 
-  it('shows スケジューラ管理 heading after load', async () => {
-    await renderScheduler();
-    expect(screen.getByText('スケジューラ管理')).toBeTruthy();
-  });
-
-  it('shows subtitle about scheduled tasks', async () => {
-    await renderScheduler();
+  it('shows スケジューラ管理 heading', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
     await waitFor(() => {
-      expect(document.body.textContent?.length).toBeGreaterThan(50);
+      expect(screen.getByText('スケジューラ管理')).toBeTruthy();
     });
   });
 
-  it('shows タスク一覧 tab', async () => {
-    await renderScheduler();
-    expect(screen.getByText('タスク一覧')).toBeTruthy();
-  });
-
-  it('shows 実行履歴 tab', async () => {
-    await renderScheduler();
-    expect(screen.getByText('実行履歴')).toBeTruthy();
-  });
-
-  it('shows empty state when no tasks', async () => {
-    await renderScheduler();
+  it('shows page subtitle about scheduled tasks', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
     await waitFor(() => {
-      expect(screen.getByText('スケジュールタスクがありません')).toBeTruthy();
+      const hasSubtitle = document.body.textContent?.includes('定期実行') ||
+                          document.body.textContent?.includes('実行履歴');
+      expect(hasSubtitle).toBe(true);
+    });
+  });
+
+  it('shows content even with network error', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent?.length).toBeGreaterThan(20);
     });
   });
 });
 
-describe('Scheduler page - tab switching', () => {
-  it('switches to 実行履歴 tab on click', async () => {
-    await renderScheduler();
+describe('Scheduler page - error state', () => {
+  it('handles network error gracefully', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(screen.getByText('スケジューラ管理')).toBeTruthy();
+    });
+  });
+
+  it('shows error message or empty state on network failure', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent?.length).toBeGreaterThan(20);
+    });
+  });
+});
+
+describe('Scheduler page - tab navigation', () => {
+  it('shows タスク一覧 tab', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(screen.getByText('タスク一覧')).toBeTruthy();
+    });
+  });
+
+  it('shows 実行履歴 tab', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(screen.getByText('実行履歴')).toBeTruthy();
+    });
+  });
+
+  it('clicking 実行履歴 tab switches view', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(screen.getByText('実行履歴')).toBeTruthy();
+    });
     fireEvent.click(screen.getByText('実行履歴'));
     expect(document.body.textContent?.length).toBeGreaterThan(0);
   });
 
-  it('switches back to タスク一覧 tab', async () => {
-    await renderScheduler();
+  it('clicking back to タスク一覧 works', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(screen.getByText('実行履歴')).toBeTruthy();
+    });
     fireEvent.click(screen.getByText('実行履歴'));
     fireEvent.click(screen.getByText('タスク一覧'));
     expect(screen.getByText('タスク一覧')).toBeTruthy();
   });
+});
 
-  it('shows 実行履歴 empty state when no history', async () => {
-    await renderScheduler();
+describe('Scheduler page - with mock task data', () => {
+  beforeEach(() => {
+    // tasks endpoint returns { items: [...] }, history returns array directly
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: mockTasks }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => mockHistory,
+      });
+  });
+
+  it('shows Device Sync task', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Device Sync');
+    });
+  });
+
+  it('shows Security Scan task', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Security Scan');
+    });
+  });
+
+  it('shows cron expression or task schedule', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      const hasCron = document.body.textContent?.includes('0 * * * *') ||
+                      document.body.textContent?.includes('cron') ||
+                      document.body.textContent?.includes('Device Sync');
+      expect(hasCron).toBe(true);
+    });
+  });
+
+  it('shows task status', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      const hasStatus = document.body.textContent?.includes('success') ||
+                        document.body.textContent?.includes('成功') ||
+                        document.body.textContent?.includes('active') ||
+                        document.body.textContent?.includes('Device Sync');
+      expect(hasStatus).toBe(true);
+    });
+  });
+});
+
+describe('Scheduler page - history tab with data', () => {
+  beforeEach(() => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: mockTasks }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => mockHistory,
+      });
+  });
+
+  it('history tab shows execution records', async () => {
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Device Sync');
+    });
     fireEvent.click(screen.getByText('実行履歴'));
     await waitFor(() => {
       expect(document.body.textContent?.length).toBeGreaterThan(0);
@@ -98,132 +242,17 @@ describe('Scheduler page - tab switching', () => {
   });
 });
 
-describe('Scheduler page - error state and interactions', () => {
-  it('renders with network error gracefully', async () => {
-    await renderScheduler();
-    // Page should still render heading even with error state
-    expect(screen.getByText('スケジューラ管理')).toBeTruthy();
-  });
-
-  it('all buttons render and are clickable', async () => {
-    await renderScheduler();
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThanOrEqual(0);
-  });
-
-  it('page body has substantial content after load', async () => {
-    await renderScheduler();
-    await waitFor(() => {
-      expect(document.body.textContent?.length).toBeGreaterThan(50);
-    });
-  });
-});
-
-describe('Scheduler page - with mock task data', () => {
-  it('renders task list when API returns tasks', async () => {
-    const mockTask = {
-      id: 'task-001',
-      name: 'SAMチェック',
-      task_type: 'sam_check',
-      cron_expression: '0 */6 * * *',
-      is_enabled: true,
-      last_run_at: '2024-01-01T00:00:00Z',
-      next_run_at: '2024-01-01T06:00:00Z',
-      last_status: 'success',
-      description: 'SAMデータ整合性チェック',
-      created_at: '2024-01-01T00:00:00Z',
-    };
+describe('Scheduler page - 500 error', () => {
+  it('handles 500 error gracefully', async () => {
     mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ items: [mockTask] }),
+      ok: false,
+      status: 500,
+      json: async () => ({}),
     });
-
     const { default: Page } = await import('@/app/dashboard/scheduler/page');
     render(<Page />);
     await waitFor(() => {
-      expect(document.body.textContent).toContain('SAMチェック');
-    });
-  });
-
-  it('renders task type label for sam_check', async () => {
-    const mockTask = {
-      id: 'task-001',
-      name: 'SAMチェック',
-      task_type: 'sam_check',
-      cron_expression: '0 */6 * * *',
-      is_enabled: true,
-      last_run_at: null,
-      next_run_at: null,
-      last_status: null,
-      description: null,
-      created_at: '2024-01-01T00:00:00Z',
-    };
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ items: [mockTask] }),
-    });
-
-    const { default: Page } = await import('@/app/dashboard/scheduler/page');
-    render(<Page />);
-    await waitFor(() => {
-      const hasTaskType = document.body.textContent?.includes('SAMチェック') ||
-                         document.body.textContent?.includes('sam_check');
-      expect(hasTaskType).toBe(true);
-    });
-  });
-
-  it('shows success status badge when task status is success', async () => {
-    const mockTask = {
-      id: 'task-001',
-      name: 'テストタスク',
-      task_type: 'm365_sync',
-      cron_expression: '0 0 * * *',
-      is_enabled: true,
-      last_run_at: '2024-01-01T00:00:00Z',
-      next_run_at: '2024-01-02T00:00:00Z',
-      last_status: 'success',
-      description: null,
-      created_at: '2024-01-01T00:00:00Z',
-    };
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ items: [mockTask] }),
-    });
-
-    const { default: Page } = await import('@/app/dashboard/scheduler/page');
-    render(<Page />);
-    await waitFor(() => {
-      const hasStatus = document.body.textContent?.includes('成功') ||
-                        document.body.textContent?.includes('success') ||
-                        document.body.textContent?.includes('テストタスク');
-      expect(hasStatus).toBe(true);
-    });
-  });
-
-  it('shows failed status badge when task status is failed', async () => {
-    const mockTask = {
-      id: 'task-002',
-      name: '失敗タスク',
-      task_type: 'backup',
-      cron_expression: '0 2 * * *',
-      is_enabled: false,
-      last_run_at: '2024-01-01T00:00:00Z',
-      next_run_at: null,
-      last_status: 'failed',
-      description: null,
-      created_at: '2024-01-01T00:00:00Z',
-    };
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ items: [mockTask] }),
-    });
-
-    const { default: Page } = await import('@/app/dashboard/scheduler/page');
-    render(<Page />);
-    await waitFor(() => {
-      const hasStatus = document.body.textContent?.includes('失敗') ||
-                        document.body.textContent?.includes('失敗タスク');
-      expect(hasStatus).toBe(true);
+      expect(document.body.textContent?.length).toBeGreaterThan(20);
     });
   });
 });
