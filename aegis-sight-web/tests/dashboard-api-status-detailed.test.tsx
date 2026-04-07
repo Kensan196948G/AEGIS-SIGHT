@@ -51,7 +51,10 @@ describe('ApiStatus page - basic render', () => {
 
   it('shows 更新 button', async () => {
     await renderApiStatus();
-    expect(screen.getByText('更新')).toBeTruthy();
+    // Button may show '更新中...' during initial refresh; wait for completion
+    await waitFor(() => {
+      expect(screen.getByText('更新')).toBeTruthy();
+    });
   });
 
   it('shows 全体ステータス section', async () => {
@@ -320,7 +323,8 @@ describe('ApiStatus page - degraded/error subsystem status', () => {
 describe('ApiStatus page - refresh button', () => {
   it('clicking 更新 button triggers refresh', async () => {
     await renderApiStatus();
-    const refreshBtn = screen.getByText('更新');
+    // Wait for initial refresh to complete (isRefreshing goes false → button shows '更新')
+    const refreshBtn = await waitFor(() => screen.getByText('更新'));
     fireEvent.click(refreshBtn);
     // Button should show 更新中... during refresh
     await waitFor(() => {
@@ -341,9 +345,8 @@ describe('ApiStatus page - refresh button', () => {
     await waitFor(() => {
       expect(screen.getByText('API接続状態')).toBeTruthy();
     });
-    // After initial render, button could be in any state
-    // Just verify the page is stable
-    expect(document.body.textContent).toContain('更新');
+    // After initial render, button could be '更新中...' or '更新'
+    expect(document.body.textContent?.match(/更新/)).toBeTruthy();
     if (resolveFetch) resolveFetch();
     await waitFor(() => {
       expect(document.body.textContent).toContain('更新');

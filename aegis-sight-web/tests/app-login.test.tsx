@@ -94,4 +94,35 @@ describe('LoginPage', () => {
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('clicking toggle button changes password input to text type (showPassword=true branch)', () => {
+    render(<LoginPage />);
+    // Initial: password type
+    expect(document.querySelector('input[type="password"]')).toBeTruthy();
+    expect(document.querySelector('input[type="text"]')).toBeFalsy();
+
+    // Find toggle button (not the ログイン submit button)
+    const buttons = screen.getAllByRole('button');
+    const toggleBtn = buttons.find(btn => !btn.textContent?.includes('ログイン'));
+    expect(toggleBtn).toBeTruthy();
+    fireEvent.click(toggleBtn!);
+
+    // After toggle: password input becomes type="text"
+    expect(document.querySelector('input[type="text"]')).toBeTruthy();
+    expect(document.querySelector('input[type="password"]')).toBeFalsy();
+  });
+
+  it('clicking toggle button twice restores password type (showPassword false→true→false)', () => {
+    render(<LoginPage />);
+    const buttons = screen.getAllByRole('button');
+    const toggleBtn = buttons.find(btn => !btn.textContent?.includes('ログイン'));
+    expect(toggleBtn).toBeTruthy();
+
+    fireEvent.click(toggleBtn!); // false → true
+    expect(document.querySelector('input[type="text"]')).toBeTruthy();
+
+    fireEvent.click(toggleBtn!); // true → false
+    expect(document.querySelector('input[type="password"]')).toBeTruthy();
+    expect(document.querySelector('input[type="text"]')).toBeFalsy();
+  });
 });
