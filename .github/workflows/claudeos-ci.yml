@@ -92,13 +92,16 @@ jobs:
             pip install pytest pytest-asyncio pytest-cov httpx factory-boy
           fi
 
-      - name: Run pytest
+      - name: Run pytest (parallel with pytest-xdist)
         id: pytest
         env:
           DATABASE_URL: postgresql+asyncpg://aegis:aegis_test@localhost:5432/aegis_test
         run: |
           if [ -d aegis-sight-api/tests ]; then
-            cd aegis-sight-api && pytest --cov=app --cov-report=xml --cov-report=html --junitxml=../test-results/pytest-results.xml -v 2>&1 | tee ../test-results/pytest-output.txt || true
+            cd aegis-sight-api && pytest -n auto --dist=loadfile \
+              --cov=app --cov-report=xml --cov-report=html \
+              --junitxml=../test-results/pytest-results.xml \
+              -q 2>&1 | tee ../test-results/pytest-output.txt || true
           else
             mkdir -p ../test-results
             echo "No tests found yet. Skipping." | tee ../test-results/pytest-output.txt
