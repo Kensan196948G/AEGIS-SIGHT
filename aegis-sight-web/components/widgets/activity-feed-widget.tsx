@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { clsx } from 'clsx';
 
 type EventType = 'alert' | 'deploy' | 'scan' | 'procurement' | 'user';
