@@ -1,16 +1,16 @@
 """Print management API endpoints."""
 
 import uuid
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select, extract, case, literal_column
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_active_user
 from app.core.pagination import PaginatedResponse, create_paginated_response
-from app.models.print_management import PrintJob, PrintJobStatus, Printer, PrintPolicy
+from app.models.print_management import Printer, PrintJob, PrintJobStatus, PrintPolicy
 from app.models.user import User
 from app.schemas.print_management import (
     PrinterCreate,

@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.scheduled_task import ScheduledTask, TaskStatus, TaskType
-from app.models.user import User
+from app.models.scheduled_task import ScheduledTask, TaskType
 
 
 async def _create_task(

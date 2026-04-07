@@ -5,15 +5,15 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.schemas.compliance import (
-    ComplianceOverviewResponse,
-    ComplianceIssue,
     AuditEvent,
-    ISO27001Response,
+    ComplianceIssue,
+    ComplianceOverviewResponse,
     ISO27001Category,
-    JSOXResponse,
+    ISO27001Response,
     JSOXControl,
-    NISTResponse,
+    JSOXResponse,
     NISTFunction,
+    NISTResponse,
 )
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])

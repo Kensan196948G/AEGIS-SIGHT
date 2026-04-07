@@ -6,7 +6,6 @@ SMTP and webhook settings are read from environment variables via Settings.
 
 from __future__ import annotations
 
-import json
 import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart

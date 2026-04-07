@@ -7,7 +7,6 @@ that agents and frontends can verify they are talking to a compatible API.
 
 from __future__ import annotations
 
-import platform
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -16,7 +15,6 @@ from functools import lru_cache
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.core.config import settings
 from app.version import __api_version__, __version__
 
 router = APIRouter(prefix="/version", tags=["version"])

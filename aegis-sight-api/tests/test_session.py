@@ -6,8 +6,6 @@ If ``fakeredis`` is not installed, the tests are skipped gracefully.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 try:
@@ -17,7 +15,7 @@ try:
 except ImportError:
     HAS_FAKEREDIS = False
 
-from app.core.session_manager import SessionManager, _SESSION_PREFIX, _USER_SESSIONS_PREFIX
+from app.core.session_manager import SessionManager
 
 pytestmark = pytest.mark.skipif(
     not HAS_FAKEREDIS,

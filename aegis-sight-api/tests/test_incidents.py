@@ -9,8 +9,8 @@ from app.models.incident import (
     IncidentCategory,
     IncidentSeverity,
     IncidentStatus,
-    ThreatIndicator,
     IndicatorType,
+    ThreatIndicator,
     ThreatLevel,
 )
 from app.models.user import User

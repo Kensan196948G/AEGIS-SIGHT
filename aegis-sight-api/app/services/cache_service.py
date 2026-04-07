@@ -28,7 +28,8 @@ import functools
 import hashlib
 import json
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import redis.asyncio as aioredis
 

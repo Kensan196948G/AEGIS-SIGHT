@@ -9,12 +9,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from decimal import Decimal
 
 import pytest
 from httpx import AsyncClient
-
-from app.models.user import User
 
 pytestmark = pytest.mark.integration
 

@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.tag import Tag, TagAssignment, TagCategory
-from app.models.user import User
 
 
 async def _create_tag(

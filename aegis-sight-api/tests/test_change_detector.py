@@ -1,10 +1,8 @@
 """Tests for the ChangeDetector service (diff logic)."""
 
-import pytest
 
 from app.models.change_tracking import ChangeType
 from app.services.change_detector import ChangeDetector
-
 
 # ---------------------------------------------------------------------------
 # Unit tests for _recursive_diff (no DB needed)

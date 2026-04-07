@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient
-
-from app.models.user import User
-
 
 # ---------------------------------------------------------------------------
 # GET /api/v1/database/stats

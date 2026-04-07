@@ -9,7 +9,6 @@ the API.  Run with:
 Or via ``make load-test``.
 """
 
-import json
 import random
 import uuid
 from datetime import datetime, timezone

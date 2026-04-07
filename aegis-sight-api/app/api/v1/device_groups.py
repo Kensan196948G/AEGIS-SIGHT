@@ -13,10 +13,10 @@ from app.models.user import User
 from app.schemas.device_group import (
     DeviceGroupCreate,
     DeviceGroupDetailResponse,
+    DeviceGroupMembershipResponse,
     DeviceGroupResponse,
     DeviceGroupUpdate,
     MemberAddRequest,
-    DeviceGroupMembershipResponse,
 )
 
 router = APIRouter(prefix="/device-groups", tags=["device-groups"])

@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.patch import PatchStatus, UpdateSeverity, VulnerabilitySeverity
 
-
 # ---------------------------------------------------------------------------
 # Windows Update schemas
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.procurement import ProcurementRequest, ProcurementStatus
 from app.models.user import User
-from app.schemas.procurement import ProcurementCreate, ProcurementUpdate
+from app.schemas.procurement import ProcurementCreate
 
 
 class ProcurementService:

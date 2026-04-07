@@ -5,7 +5,7 @@ Revises: 018_add_user_sessions
 Create Date: 2026-03-27
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -14,8 +14,8 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 # revision identifiers, used by Alembic.
 revision: str = "019_add_print_management"
 down_revision: str = "018_add_user_sessions"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

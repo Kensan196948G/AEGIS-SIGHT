@@ -1,7 +1,7 @@
 import csv
 import io
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -13,7 +13,6 @@ from app.core.deps import get_current_active_user
 from app.core.exceptions import NotFoundError
 from app.core.pagination import PaginatedResponse, create_paginated_response
 from app.models.sla import (
-    MeasurementPeriod,
     SLADefinition,
     SLAMeasurement,
     SLAMetricType,

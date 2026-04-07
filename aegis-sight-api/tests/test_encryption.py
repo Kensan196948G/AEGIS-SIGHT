@@ -6,7 +6,6 @@ import pytest
 
 from app.services.encryption_service import EncryptionService
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
