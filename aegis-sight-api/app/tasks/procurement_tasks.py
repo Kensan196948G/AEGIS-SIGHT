@@ -107,7 +107,7 @@ def notify_pending_approvals(self) -> dict:
         return result
     except Exception as exc:
         logger.error("Procurement notification failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -130,4 +130,4 @@ def generate_status_report(self) -> dict:
         return result
     except Exception as exc:
         logger.error("Procurement status report generation failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc

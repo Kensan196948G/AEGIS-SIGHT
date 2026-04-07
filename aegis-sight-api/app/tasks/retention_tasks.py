@@ -86,7 +86,7 @@ def daily_retention_cleanup(self) -> dict:
         return result
     except Exception as exc:
         logger.error("Daily retention cleanup failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -104,7 +104,7 @@ def weekly_archive(self) -> dict:
         return result
     except Exception as exc:
         logger.error("Weekly archive failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -122,4 +122,4 @@ def monthly_stats_report(self) -> dict:
         return result
     except Exception as exc:
         logger.error("Monthly stats report failed: %s", exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc

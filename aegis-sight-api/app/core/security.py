@@ -40,12 +40,12 @@ def decode_access_token(token: str) -> dict:
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         return payload
-    except JWTError:
+    except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc
 
 
 async def get_current_user(

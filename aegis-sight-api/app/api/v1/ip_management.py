@@ -87,7 +87,7 @@ async def create_ip_range(
     try:
         ipaddress.ip_network(data.network_address, strict=False)
     except ValueError as exc:
-        raise BadRequestError(f"Invalid CIDR notation: {exc}")
+        raise BadRequestError(f"Invalid CIDR notation: {exc}") from exc
 
     # Check uniqueness
     existing = await db.execute(
@@ -264,7 +264,7 @@ async def create_ip_assignment(
                 f"IP {data.ip_address} is not within range {ip_range.network_address}"
             )
     except ValueError as exc:
-        raise BadRequestError(f"Invalid IP address: {exc}")
+        raise BadRequestError(f"Invalid IP address: {exc}") from exc
 
     assignment = IPAssignment(
         ip_address=data.ip_address,
