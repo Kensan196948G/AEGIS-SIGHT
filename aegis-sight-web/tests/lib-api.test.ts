@@ -123,6 +123,59 @@ describe('ApiClient', () => {
     const headers = init.headers as Record<string, string>;
     expect(headers['Content-Type']).toBe('application/json');
   });
+
+  it('handles error response with non-JSON body (catch path)', async () => {
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () => Promise.reject(new Error('invalid json')),
+      } as Response)
+    );
+    const { api, ApiError } = await import('@/lib/api');
+    try {
+      await api.get('/api/v1/broken');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ApiError);
+      expect((e as InstanceType<typeof ApiError>).message).toBe('Internal Server Error');
+    }
+  });
+
+  it('uses "Unknown error" when error response has no message', async () => {
+    fetchMock.mockReturnValue(errorResponse(400, {}));
+    const { api, ApiError } = await import('@/lib/api');
+    try {
+      await api.get('/api/v1/bad');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ApiError);
+      expect((e as InstanceType<typeof ApiError>).message).toBe('Unknown error');
+    }
+  });
+
+  it('POST without data sends undefined body', async () => {
+    fetchMock.mockReturnValue(okResponse({}));
+    const { api } = await import('@/lib/api');
+    await api.post('/api/v1/action');
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(init.body).toBeUndefined();
+  });
+
+  it('PUT without data sends undefined body', async () => {
+    fetchMock.mockReturnValue(okResponse({}));
+    const { api } = await import('@/lib/api');
+    await api.put('/api/v1/items/1');
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(init.body).toBeUndefined();
+  });
+
+  it('PATCH without data sends undefined body', async () => {
+    fetchMock.mockReturnValue(okResponse({}));
+    const { api } = await import('@/lib/api');
+    await api.patch('/api/v1/items/1');
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(init.body).toBeUndefined();
+  });
 });
 
 describe('Convenience functions', () => {
