@@ -108,7 +108,8 @@ describe('Alerts page - stats cards', () => {
   it('displays critical count 8', async () => {
     await renderAlerts();
     expect(screen.getByText('8')).toBeTruthy();
-    expect(screen.getByText('重大')).toBeTruthy();
+    // '重大' appears in stats card, severity badges, BarChart, and filter select
+    expect(screen.getAllByText('重大').length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays warning count 21', async () => {
@@ -167,23 +168,25 @@ describe('Alerts page - resolve rate chart', () => {
 describe('Alerts page - getAlertStatus branches', () => {
   it('shows "未対応" for alerts with !resolved_at && !is_acknowledged (open)', async () => {
     await renderAlerts();
-    // Alerts id=1,3,6 are open: not acknowledged, not resolved
+    // '未対応' appears in status badges AND in the status filter select option
     const badges = screen.getAllByText('未対応');
-    expect(badges.length).toBe(3);
+    // Filter to only span elements (badges), not option elements
+    const badgeSpans = badges.filter((el) => el.tagName === 'SPAN');
+    expect(badgeSpans.length).toBe(3);
   });
 
   it('shows "確認済" for alerts with is_acknowledged && !resolved_at (acknowledged)', async () => {
     await renderAlerts();
-    // Alerts id=2,4 are acknowledged but not resolved
     const badges = screen.getAllByText('確認済');
-    expect(badges.length).toBe(2);
+    const badgeSpans = badges.filter((el) => el.tagName === 'SPAN');
+    expect(badgeSpans.length).toBe(2);
   });
 
   it('shows "解決済" for alerts with resolved_at truthy (resolved)', async () => {
     await renderAlerts();
-    // Alerts id=5,7 have resolved_at set
     const badges = screen.getAllByText('解決済');
-    expect(badges.length).toBe(2);
+    const badgeSpans = badges.filter((el) => el.tagName === 'SPAN');
+    expect(badgeSpans.length).toBe(2);
   });
 });
 
@@ -193,7 +196,7 @@ describe('Alerts page - getAlertStatus branches', () => {
 describe('Alerts page - status badge variants', () => {
   it('uses "danger" variant for open status', async () => {
     await renderAlerts();
-    const openBadges = screen.getAllByText('未対応');
+    const openBadges = screen.getAllByText('未対応').filter((el) => el.tagName === 'SPAN');
     openBadges.forEach((badge) => {
       expect(badge.getAttribute('data-variant')).toBe('danger');
     });
@@ -201,7 +204,7 @@ describe('Alerts page - status badge variants', () => {
 
   it('uses "info" variant for acknowledged status', async () => {
     await renderAlerts();
-    const ackBadges = screen.getAllByText('確認済');
+    const ackBadges = screen.getAllByText('確認済').filter((el) => el.tagName === 'SPAN');
     ackBadges.forEach((badge) => {
       expect(badge.getAttribute('data-variant')).toBe('info');
     });
@@ -209,7 +212,7 @@ describe('Alerts page - status badge variants', () => {
 
   it('uses "success" variant for resolved status', async () => {
     await renderAlerts();
-    const resolvedBadges = screen.getAllByText('解決済');
+    const resolvedBadges = screen.getAllByText('解決済').filter((el) => el.tagName === 'SPAN');
     resolvedBadges.forEach((badge) => {
       expect(badge.getAttribute('data-variant')).toBe('success');
     });
@@ -448,10 +451,11 @@ describe('Alerts page - alert content', () => {
 
   it('displays category labels in table', async () => {
     await renderAlerts();
-    expect(screen.getByText('セキュリティ')).toBeTruthy();
-    expect(screen.getByText('ライセンス')).toBeTruthy();
-    expect(screen.getByText('ハードウェア')).toBeTruthy();
-    expect(screen.getByText('ネットワーク')).toBeTruthy();
+    // Category labels appear in both the filter select options AND the table cells
+    expect(screen.getAllByText('セキュリティ').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('ライセンス').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('ハードウェア').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('ネットワーク').length).toBeGreaterThanOrEqual(1);
   });
 
   it('displays table headers', async () => {

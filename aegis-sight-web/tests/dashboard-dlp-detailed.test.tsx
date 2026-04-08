@@ -23,7 +23,8 @@ async function renderPage() {
 
 async function switchToEvents() {
   await renderPage();
-  const eventsButton = screen.getByText(/DLPイベント/).closest('button')!;
+  const matches = screen.getAllByText(/DLPイベント/);
+  const eventsButton = matches.find((el) => el.closest('button'))?.closest('button')!;
   fireEvent.click(eventsButton);
 }
 
@@ -50,7 +51,7 @@ describe('DLP page - summary and charts', () => {
     await renderPage();
     expect(screen.getByText('総イベント数')).toBeDefined();
     expect(screen.getByText('6')).toBeDefined();
-    expect(screen.getByText('ブロック')).toBeDefined();
+    expect(screen.getAllByText('ブロック').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('2')).toBeDefined();
     // "アラート" label in summary (not action badge)
     expect(screen.getByText('4')).toBeDefined();
@@ -98,21 +99,28 @@ describe('DLP page - tab switching', () => {
 
   it('shows blocked badge on events tab when mockSummary.blocked > 0', async () => {
     await renderPage();
-    const eventsTab = screen.getByText(/DLPイベント/).closest('button');
+    const matches = screen.getAllByText(/DLPイベント/);
+    const eventsTab = matches.find((el) => el.closest('button'))?.closest('button');
     expect(eventsTab?.textContent).toContain('2');
   });
 
   it('switches to events tab and hides rules (activeTab === "events" branch)', async () => {
     await renderPage();
-    fireEvent.click(screen.getByText(/DLPイベント/).closest('button')!);
+    const matches = screen.getAllByText(/DLPイベント/);
+    const eventsButton = matches.find((el) => el.closest('button'))?.closest('button')!;
+    fireEvent.click(eventsButton);
     expect(screen.getByText('DLPイベント一覧')).toBeDefined();
     expect(screen.queryByText('DLPルール一覧')).toBeNull();
   });
 
   it('switches back to rules tab', async () => {
     await renderPage();
-    fireEvent.click(screen.getByText(/DLPイベント/).closest('button')!);
-    fireEvent.click(screen.getByText('DLPルール'));
+    const matches = screen.getAllByText(/DLPイベント/);
+    const eventsButton = matches.find((el) => el.closest('button'))?.closest('button')!;
+    fireEvent.click(eventsButton);
+    const rulesMatches = screen.getAllByText(/DLPルール/);
+    const rulesButton = rulesMatches.find((el) => el.closest('button'))?.closest('button')!;
+    fireEvent.click(rulesButton);
     expect(screen.getByText('DLPルール一覧')).toBeDefined();
   });
 });

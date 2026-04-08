@@ -186,7 +186,8 @@ describe('Monitoring page - event level filter', () => {
 
   it('filters to warning events only (3 events)', async () => {
     await renderMonitoring();
-    const warningButton = screen.getByText('警告');
+    const warningButtons = screen.getAllByText('警告');
+    const warningButton = warningButtons.find((el) => el.closest('button') && !el.getAttribute('data-variant'))!;
     fireEvent.click(warningButton);
 
     expect(screen.getByText('レプリケーション遅延 5秒')).toBeDefined();
@@ -197,7 +198,8 @@ describe('Monitoring page - event level filter', () => {
 
   it('filters to info events only (3 events)', async () => {
     await renderMonitoring();
-    const infoButton = screen.getByText('情報');
+    const infoButtons = screen.getAllByText('情報');
+    const infoButton = infoButtons.find((el) => el.closest('button') && !el.getAttribute('data-variant'))!;
     fireEvent.click(infoButton);
 
     expect(screen.getByText('デプロイ完了 v2.4.1')).toBeDefined();
