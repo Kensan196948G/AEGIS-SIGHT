@@ -1,4 +1,4 @@
-<div align="center">
+﻿﻿<div align="center">
 
 ```
  █████╗ ███████╗ ██████╗ ██╗███████╗      ███████╗██╗ ██████╗ ██╗  ██╗████████╗
@@ -435,7 +435,9 @@ gantt
 | [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | Done | ✅ |
 | [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3→4 / @vitest/coverage-v8 / jsdom 24→29 アップグレード** | Done | ✅ |
 | [#289](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/289) | **React 19 移行後 react-hooks/immutability + set-state-in-effect 再有効化** | Done | ✅ |
-| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | In Progress | 🔄 |
+| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | Done | ✅ |
+| [#300](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/300) | **フロントエンドテストカバレッジ向上 — 75本テスト追加 (PR#299)** | Done | ✅ |
+| [#301 PR](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/301) | **coverage設定追加・StatCardテスト実装** | In Review | 🔄 |
 
 ---
 
