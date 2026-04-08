@@ -652,7 +652,8 @@ describe('Changes page - successful API fetch branch', () => {
 
   it('renders successful diff data with diff table', async () => {
     mockFetch
-      .mockRejectedValueOnce(new Error('Network error')) // initial load → demo data
+      .mockRejectedValueOnce(new Error('Network error')) // initial changes fetch → demo data
+      .mockRejectedValueOnce(new Error('Network error')) // initial summary fetch → demo data
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({

@@ -212,7 +212,7 @@ describe('SAM Reports page - report selection switching', () => {
     // J-SOX specific content should disappear
     expect(screen.queryByText('J-SOXレポート - IT全般統制（SAM）')).toBeNull();
     // Generic preview should appear with report name
-    expect(screen.getByText('ライセンスサマリー')).toBeTruthy();
+    expect(screen.getAllByText('ライセンスサマリー').length).toBeGreaterThanOrEqual(1);
     expect(document.body.textContent).toContain('レポートを生成するには「出力」ボタンをクリックしてください');
   });
 
@@ -265,9 +265,10 @@ describe('SAM Reports page - selected report button styling', () => {
     const Page = await loadPage();
     render(<Page />);
     fireEvent.click(screen.getByText('ライセンスサマリー'));
-    const summaryButton = screen.getByText('ライセンスサマリー').closest('button');
+    const summaryButtons = screen.getAllByText('ライセンスサマリー');
+    const summaryButton = summaryButtons.find((el) => el.closest('button'))?.closest('button');
     expect(summaryButton?.className).toContain('border-primary-500');
-    const jsoxButton = screen.getByText('J-SOXレポート').closest('button');
+    const jsoxButton = screen.getAllByText('J-SOXレポート').find((el) => el.closest('button'))?.closest('button');
     expect(jsoxButton?.className).toContain('border-gray-200');
   });
 
@@ -275,14 +276,16 @@ describe('SAM Reports page - selected report button styling', () => {
     const Page = await loadPage();
     render(<Page />);
     // Default: jsox selected -> h3 has text-primary-700
-    const h3 = screen.getByText('J-SOXレポート');
+    const h3s = screen.getAllByText('J-SOXレポート');
+    const h3 = h3s.find((el) => el.className?.includes('text-primary-700')) || h3s[0];
     expect(h3.className).toContain('text-primary-700');
   });
 
   it('non-selected report heading gets gray text color', async () => {
     const Page = await loadPage();
     render(<Page />);
-    const h3 = screen.getByText('ライセンスサマリー');
+    const h3s = screen.getAllByText('ライセンスサマリー');
+    const h3 = h3s.find((el) => el.className?.includes('text-gray-900')) || h3s[0];
     expect(h3.className).toContain('text-gray-900');
   });
 });

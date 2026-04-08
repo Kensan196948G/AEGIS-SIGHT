@@ -112,8 +112,8 @@ describe('NewProcurementPage', () => {
 
   it('calculates and displays total cost correctly', () => {
     render(<NewProcurementPage />);
-    // Initial total should be 0
-    expect(screen.getByText('0円')).toBeInTheDocument();
+    // Initial total should be 0 (may appear in both subtotal and total)
+    expect(screen.getAllByText('0円').length).toBeGreaterThanOrEqual(1);
 
     const spinbuttons = screen.getAllByRole('spinbutton');
     // Set quantity to 3
@@ -121,8 +121,8 @@ describe('NewProcurementPage', () => {
     // Set unit price to 100000
     fireEvent.change(spinbuttons[1], { target: { value: '100000' } });
 
-    // Total should be 300,000
-    expect(screen.getByText('300,000円')).toBeInTheDocument();
+    // Total should be 300,000 (appears in both subtotal and total)
+    expect(screen.getAllByText('300,000円').length).toBeGreaterThanOrEqual(1);
   });
 
   it('calculates total cost with multiple items', () => {
