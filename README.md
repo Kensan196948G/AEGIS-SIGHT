@@ -13,9 +13,11 @@
 
 **SKYSEA Client View 内製代替 + IAMS 選択移植**
 
-![Version](https://img.shields.io/badge/version-0.65.0-1A3A5C?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.66.0-1A3A5C?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-27-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![ISO 27001](https://img.shields.io/badge/ISO%2027001-Compliant-1A7A4A?style=for-the-badge)
@@ -51,7 +53,7 @@
 | 🏢 **対象組織** | みらい建設工業（約550名） |
 | 🖥️ **管理対象** | Windows 11/10 クライアントPC 約500台 + サーバ群 |
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
-| 🛠️ **開発方式** | ClaudeOS v4 自律型開発（AI-Augmented Development） |
+| 🛠️ **開発方式** | ClaudeOS v6 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
 | 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・IAMS pytest 1,798件移植完結・フロントエンド強化継続中 |
 
@@ -183,7 +185,7 @@ graph TB
 | レイヤー | 技術 | バージョン |
 |:---|:---|:---|
 | 🐍 **Backend** | FastAPI / SQLAlchemy / Alembic / Celery | Python 3.12 |
-| ⚛️ **Frontend** | Next.js / TypeScript / Tailwind CSS | Next.js 14 |
+| ⚛️ **Frontend** | Next.js / React / TypeScript / Tailwind CSS | Next.js 16 / React 19 / TS 6.0 / Tailwind 4 |
 | 🐘 **Database** | PostgreSQL / Redis | PG 16 / Redis 7 |
 | 💻 **Agent** | PowerShell / Pester | PS 7.4 |
 | 🐳 **Infrastructure** | Docker Compose / Nginx | Docker 27 |
@@ -342,7 +344,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (850+ケース) | ✅ Done | pytest 100+ファイル + Vitest + Playwright E2E |
+| 🧪 テスト (2,750+ケース) | ✅ Done | pytest 1,798件 + Vitest 1,905件 + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|
@@ -430,8 +432,10 @@ gantt
 | [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | **依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 / React 19** | Backlog | 📋 |
 | [#239](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/239) | **依存関係移行計画: vitest 4 / jsdom 29 / @vitejs/plugin-react 6** | Backlog | 📋 |
 | [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | Done | ✅ |
-| [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | In Review | 🔄 |
-| [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3 / @vitest/coverage-v8 1→3 / jsdom 24→26 アップグレード** | In Review | 🔄 |
+| [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | Done | ✅ |
+| [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3→4 / @vitest/coverage-v8 / jsdom 24→29 アップグレード** | Done | ✅ |
+| [#289](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/289) | **React 19 移行後 react-hooks/immutability + set-state-in-effect 再有効化** | Done | ✅ |
+| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | In Progress | 🔄 |
 
 ---
 
@@ -461,190 +465,46 @@ graph LR
     style D fill:#C8E6C9,stroke:#1B5E20,stroke-width:3px
 ```
 
-### 本日のタイムスケジュール (2026-03-27)
+### 開発セッション履歴
 
-| 時間 (JST) | ループ | 内容 | PR | 状態 |
-|:---|:---|:---|:---:|:---:|
-| 08:33 | 🟢 開始 | ClaudeOS Boot | - | ✅ |
-| 08:33-08:50 | 📚 Build | ドキュメント52ファイル作成 | #2 | ✅ |
-| 08:50-09:15 | 🔨 Build | Phase1 スキャフォールド94ファイル | #4 | ✅ |
-| 09:15-09:35 | 🔍 Monitor | リポジトリ状態確認・GitHub Projects #14 設定 | - | ✅ |
-| 09:35-09:40 | 🔨 Build | Phase2 Backend/Frontend深化 | #6 | ✅ |
-| 09:40-09:45 | 🔨 Build | Phase3 テスト基盤・API追加 | #8 | ✅ |
-| 09:45-09:50 | 🔧 Improve | Phase4 ログ/SW API・Docker/CI最適化 | #10 | ✅ |
-| 09:50-09:57 | 🔧 Improve | Phase5 Frontend統合・テスト76ケース | #29 | ✅ |
-| 09:57-10:05 | 🔧 Improve | Phase6 監査証跡・通知・レポート | #31 | ✅ |
-| 10:05-10:15 | 🔧 Improve | Phase7 アラート管理・ユーザー管理 | #33 | ✅ |
-| 10:15-10:22 | 🔧 Improve | Phase8 部門管理・バッチ処理・ヘルスチェック | #35 | ✅ |
-| 10:22-10:28 | 🔧 Improve | Phase9 CI修復・設定管理・ネットワーク探索 | #37 | ✅ |
-| 10:28-10:32 | 🔧 Improve | Phase10 M365連携・WebSocket・スケジューラ | #39 | ✅ |
-| 10:32-10:35 | ✅ Verify | Phase11 統合テスト・RBAC・OpenAPI | #41 | ✅ |
-| 10:35-10:40 | 🔧 Improve | Phase12 README最終更新・品質強化 | - | ✅ |
-| 10:40-12:00 | 🔨 Build | Phase13-20 継続実装・テスト拡充 | - | ✅ |
-| 12:00-12:30 | 🔍 Monitor | 中間レポート | - | ✅ |
-| 12:30-15:00 | 🔧 Improve | Phase21-24 品質改善・国際化基盤 | - | ✅ |
-| 15:00-16:00 | ✅ Verify | Phase25 STABLE判定・最終テスト | - | ✅ |
-| 16:00-16:30 | 🔍 Monitor | 最終レポート・安全停止 | - | ✅ |
-| 16:33 | 🔴 終了 | 8時間制限到達（Session 1） | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 2 | Phase26-30 拡張開発セッション | - | ✅ |
-| - | 🔨 Build | Phase26 Webhook配信・エクスポート機能 | - | ✅ |
-| - | 🔨 Build | Phase27 タグ管理・全文検索基盤 | - | ✅ |
-| - | 🔨 Build | Phase28 チャート/ウィジェットシステム | - | ✅ |
-| - | 🔨 Build | Phase29 コンプライアンスダッシュボード・監査UI | - | ✅ |
-| - | ✅ Verify | Phase30 最終品質保証・README更新・v0.30.0リリース | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 3 | Phase31-35 運用強化セッション | - | ✅ |
-| - | 🔨 Build | Phase31 パッチ管理・配信基盤 | - | ✅ |
-| - | 🔨 Build | Phase32 デバイスグループ・ポリシー管理 | - | ✅ |
-| - | 🔨 Build | Phase33 廃棄ワークフロー | - | ✅ |
-| - | 🔨 Build | Phase34 ETag/圧縮・パフォーマンス最適化 | - | ✅ |
-| - | ✅ Verify | Phase35 最終統合・リリース v0.35.0 | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 4 | Phase36-39 高度管理セッション | - | ✅ |
-| - | 🔨 Build | Phase36 IPアドレス管理 (IPAM) | - | ✅ |
-| - | 🔨 Build | Phase37 ポリシーエンジン | - | ✅ |
-| - | 🔨 Build | Phase38 変更追跡システム | - | ✅ |
-| - | ✅ Verify | Phase39 最終統合・リリース v0.39.0 | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 5 | Phase40-42 最終完成セッション | - | ✅ |
-| - | 🔨 Build | Phase40 容量計画・予測分析 | - | ✅ |
-| - | 🔨 Build | Phase41 自動修復エンジン | - | ✅ |
-| - | ✅ Verify | Phase42 最終統合・リリース v0.42.0 | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 6 | Phase43-45 最終完成セッション | - | ✅ |
-| - | 🔨 Build | Phase43 印刷管理システム | - | ✅ |
-| - | 🔨 Build | Phase44 リモートワーク・VPN追跡 | - | ✅ |
-| - | ✅ Verify | Phase45 最終統合・リリース v0.45.0 | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-03-27 | 🟢 Session 7 | Phase46-48 最終完成セッション | - | ✅ |
-| - | 🔨 Build | Phase46 ナレッジベース管理 | - | ✅ |
-| - | 🔨 Build | Phase47 SLA管理ダッシュボード | - | ✅ |
-| - | ✅ Verify | Phase48 最終統合・リリース v0.48.0 | - | ✅ |
-| --- | --- | --- | --- | --- |
-| 2026-04-02 | 🟢 **Session 8** | **Phase50 本番デプロイ準備セッション** | - | ✅ |
-| 08:21 JST | 🔍 Monitor | ClaudeOS Boot・GitHub/CI状態確認 | - | ✅ |
-| 08:21-08:40 | 🔨 Build | Trivy @0.28.0→@master修正・Prometheusアラート強化 (22ルール) | - | ✅ |
-| 08:35 JST | 🚀 Build | PR#117 push (Phase50 本番デプロイ準備) | #117 | ✅ |
-| 08:40 JST | ✅ Verify | STABLE N=2 達成・PR#117 merged | #117 | ✅ |
-| 08:42 JST | 🔧 Improve | Phase51 Issue#118作成・監視設計書更新・PR#16マージ | #118 | ✅ |
-| 08:50 JST | 🔧 Improve | npm major PR #22,#24,#25,#26 リスクコメント | - | ✅ |
-| 09:00 JST | 🔧 Improve | PR#119 docs フェーズ完了・Phase51計画 push | #119 | ✅ |
-| 09:05 JST | 🔧 Improve | Actions PR #13,#15,#17,#18 CI確認・マージ | - | ✅ |
-| 09:10 JST | 🔧 Improve | npm major PR #19,#20,#21,#23,#27,#28 リスクコメント | - | ✅ |
-| 09:15 JST | 🔧 Improve | PR#119 CI全通過・マージ完了 (docs Phase51) | #119 | ✅ |
-| 09:30 JST | 🔧 Improve | AlertManager設定・docker-compose更新・Secrets手順書作成 | - | ✅ |
-| 09:50 JST | 🔧 Improve | PR#120 CI全通過・マージ完了 (AlertManager+docs) | #120 | ✅ |
-| 10:00-10:20 JST | 🔧 Improve | Phase52: AlertManager Grafana統合・CI修正・SAM期限アラートAPI | #122 | ✅ |
-| 10:20 JST | 🔧 Improve | PR#122 CI全通過・maim マージ完了 (Phase52) | #122 | ✅ |
-| 10:30-10:45 JST | 🔧 Improve | Phase53: IAMS pytest変換 Phase1（70件）tests/iams/ 新設 | #124 | ✅ |
-| 10:45 JST | 🔧 Improve | PR#124 CI全通過・main マージ完了 (Phase53) | #124 | ✅ |
-| 11:00-11:20 JST | 🔧 Improve | Phase54: IAMS pytest Phase2 資産管理テスト52件 | #125 | ✅ |
-| 11:20 JST | 🔧 Improve | PR#125 CI全通過・main マージ完了 (Phase54) | #125 | ✅ |
-| 11:30-11:50 JST | 🔧 Improve | Phase55: IAMS pytest Phase3 SAMライセンス管理テスト48件 | #126 | ✅ |
-| 11:50 JST | 🔧 Improve | PR#126 CI全通過・main マージ完了 (Phase55) | #126 | ✅ |
-| 12:00-12:20 JST | 🔧 Improve | Phase56: IAMS pytest Phase4 ユーザー管理テスト45件 | #127 | ✅ |
-| 12:20 JST | 🔧 Improve | PR#127 CI全通過・main マージ完了 (Phase56) | #127 | ✅ |
-| 12:30-12:50 JST | 🔧 Improve | Phase57: IAMS pytest Phase5 通知管理テスト50件 | #128 | ✅ |
-| 12:50-13:10 JST | 🔧 Improve | Phase58: IAMS pytest Phase6 調達管理テスト33件 | #129 | ✅ |
-| 13:10-13:20 JST | 🔧 Improve | Phase59: IAMS pytest Phase7 監査ログ・コンプライアンステスト40件 | #130 | ✅ |
-| 13:20-13:35 JST | 🔧 Improve | Phase60: IAMS pytest Phase8 資産ライフサイクル・廃棄管理テスト38件 | #131 | ✅ |
-| 13:35-13:50 JST | 🔧 Improve | Phase61: IAMS pytest Phase9 DLPポリシー・イベントテスト35件 | #132 | ✅ |
-| 13:50-14:05 JST | 🔧 Improve | Phase62: IAMS pytest Phase10 ネットワーク探索・ソフトウェアインベントリテスト38件 | #133 | ✅ |
-| 14:05-14:20 JST | 🔧 Improve | Phase63: IAMS pytest Phase11 パッチ管理・脆弱性追跡テスト40件 | #134 | ✅ |
-| 14:20-14:35 JST | 🔧 Improve | Phase64: IAMS pytest Phase12 レポート生成・セキュリティ監査テスト36件 | #135 | ✅ |
-| 14:35-14:50 JST | 🔧 Improve | Phase65: IAMS pytest Phase13 デバイスポリシー管理・コンプライアンステスト40件 | #136 | ✅ |
-| 14:50-15:05 JST | 🔧 Improve | Phase66: IAMS pytest Phase14 印刷管理・プリンタ・印刷ポリシーテスト38件 | #137 | ✅ |
-| 15:05-15:20 JST | 🔧 Improve | Phase67: IAMS pytest Phase15 IPアドレス管理・タグ管理テスト38件 | #138 | ✅ |
-| 15:20-15:35 JST | 🔧 Improve | Phase68: IAMS pytest Phase16 VPN・ソフトウェア・部署管理テスト38件 | #139 | ✅ |
-| 15:35-15:50 JST | 🔧 Improve | Phase69: IAMS pytest Phase17 デバイスグループ・全文検索テスト36件 | #140 | ✅ |
-| 15:50-16:05 JST | 🔧 Improve | Phase70: IAMS pytest Phase18 エクスポート・セッション管理テスト36件 | #141 | ✅ |
-| 16:05-16:20 JST | 🔧 Improve | Phase71: IAMS pytest Phase19 ナレッジ・カスタムビュー・ダッシュボードテスト38件 | #142 | ✅ |
-| 16:20-16:35 JST | 🔧 Improve | Phase72: IAMS pytest Phase20 スケジューラー・M365・システム設定管理テスト36件 | #143 | ✅ |
-| 16:35-16:50 JST | 🔧 Improve | Phase73: IAMS pytest Phase21 アラート・インシデント・変更管理テスト38件 | #144 | ✅ |
-| 16:50-17:05 JST | 🔧 Improve | Phase74: IAMS pytest Phase22 コンプライアンス・セキュリティ・メトリクス・ログテスト36件 | #145 | ✅ |
-| 17:05-17:20 JST | 🔧 Improve | Phase75: IAMS pytest Phase23 バッチ処理・DB管理・部署管理テスト36件 | #146 | ✅ |
-| 17:20-17:35 JST | 🔧 Improve | Phase76: IAMS pytest Phase24 ヘルス・バージョン・テレメトリー・ソフトウェアテスト36件 | #147 | ✅ |
-| 17:35-17:50 JST | 🔧 Improve | Phase77: IAMS pytest Phase25 セキュリティ・SLA管理・統合検索テスト36件 | #148 | ✅ |
-| 17:50-18:05 JST | 🔧 Improve | Phase78: IAMS pytest Phase26 認証詳細・DLP・印刷管理テスト36件 | #149 | ✅ |
-| 18:05-18:20 JST | 🔧 Improve | Phase79: IAMS pytest Phase27 リモートワーク・ネットワーク・ログイベントテスト36件 | #150 | ✅ |
-| 18:20-18:35 JST | 🔧 Improve | Phase80: IAMS pytest Phase28 レポート・通知管理・アセット管理テスト36件 | #151 | ✅ |
-| 18:35-18:50 JST | 🔧 Improve | Phase81: IAMS pytest Phase29 ユーザー管理・ダッシュボード・監査ログ・カスタムビューテスト36件 | #152 | ✅ |
-| 18:50-19:05 JST | 🔧 Improve | Phase82: IAMS pytest Phase30 コンプライアンス・ライフサイクル・パッチ・セッション管理テスト36件 | #153 | ✅ |
-| 19:05-19:20 JST | 🔧 Improve | Phase83: IAMS pytest Phase31 変更管理・設定管理・M365連携・エクスポートテスト36件 | #154 | ✅ |
-| 19:20-19:35 JST | 🔧 Improve | Phase84: IAMS pytest Phase32 スケジューラー・タグ・デバイスグループ・IPAM テスト36件 | #155 | ✅ |
-| 19:35-19:50 JST | 🔧 Improve | Phase85: IAMS pytest Phase33 ナレッジベース・SAMライセンス・調達管理・ソフトウェア在庫テスト36件 | #156 | ✅ |
-| 19:50-20:05 JST | 🔧 Improve | Phase86: IAMS pytest Phase34 インシデント管理・SLA管理・ポリシー管理・DLPテスト36件 | #157 | ✅ |
-| 20:05-20:20 JST | 🔧 Improve | Phase87: IAMS pytest Phase35 印刷管理・リモートワーク・セキュリティ監査・ログ管理テスト36件 | #158 | ✅ |
-| 20:20-20:35 JST | 🔧 Improve | Phase88: IAMS pytest Phase36 セッション管理・設定変更・カスタムビュー・アラート詳細テスト36件 | #159 | ✅ |
-| 20:35-20:50 JST | 🔧 Improve | Phase89: IAMS pytest Phase37 通知管理・M365統合・エクスポート・部署管理テスト36件 | #160 | ✅ |
-| 20:50-21:05 JST | 🔧 Improve | Phase90: IAMS pytest Phase38 設定管理・ネットワーク管理・ソフトウェア管理・ダッシュボードテスト36件 | #161 | ✅ |
-| 21:05-21:20 JST | 🔧 Improve | Phase91: IAMS pytest Phase39 ユーザー管理・資産管理・監査ログ・セキュリティ詳細テスト36件 | #162 | ✅ |
-| 21:20-21:35 JST | 🔧 Improve | Phase92: IAMS pytest Phase40 SAMライセンス・調達管理・ナレッジベース・ライフサイクル詳細テスト36件 | #163 | ✅ |
-| 21:35-21:50 JST | 🔧 Improve | Phase93: IAMS pytest Phase41 データベース管理・メトリクス・セキュリティ監査・レポート詳細テスト36件 | #164 | ✅ |
-| 21:50-22:05 JST | 🔧 Improve | Phase94: IAMS pytest Phase42 変更管理・パッチ管理・コンプライアンス・IPAM詳細テスト36件 | #165 | ✅ |
-| 22:05-22:20 JST | 🔧 Improve | Phase95: IAMS pytest Phase43 デバイスグループ・カスタムビュー・検索・スケジューラー詳細テスト36件 | #166 | ✅ |
-| 22:20-22:35 JST | 🔧 Improve | Phase96: IAMS pytest Phase44 インシデント管理・SLA管理・バッチ処理・DLP・タグ管理詳細テスト36件 | #167 | ✅ |
-| 22:35-22:50 JST | 🔧 Improve | Phase97: IAMS pytest Phase45 ポリシー管理・アラート管理・セッション管理・設定管理詳細テスト36件 | #168 | ✅ |
-| 22:50-23:05 JST | 🔧 Improve | Phase98: IAMS pytest Phase46 ログ管理・エクスポート・印刷管理・リモートワーク詳細テスト36件 | #169 | ✅ |
-| 23:05-23:20 JST | 🔧 Improve | Phase99: IAMS pytest Phase47 M365統合・通知管理・部署管理・ソフトウェア管理詳細テスト36件 | #170 | ✅ |
-| 23:20-23:35 JST | 🔧 Improve | Phase100: IAMS pytest Phase48 ナレッジベース詳細・調達ワークフロー・SAM詳細テスト36件 | #171 | ✅ |
-| 2026-04-02 | 🟢 **Session 9** | **Phase101-117 IAMS pytest完結・フロントエンド強化・品質改善セッション** | - | ✅ |
-| 08:00 JST | 🔧 Improve | Phase101: IAMS pytest SLA管理・コンプライアンス・レポート・テレメトリ36件 + Prometheus修正 | #173 | ✅ |
-| 08:15 JST | 🔧 Improve | Phase102: IAMS pytest タグ/スケジューラ/IP管理/ダッシュボード36件 | #174 | ✅ |
-| 08:30 JST | 🔧 Improve | Phase103: IAMS pytest 監査ログ・統合検索・パッチ管理・ライフサイクル36件 | #175 | ✅ |
-| 08:45 JST | 🔧 Improve | Phase104: IAMS pytest 資産管理・バッチ処理・設定変更追跡・デバイスグループ36件 | #176 | ✅ |
-| 09:00 JST | 🔧 Improve | Phase105: IAMS pytest DLP・インシデント管理・セキュリティ監査・カスタムビュー36件 | #177 | ✅ |
-| 09:15 JST | 🔧 Improve | Phase106: IAMS pytest セキュリティ概要・セッション・通知・ユーザー管理36件 | #178 | ✅ |
-| 09:30 JST | 🔧 Improve | Phase107: IAMS pytest ポリシー・アラート・調達・ソフトウェア管理36件 | #179 | ✅ |
-| 09:45 JST | 🔧 Improve | Phase108: IAMS pytest 印刷管理・リモートワーク・M365連携・ログ管理36件 | #180 | ✅ |
-| 10:00 JST | 🔧 Improve | Phase109: IAMS pytest システム設定・部門管理・エクスポート・レポート36件 | #181 | ✅ |
-| 10:15 JST | 🔧 Improve | Phase110: IAMS pytest 認証・SAM・ナレッジ・DB管理36件 | #182 | ✅ |
-| 10:30 JST | 🔧 Improve | Phase111: IAMS pytest ヘルスチェック・バージョン・メトリクス・テレメトリー36件 | #183 | ✅ |
-| 10:45 JST | 🔧 Improve | Phase112: IAMS pytest IPアドレス管理・セキュリティ監査・バッチ処理36件（IAMS移植**完結**・累計1,798件） | #184 | ✅ |
-| 11:00 JST | 🔨 Build | Phase113: フロントエンドPhase B-5 デバイス管理画面実装（一覧・詳細・サイドバー追加） | #185 | ✅ |
-| 14:00 JST | 🔨 Build | Phase114: 監視ダッシュボード実装（monitoring/page.tsx・サービス状態・アラートイベント・Grafana埋め込み） | #186 | ✅ |
-| 14:30 JST | 🔧 Improve | Phase115: alembic lint修正（UP007/UP035/I001・型アノテーション近代化・インポート整列） | #187 | ✅ |
-| 14:45 JST | 🔧 Improve | Phase116: Badge variant `'outline'` 追加（TypeScript型エラー修正・ボーダースタイル定義） | #188 | ✅ |
-| 15:18 JST | 🔍 Monitor | Phase117: README v0.63.0更新・Session9フェーズ進捗記録 | #189 | ✅ |
-| 15:25 JST | 🔨 Build | Phase118: IT資産一覧ページ インタラクティブ化（フィルタ・ページネーション・デモデータ10件） | #190 | 🔄 |
-| 15:35 JST | 🔨 Build | Phase119: 調達管理ページ改善（Badge統一・フィルタ3種・ページネーション・サマリーカード4件） | #191 | 🔄 |
-| 15:40 JST | 🔨 Build | Phase120: SAMライセンスページ改善（期限警告・使用率バー・Badge統一・デモ12件） | #192 | ❌ 代替 |
-| 15:42 JST | 🔧 Improve | Phase121: ライフサイクルページ Badge コンポーネント統一（最小差分修正） | #193 | ✅ |
-| 15:42 JST | 🔧 Improve | Phase122: ダッシュボードページ Badge統一（severityBadge/Label→severityConfig統合・型安全化） | #194 | 🔄 CI中 |
-| 16:00 JST | 🔍 Monitor | **8時間終了** v0.64.0 最終報告・Session9完了 | - | ✅ |
-| 2026-04-02 | 🟢 **Session 10** | **Phase D-1/D-2 IAMS選択移植・SAM/調達強化セッション** | - | 🔄 |
-| 13:02 JST | 🔍 Monitor | Session10開始・PR #193 マージ完了・CI状態確認 | #193 | ✅ |
-| 13:10 JST | 🔨 Build | Phase D-1: SAMライセンス管理強化（期限追跡・月額コスト・フィルタ・Badge統一・5種ステータス） | #197 | ✅ |
-| 13:15 JST | 🔨 Build | Phase D-2: 調達承認ワークフロー・ライフサイクルステッパー（承認/却下Modal・状態管理） | #198 | ✅ |
-| 2026-04-02 | 🟢 **Session 11** | **Phase D-3〜D-11 チャートビジュアライゼーション強化セッション** | - | ✅ |
-| 07:13 JST | 🔨 Build | Phase D-3: 調達詳細ページ動的ルーティング（useParams・全10申請データ対応） | #199 | ✅ Merged |
-| 07:25 JST | 🔨 Build | Phase D-4: 監視ダッシュボードPrometheusメトリクス可視化（ProgressBar・BarChart） | #200 | ✅ Merged |
-| 07:29 JST | 🔨 Build | Phase D-5: SAM OverviewページDonutChart遵守率・BarChartベンダー別コスト | #201 | ✅ Merged |
-| 07:43 JST | 🔨 Build | Phase D-6: パッチ管理ページDonutChart適用率・ProgressBar重要度別可視化 | #202 | ✅ Merged |
-| 07:55 JST | 🔨 Build | Phase D-7: ライフサイクル管理DonutChart稼働中率・BarChartステージ別台数 | #203 | ✅ Merged |
-| 08:10 JST | 🔨 Build | Phase D-8: IT資産一覧DonutChartアクティブ率・BarChart種別別台数 | #204 | ✅ Merged |
-| 16:35 JST | 🔨 Build | Phase D-9: compliance DonutChart+BarChart（ISO27001スコア・NIST CSF） | #205 | ✅ Merged |
-| 16:48 JST | 🔨 Build | Phase D-10: incidents DonutChart+BarChart（解決率・重要度別件数） | #206 | ✅ Merged |
-| 16:49 JST | 🔨 Build | Phase D-11: devices DonutChart+BarChart（オンライン率・ステータス別台数） | #207 | ✅ Merged |
-| 2026-04-02 | 🟢 **Session 12** | **Phase D チャート100%完了・E2E検証・バグ修正・Systemd登録** | - | 🔄 |
-| 16:55 JST | 🔍 Monitor | Session12開始・PR #200〜#207 状態確認・カスケードコンフリクト解消 | #200-208 | ✅ |
-| 17:05 JST | 🔨 Build | Phase D-12: DLP DonutChart+BarChart（ブロック率・重要度別イベント数） | #209 | ✅ Merged |
-| 17:05 JST | 🔨 Build | Phase D-13: ネットワーク管理 DonutChart+BarChart（IPアクティブ率・レンジ別使用率） | #210 | ✅ Merged |
-| 17:07 JST | 🔨 Build | Phase D-14: アラート管理 DonutChart+BarChart（解決率・重要度別件数） | #211 | ✅ Merged |
-| 17:08 JST | 🔨 Build | Phase D-15: 監査ログ DonutChart+BarChart（ユーザーカバレッジ・アクション種別） | #212 | ✅ Merged |
-| 17:10 JST | 🔨 Build | Phase D-16: 調達管理 DonutChart+BarChart（完了率・カテゴリ別件数） | #213 | ✅ Merged |
-| 17:11 JST | 🔨 Build | Phase D-17: SLA管理 DonutChart+BarChart（全体達成率・メトリクス種別別） | #214 | ✅ Merged |
-| 17:12 JST | 🔨 Build | Phase D-18: リモートワーク DonutChart+BarChart（VPN接続率・プロトコル別） | #215 | ✅ Merged |
-| 17:13 JST | 🔨 Build | Phase D-19: 印刷管理 DonutChart+BarChart（成功率・ユーザー別ページ数） | #216 | ✅ Merged |
-| 17:28 JST | 🔨 Build | Phase D-20〜D-27: 残8ページ一括チャート追加（changes/departments/policies/users/sessions/notifications/reports/dashboard） | #221-228 | ✅ Merged |
-| 17:35 JST | 🔧 Fix | TypeScriptエラー2件修正（Badge variant + i18n as const） | #229 | ✅ Merged |
-| 17:43 JST | 🚀 Deploy | Systemd登録 aegis-sight-web.service → http://192.168.0.185:3080 | - | ✅ |
-| 17:45 JST | 🔧 Fix | デモログインcookie認証修正（middleware リダイレクトループ解消） | #230 | ✅ Merged |
-| 17:50 JST | ✅ Verify | E2E全24ページ Playwright巡回検証 | - | ✅ |
-| 17:55 JST | 🔧 Fix | departments APIタイムアウト対策（5秒制限+デモデータ） | #231 | ✅ Merged |
-| 18:00 JST | 🔧 Fix | SLA/変更管理デモデータフォールバック追加 | #232 | ✅ Merged |
-| 18:05 JST | 🔍 Monitor | GitHub Projects #14 更新（9件Done + 1件InProgress） | - | ✅ |
+<details>
+<summary>📅 Session 1-7 (2026-03-27) — Phase 0-48 全機能実装</summary>
+
+| Session | 内容 | Phase | PR |
+|:---|:---|:---|:---:|
+| Session 1 | 基盤構築 (docs 52ファイル + scaffold 94ファイル + API 10ドメイン + Frontend 9ページ) | Phase 0-25 | #2-#41 |
+| Session 2 | Webhook/エクスポート・タグ管理・チャート・コンプライアンスダッシュボード | Phase 26-30 | - |
+| Session 3 | パッチ管理・デバイスグループ・廃棄ワークフロー・ETag/圧縮 | Phase 31-35 | - |
+| Session 4 | IPAM・ポリシーエンジン・変更追跡 | Phase 36-39 | - |
+| Session 5 | 容量計画・自動修復エンジン | Phase 40-42 | - |
+| Session 6 | 印刷管理・リモートワーク・VPN追跡 | Phase 43-45 | - |
+| Session 7 | ナレッジベース・SLA管理ダッシュボード → **v0.48.0 リリース** | Phase 46-48 | - |
+
+</details>
+
+<details>
+<summary>📅 Session 8 (2026-04-02) — Phase 50-100 本番準備・IAMS pytest 移植</summary>
+
+| 時間 | 内容 | PR |
+|:---|:---|:---:|
+| Phase50 | 本番デプロイ準備 (Trivy修正・Prometheus 22ルール・IAMS移行スクリプト) | #117 |
+| Phase51 | 依存関係更新・ステージング・npm major PRリスク評価 | #118-#120 |
+| Phase52 | AlertManager Grafana統合・SAM期限アラートAPI | #122 |
+| Phase53-100 | **IAMS pytest 変換 48バッチ (Phase1-48)** — 累計1,798件テスト完了 | #124-#171 |
+
+</details>
+
+<details>
+<summary>📅 Session 9-12 (2026-04-02) — フロントエンド強化・チャート全ページ実装</summary>
+
+| Session | 内容 | PR |
+|:---|:---|:---:|
+| Session 9 | Phase101-112 IAMS pytest完結 + Phase113-122 フロントエンド強化 (デバイス管理・Badge統一) | #173-#194 |
+| Session 10 | Phase D-1/D-2 SAMライセンス管理強化・調達承認ワークフロー | #197-#198 |
+| Session 11 | Phase D-3〜D-11 チャート可視化 (9ページ DonutChart+BarChart) | #199-#207 |
+| Session 12 | Phase D-12〜D-27 残全ページチャート + E2E検証 + Systemd登録 + バグ修正 | #209-#232 |
+
+</details>
 
 ### STABLE 判定条件
 
@@ -675,11 +535,33 @@ graph LR
 
 ## 🚀 クイックスタート
 
+### 1. 環境変数の設定
+
 ```bash
 # リポジトリクローン
 git clone https://github.com/Kensan196948G/AEGIS-SIGHT.git
 cd AEGIS-SIGHT
 
+# 環境変数テンプレートをコピー
+cp .env.example .env
+```
+
+`.env` を編集し、以下の主要項目を設定してください：
+
+| 変数 | 説明 | デフォルト |
+|:---|:---|:---|
+| `POSTGRES_USER` | DB ユーザー名 | `aegis` |
+| `POSTGRES_PASSWORD` | DB パスワード | `aegis_dev` (**本番では変更必須**) |
+| `SECRET_KEY` | JWT 署名キー | (**必ず変更**: `openssl rand -hex 32`) |
+| `NEXT_PUBLIC_API_URL` | フロントエンド→API 接続先 | `http://localhost:8000` |
+| `CORS_ORIGINS` | CORS 許可オリジン | `["http://localhost:3000"]` |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana 管理パスワード | `admin` |
+
+> 📋 全項目は [`.env.example`](./.env.example) を参照
+
+### 2. サービス起動
+
+```bash
 # 全サービス起動 (本番)
 docker compose up -d
 
@@ -688,14 +570,17 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # テスト実行
 docker compose -f docker-compose.test.yml up --abort-on-container-exit
-
-# 個別サービスアクセス
-# API:        http://localhost:8000
-# API Docs:   http://localhost:8000/docs
-# Web UI:     http://localhost:3000
-# Grafana:    http://localhost:3001
-# Prometheus: http://localhost:9090
 ```
+
+### 3. アクセス先
+
+| サービス | URL |
+|:---|:---|
+| 🌐 Web UI | http://localhost:3000 |
+| 🐍 API | http://localhost:8000 |
+| 📖 API Docs (Swagger) | http://localhost:8000/docs |
+| 📉 Grafana | http://localhost:3001 |
+| 📈 Prometheus | http://localhost:9090 |
 
 ---
 
@@ -708,10 +593,10 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 | フェーズ | 名称 | 期間 | 状態 |
 |---------|------|------|------|
 | **Phase A** | 🏗️ 基盤構築 | 〜2026-04-21 | ✅ 完了 |
-| **Phase B** | ⚙️ コア機能実装 | 〜2026-05-31 | 🔄 進行中 |
-| **Phase C** | 🔄 IAMS選択移植 | 〜2026-06-30 | 🔄 進行中 |
-| **Phase D** | 📊 監視・PWA統合 | 〜2026-07-31 | 🔄 進行中 |
-| **Phase E** | 🛡️ QA・セキュリティ | 〜2026-08-31 | ⏳ 未開始 |
+| **Phase B** | ⚙️ コア機能実装 | 〜2026-05-31 | ✅ 完了 (B-5 デバイス管理まで) |
+| **Phase C** | 🔄 IAMS選択移植 | 〜2026-06-30 | ✅ 完了 (1,798件 pytest 移植完結) |
+| **Phase D** | 📊 監視・チャート統合 | 〜2026-07-31 | ✅ 完了 (D-1〜D-27 全チャート実装) |
+| **Phase E** | 🛡️ QA・セキュリティ・品質強化 | 〜2026-08-31 | 🔄 進行中 |
 | **Phase F** | 🚀 リリース準備 | 〜2026-09-22 | ⏳ 未開始 |
 
 > 📋 詳細: [docs/development-phases/](./docs/development-phases/)
@@ -760,6 +645,6 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 **🏗️ みらい建設工業 IT部門 | AEGIS-SIGHT | 2026**
 
-*Built with [ClaudeOS v4](./CLAUDE.md) Autonomous Development*
+*Built with [ClaudeOS v6](./CLAUDE.md) Autonomous Development*
 
 </div>
