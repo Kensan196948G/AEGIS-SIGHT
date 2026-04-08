@@ -1,0 +1,88 @@
+{
+  "goal": {
+    "title": "AEGIS-SIGHT 品質安定化・テストカバレッジ向上",
+    "description": "React 19移行完了後の残課題解消、テストカバレッジ向上、CI安定化"
+  },
+  "kpi": {
+    "success_rate_target": 0.9,
+    "frontend_coverage_target": 85,
+    "backend_coverage_target": 80,
+    "ci_pass_rate_target": 1.0
+  },
+  "execution": {
+    "start_time": "2026-04-08T00:00:00+09:00",
+    "max_duration_minutes": 300,
+    "elapsed_minutes": 0,
+    "remaining_minutes": 300,
+    "phase": "Monitor",
+    "auto_stop_threshold": 5,
+    "graceful_shutdown": true
+  },
+  "token": {
+    "total_budget": 100,
+    "used": 5,
+    "remaining": 95,
+    "allocation": {
+      "monitor": 10,
+      "development": 35,
+      "verify": 25,
+      "improvement": 10,
+      "debug": 20
+    },
+    "dynamic_mode": true,
+    "current_phase_budget": 10,
+    "current_phase_used": 5
+  },
+  "codex": {
+    "setup_checked": true,
+    "review_gate": "off",
+    "last_review_status": "none",
+    "last_review_type": "none",
+    "last_review_job_id": "",
+    "last_review_summary": "",
+    "last_adversarial_status": "none",
+    "last_adversarial_job_id": "",
+    "last_adversarial_summary": "",
+    "last_rescue_status": "none",
+    "last_rescue_job_id": "",
+    "last_rescue_summary": "",
+    "blocking_issues": [],
+    "severity": "none"
+  },
+  "debug": {
+    "last_failure_category": "none",
+    "failure_count_by_category": {},
+    "same_error_retry_count": 0,
+    "rescue_retry_count": 0,
+    "last_root_cause": "",
+    "last_fix_scope": "none",
+    "last_fix_strategy": "none",
+    "flaky_suspected": false,
+    "debug_mode": "normal"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "session": {
+    "id": "2026-04-08-001",
+    "started_at": "2026-04-08T00:00:00+09:00",
+    "loop_count": 3,
+    "phase_history": ["Monitor", "Development", "Verify", "Improvement", "Monitor", "Development", "Verify", "Improvement", "Monitor", "Development", "Verify", "Improvement"],
+    "merged_prs": [299],
+    "open_prs": [301],
+    "created_issues": [300],
+    "last_updated": "2026-04-08T13:20:00+09:00",
+    "notes": "Loop 3 Verify PASSED: 73/73 frontend tests, coverage Statements=92.48% Branches=85.49% Functions=87.79% Lines=93.55% (all above thresholds). CI artifact frontend-coverage uploaded. Loop 3 Improvement: added types.ts test (coverage 0%→~100%), Codecov badge. PR#301 CI re-running on latest commit 8bd8409."
+  },
+  "kpi_status": {
+    "frontend_coverage_statements": 92.48,
+    "frontend_coverage_branches": 85.49,
+    "frontend_coverage_functions": 87.79,
+    "frontend_coverage_lines": 93.55,
+    "frontend_test_count": 1942,
+    "frontend_test_files": 73,
+    "frontend_all_passing": true,
+    "coverage_artifact_generated": true
+  }
+}

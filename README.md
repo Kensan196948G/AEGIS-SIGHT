@@ -1,4 +1,4 @@
-<div align="center">
+﻿﻿<div align="center">
 
 ```
  █████╗ ███████╗ ██████╗ ██╗███████╗      ███████╗██╗ ██████╗ ██╗  ██╗████████╗
@@ -24,6 +24,7 @@
 
 [![CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/claudeos-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
 [![Frontend CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
+[![codecov](https://codecov.io/gh/Kensan196948G/AEGIS-SIGHT/branch/main/graph/badge.svg)](https://codecov.io/gh/Kensan196948G/AEGIS-SIGHT)
 [![Project](https://img.shields.io/badge/Project-司令盤-blue?style=flat-square)](https://github.com/users/Kensan196948G/projects/14)
 
 </div>
@@ -119,6 +120,57 @@
 | インシデント管理 | ITSM-System と重複 |
 | SLA管理 | ITSM-System と重複 |
 | 変更管理 | ITSM-System と重複 |
+
+---
+
+## 🔄 CI/CD パイプライン
+
+```mermaid
+flowchart LR
+    subgraph PR["📝 Pull Request"]
+        PUSH["git push"] --> TRIGGER["GitHub Actions\nトリガー"]
+    end
+
+    subgraph PARALLEL["⚡ 並列実行"]
+        direction TB
+        LINT["🔍 Lint\nRuff + ESLint"]
+        SEC["🔒 Security\nBandit + secrets"]
+        DEPS["📦 Dependency Audit\nPython + Node.js"]
+        CODEQL["🧬 CodeQL\n解析"]
+        TRIVY["🛡️ Trivy\nContainer Scan"]
+    end
+
+    subgraph TEST["🧪 テスト (DB付き)"]
+        PYTEST["🐍 pytest\n1,798件 + coverage"]
+        VITEST["⚛️ vitest\n1,942件 + coverage v8"]
+        REPORT["📊 PR Summary\nコメント自動投稿"]
+    end
+
+    subgraph ARTIFACTS["📦 成果物"]
+        PY_COV["Python Coverage\nXML + HTML"]
+        FE_COV["Frontend Coverage\n143ファイル / 778KB"]
+        CODECOV["☁️ Codecov\nバッジ更新"]
+    end
+
+    subgraph GATE["✅ マージゲート"]
+        GREEN["全チェック ✅"] --> MERGE["merge to main"]
+    end
+
+    TRIGGER --> PARALLEL
+    PARALLEL --> TEST
+    TEST --> PYTEST & VITEST
+    PYTEST --> PY_COV
+    VITEST --> FE_COV
+    PY_COV & FE_COV --> CODECOV
+    TEST --> REPORT
+    PARALLEL & TEST --> GREEN
+
+    style PR fill:#E3F2FD,stroke:#1565C0
+    style PARALLEL fill:#E8F5E9,stroke:#2E7D32
+    style TEST fill:#FFF3E0,stroke:#FFA000
+    style ARTIFACTS fill:#F3E5F5,stroke:#7B1FA2
+    style GATE fill:#E8F5E9,stroke:#2E7D32
+```
 
 ---
 
@@ -435,7 +487,9 @@ gantt
 | [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | Done | ✅ |
 | [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3→4 / @vitest/coverage-v8 / jsdom 24→29 アップグレード** | Done | ✅ |
 | [#289](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/289) | **React 19 移行後 react-hooks/immutability + set-state-in-effect 再有効化** | Done | ✅ |
-| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | In Progress | 🔄 |
+| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | Done | ✅ |
+| [#300](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/300) | **フロントエンドテストカバレッジ向上 — 75本テスト追加 (PR#299)** | Done | ✅ |
+| [#301 PR](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/301) | **coverage設定追加・StatCardテスト実装** | In Review | 🔄 |
 
 ---
 
@@ -506,18 +560,43 @@ graph LR
 
 </details>
 
+<details>
+<summary>📅 Session 13 (2026-04-08) — カバレッジ設定・テスト追加・CI強化</summary>
+
+| 内容 | 詳細 | PR |
+|:---|:---|:---:|
+| フロントエンドテスト大量追加 | 75本テストファイル (1,940+テスト) | #299 ✅ |
+| Backend coverage 設定 | pyproject.toml に [tool.coverage.*] セクション追加 | #301 |
+| StatCard テスト実装 | ui-components.test.tsx — StatCard 包括テスト | #301 |
+| useOnlineStatus hook テスト | useSyncExternalStore 多重呼出し対応テスト | #301 |
+| lib/types.ts テスト実装 | 全型定義の網羅テスト (coverage 0%→~100%) | #301 |
+| CI 強化 | vitest coverage artifact・Codecov 統合・PR summary 改善 | #301 |
+| Codecov バッジ追加 | README にカバレッジ可視化バッジ追加 | #301 |
+
+**実測フロントエンドカバレッジ (Loop 3 Verify済):**
+
+| メトリクス | 実績 | 目標 | 判定 |
+|:---|:---:|:---:|:---:|
+| Statements | **92.48%** | 80% | ✅ |
+| Branches | **85.49%** | 75% | ✅ |
+| Functions | **87.79%** | 80% | ✅ |
+| Lines | **93.55%** | 80% | ✅ |
+
+</details>
+
 ### STABLE 判定条件
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | ✅ |
+| テスト | 全テスト通過 | ✅ 74/74 ファイル / 1942件 |
+| フロントカバレッジ | Lines ≥ 85% | ✅ **93.55%** |
 | CI | GitHub Actions 成功 | ✅ |
 | Lint | ruff + ESLint エラー 0 | ✅ |
 | Build | Docker build 成功 | ✅ |
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 2** (小規模変更・Phase50)：連続2回全条件クリアで STABLE ✅ **達成済み** (PR#117 merged 2026-04-02)
+> **N = 3** (通常変更)：PR#301 CI再実行中 🔄 (types.ts テスト追加) **Session 13 — カバレッジ向上フェーズ**
 
 ### Agent Teams
 
