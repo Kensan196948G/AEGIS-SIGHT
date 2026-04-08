@@ -32,14 +32,14 @@ describe('useOnlineStatus', () => {
   });
 
   it('updates to false when offline event fires', () => {
-    vi.spyOn(navigator, 'onLine', 'get')
-      .mockReturnValueOnce(true)
-      .mockReturnValue(false);
+    let onlineState = true;
+    vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => onlineState);
 
     const { result } = renderHook(() => useOnlineStatus());
     expect(result.current).toBe(true);
 
     act(() => {
+      onlineState = false;
       listeners['offline'].forEach((cb) => cb());
     });
 
@@ -47,14 +47,14 @@ describe('useOnlineStatus', () => {
   });
 
   it('updates to true when online event fires', () => {
-    vi.spyOn(navigator, 'onLine', 'get')
-      .mockReturnValueOnce(false)
-      .mockReturnValue(true);
+    let onlineState = false;
+    vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => onlineState);
 
     const { result } = renderHook(() => useOnlineStatus());
     expect(result.current).toBe(false);
 
     act(() => {
+      onlineState = true;
       listeners['online'].forEach((cb) => cb());
     });
 
