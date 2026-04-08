@@ -1,25 +1,25 @@
 # AEGIS-SIGHT Project Status
 
-## 開発セッションサマリ (2026-04-04)
+## 開発セッションサマリ (2026-04-08)
 
-- **バージョン**: v0.65.0
-- **ステータス**: IAMS全移植完了・保守フェーズ移行
+- **バージョン**: v0.66.0
+- **ステータス**: カバレッジ向上・保守フェーズ継続中
 - **STABLE判定**: 達成済み (テスト/CI/Lint/Build/Security 全通過)
 - **GitHub Projects**: [司令盤 #14](https://github.com/users/Kensan196948G/projects/14)
 
 ---
 
-## 📊 現在の状態（2026-04-04時点）
+## 📊 現在の状態（2026-04-08時点）
 
 | 項目 | 状態 |
 |:---|:---:|
 | CI | ✅ 全グリーン |
-| テスト | ✅ success |
+| テスト | ✅ success (frontend 80+ test files) |
 | Lint | ✅ success |
 | Build | ✅ success |
 | Security Scan | ✅ success |
-| Open Issues | 0件（全完了） |
-| Dependabot PRs | 10件（高リスク4件はレビュー中） |
+| Open Issues | 1件 (#300 テストカバレッジ) |
+| Open PRs | 1件 (#301 coverage config) |
 
 ---
 
