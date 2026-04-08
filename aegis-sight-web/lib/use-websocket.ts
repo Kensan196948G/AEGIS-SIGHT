@@ -28,46 +28,64 @@ export function useWebSocket(
   const wsRef = useRef<WebSocket | null>(null);
   const retriesRef = useRef(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const optionsRef = useRef({ onMessage, onError });
 
-  const connect = useCallback(() => {
+  useEffect(() => {
+    optionsRef.current = { onMessage, onError };
+  }, [onMessage, onError]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    setStatus('connecting');
-    const ws = new WebSocket(url);
+    const connectRef = { current: null as (() => void) | null };
 
-    ws.onopen = () => {
-      setStatus('connected');
-      retriesRef.current = 0;
+    const doConnect = () => {
+      setStatus('connecting');
+      const ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        setStatus('connected');
+        retriesRef.current = 0;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setLastMessage(data);
+          optionsRef.current.onMessage?.(data);
+        } catch {
+          setLastMessage(event.data);
+          optionsRef.current.onMessage?.(event.data);
+        }
+      };
+
+      ws.onerror = (error) => {
+        optionsRef.current.onError?.(error);
+      };
+
+      ws.onclose = () => {
+        setStatus('disconnected');
+        wsRef.current = null;
+
+        if (reconnect && retriesRef.current < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, retriesRef.current), 30000);
+          retriesRef.current += 1;
+          timeoutRef.current = setTimeout(() => connectRef.current?.(), delay);
+        }
+      };
+
+      wsRef.current = ws;
     };
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        setLastMessage(data);
-        onMessage?.(data);
-      } catch {
-        setLastMessage(event.data);
-        onMessage?.(event.data);
-      }
+    connectRef.current = doConnect;
+    doConnect();
+
+    return () => {
+      connectRef.current = null;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      wsRef.current?.close();
     };
-
-    ws.onerror = (error) => {
-      onError?.(error);
-    };
-
-    ws.onclose = () => {
-      setStatus('disconnected');
-      wsRef.current = null;
-
-      if (reconnect && retriesRef.current < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, retriesRef.current), 30000);
-        retriesRef.current += 1;
-        timeoutRef.current = setTimeout(connect, delay);
-      }
-    };
-
-    wsRef.current = ws;
-  }, [url, reconnect, maxRetries, onMessage, onError]);
+  }, [url, reconnect, maxRetries]);
 
   const send = useCallback((data: unknown) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -81,14 +99,6 @@ export function useWebSocket(
     wsRef.current = null;
     setStatus('disconnected');
   }, []);
-
-  useEffect(() => {
-    connect();
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      wsRef.current?.close();
-    };
-  }, [connect]);
 
   return { status, lastMessage, send, disconnect };
 }

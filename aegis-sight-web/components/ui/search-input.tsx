@@ -23,15 +23,17 @@ export function SearchInput({
   autoFocus = false,
 }: SearchInputProps) {
   const [internalValue, setInternalValue] = useState(controlledValue ?? '');
+  const [prevControlledValue, setPrevControlledValue] = useState(controlledValue);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync controlled value
-  useEffect(() => {
+  // Sync controlled value — "adjusting state during rendering" pattern (React docs recommended)
+  if (controlledValue !== prevControlledValue) {
+    setPrevControlledValue(controlledValue);
     if (controlledValue !== undefined) {
       setInternalValue(controlledValue);
     }
-  }, [controlledValue]);
+  }
 
   const debouncedOnChange = useCallback(
     (val: string) => {

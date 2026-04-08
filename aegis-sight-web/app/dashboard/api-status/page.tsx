@@ -115,9 +115,13 @@ export default function ApiStatusPage() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    // Schedule initial fetch asynchronously to avoid synchronous setState in effect body
+    const initialTimeout = setTimeout(refresh, 0);
     const interval = setInterval(refresh, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, [refresh]);
 
   const checks = healthDetail?.checks || {};

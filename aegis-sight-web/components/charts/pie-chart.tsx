@@ -64,17 +64,19 @@ export function PieChart({
   const innerR = innerRadius;
 
   const slices = useMemo(() => {
-    let currentAngle = 0;
-    return data.map((d, i) => {
+    return data.reduce<
+      Array<PieChartSlice & { startAngle: number; endAngle: number; midAngle: number; color: string; percentage: string }>
+    >((acc, d, i) => {
+      const prevEnd = acc.length > 0 ? acc[acc.length - 1].endAngle : 0;
       const angle = total > 0 ? (d.value / total) * 360 : 0;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + angle;
-      currentAngle = endAngle;
+      const startAngle = prevEnd;
+      const endAngle = prevEnd + angle;
       const midAngle = startAngle + angle / 2;
       const color = d.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
       const percentage = total > 0 ? ((d.value / total) * 100).toFixed(1) : '0';
-      return { ...d, startAngle, endAngle, midAngle, color, percentage };
-    });
+      acc.push({ ...d, startAngle, endAngle, midAngle, color, percentage });
+      return acc;
+    }, []);
   }, [data, total]);
 
   const buildSlicePath = (startAngle: number, endAngle: number) => {
