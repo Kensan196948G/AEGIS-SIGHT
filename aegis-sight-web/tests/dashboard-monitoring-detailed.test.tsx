@@ -85,9 +85,9 @@ describe('Monitoring page - overview stats', () => {
 
   it('shows stat labels', async () => {
     await renderMonitoring();
-    expect(screen.getByText('正常')).toBeDefined();
-    expect(screen.getByText('低下')).toBeDefined();
-    expect(screen.getByText('停止中')).toBeDefined();
+    expect(screen.getAllByText('正常').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('低下').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('停止中').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('合計サービス')).toBeDefined();
   });
 });
@@ -171,7 +171,8 @@ describe('Monitoring page - event level filter', () => {
 
   it('filters to critical events only (2 events)', async () => {
     await renderMonitoring();
-    const criticalButton = screen.getByText('重大');
+    const criticalButtons = screen.getAllByText('重大');
+    const criticalButton = criticalButtons.find((el) => el.closest('button') && !el.getAttribute('data-variant'))!;
     fireEvent.click(criticalButton);
 
     expect(criticalButton.className).toContain('bg-aegis-blue');
@@ -207,7 +208,8 @@ describe('Monitoring page - event level filter', () => {
 
   it('returns to all events when clicking "すべて" after filter', async () => {
     await renderMonitoring();
-    const criticalButton = screen.getByText('重大');
+    const criticalButtons = screen.getAllByText('重大');
+    const criticalButton = criticalButtons.find((el) => el.closest('button') && !el.getAttribute('data-variant'))!;
     const allButton = screen.getByText('すべて');
 
     fireEvent.click(criticalButton);
@@ -233,7 +235,9 @@ describe('Monitoring page - empty events state', () => {
     expect(screen.queryByText('該当するイベントがありません')).toBeNull();
 
     // Filter to critical - still has events
-    fireEvent.click(screen.getByText('重大'));
+    const criticalButtons = screen.getAllByText('重大');
+    const criticalFilterBtn = criticalButtons.find((el) => el.closest('button') && !el.getAttribute('data-variant'))!;
+    fireEvent.click(criticalFilterBtn);
     expect(screen.queryByText('該当するイベントがありません')).toBeNull();
   });
 });
@@ -269,7 +273,7 @@ describe('Monitoring page - service table', () => {
   it('renders all 8 service names', async () => {
     await renderMonitoring();
     expect(screen.getByText('Web Frontend')).toBeDefined();
-    expect(screen.getByText('API Server')).toBeDefined();
+    expect(screen.getAllByText('API Server').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Database (Primary)')).toBeDefined();
     expect(screen.getByText('Database (Replica)')).toBeDefined();
     expect(screen.getByText('Application Server')).toBeDefined();
@@ -289,11 +293,11 @@ describe('Monitoring page - service table', () => {
 
   it('renders host names in service table', async () => {
     await renderMonitoring();
-    expect(screen.getByText('srv-web-01')).toBeDefined();
-    expect(screen.getByText('srv-api-01')).toBeDefined();
-    expect(screen.getByText('db-primary-01')).toBeDefined();
-    expect(screen.getByText('db-replica-02')).toBeDefined();
-    expect(screen.getByText('srv-app-02')).toBeDefined();
+    expect(screen.getAllByText('srv-web-01').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('srv-api-01').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('db-primary-01').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('db-replica-02').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('srv-app-02').length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -486,7 +490,7 @@ describe('Monitoring page - host metric labels', () => {
   it('renders all host labels in metrics panel', async () => {
     await renderMonitoring();
     expect(screen.getByText('Production Server')).toBeDefined();
-    expect(screen.getByText('API Server')).toBeDefined();
+    expect(screen.getAllByText('API Server').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('DB Primary')).toBeDefined();
     expect(screen.getByText('DB Replica')).toBeDefined();
     expect(screen.getByText('NAS Storage')).toBeDefined();

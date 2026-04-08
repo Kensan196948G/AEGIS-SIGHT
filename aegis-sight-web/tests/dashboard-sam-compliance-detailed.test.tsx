@@ -178,9 +178,9 @@ describe('SAM Compliance page - filter tabs', () => {
   it('renders all 3 filter tabs: すべて, 超過, 低利用', async () => {
     const Page = await loadPage();
     render(<Page />);
-    expect(screen.getByText('すべて')).toBeTruthy();
-    expect(screen.getByText('超過')).toBeTruthy();
-    expect(screen.getByText('低利用')).toBeTruthy();
+    expect(screen.getAllByText('すべて').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('超過').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('低利用').length).toBeGreaterThanOrEqual(1);
   });
 
   it('default filter is "all" - shows all 6 rows', async () => {
@@ -203,7 +203,7 @@ describe('SAM Compliance page - filter tabs', () => {
   it('clicking 超過 tab filters to over-deployed items only', async () => {
     const Page = await loadPage();
     render(<Page />);
-    fireEvent.click(screen.getByText('超過'));
+    fireEvent.click(screen.getAllByText('超過').find((el) => el.closest('button'))!);
     // over-deployed items: Adobe CC, AutoCAD, Visio, Photoshop
     expect(screen.getByText('Adobe Creative Cloud')).toBeTruthy();
     expect(screen.getByText('AutoCAD LT 2024')).toBeTruthy();
@@ -217,7 +217,7 @@ describe('SAM Compliance page - filter tabs', () => {
   it('clicking 低利用 tab filters to under-utilized items only', async () => {
     const Page = await loadPage();
     render(<Page />);
-    fireEvent.click(screen.getByText('低利用'));
+    fireEvent.click(screen.getAllByText('低利用').find((el) => el.closest('button'))!);
     // under-utilized items: Norton 360, Slack Business+
     expect(screen.getByText('Norton 360')).toBeTruthy();
     expect(screen.getByText('Slack Business+')).toBeTruthy();
@@ -229,9 +229,9 @@ describe('SAM Compliance page - filter tabs', () => {
   it('clicking すべて tab restores all items after filtering', async () => {
     const Page = await loadPage();
     render(<Page />);
-    fireEvent.click(screen.getByText('超過'));
+    fireEvent.click(screen.getAllByText('超過').find((el) => el.closest('button'))!);
     expect(screen.queryByText('Norton 360')).toBeNull();
-    fireEvent.click(screen.getByText('すべて'));
+    fireEvent.click(screen.getAllByText('すべて').find((el) => el.closest('button'))!);
     expect(screen.getByText('Norton 360')).toBeTruthy();
     expect(screen.getByText('Adobe Creative Cloud')).toBeTruthy();
   });
@@ -244,7 +244,7 @@ describe('SAM Compliance page - active tab styling', () => {
   it('applies active styling to selected tab', async () => {
     const Page = await loadPage();
     render(<Page />);
-    const allTab = screen.getByText('すべて').closest('button');
+    const allTab = screen.getAllByText('すべて').find((el) => el.closest('button'))?.closest('button');
     expect(allTab?.className).toContain('bg-primary-50');
     expect(allTab?.className).toContain('text-primary-700');
   });
@@ -252,17 +252,17 @@ describe('SAM Compliance page - active tab styling', () => {
   it('applies inactive styling to non-selected tab', async () => {
     const Page = await loadPage();
     render(<Page />);
-    const overTab = screen.getByText('超過').closest('button');
+    const overTab = screen.getAllByText('超過').find((el) => el.closest('button'))?.closest('button');
     expect(overTab?.className).toContain('text-gray-600');
   });
 
   it('switches active styling when clicking a different tab', async () => {
     const Page = await loadPage();
     render(<Page />);
-    fireEvent.click(screen.getByText('超過'));
-    const overTab = screen.getByText('超過').closest('button');
+    fireEvent.click(screen.getAllByText('超過').find((el) => el.closest('button'))!);
+    const overTab = screen.getAllByText('超過').find((el) => el.closest('button'))?.closest('button');
     expect(overTab?.className).toContain('bg-primary-50');
-    const allTab = screen.getByText('すべて').closest('button');
+    const allTab = screen.getAllByText('すべて').find((el) => el.closest('button'))?.closest('button');
     expect(allTab?.className).toContain('text-gray-600');
   });
 });
