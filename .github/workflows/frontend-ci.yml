@@ -58,7 +58,15 @@ jobs:
         run: cd aegis-sight-web && npm ci
 
       - name: Run Vitest
-        run: cd aegis-sight-web && npx vitest run --reporter=verbose
+        run: cd aegis-sight-web && npx vitest run --coverage --reporter=verbose 2>&1 | tee vitest-output.txt || true
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-coverage
+          path: aegis-sight-web/coverage/
+          retention-days: 14
 
   frontend-build:
     name: Build (Frontend)
