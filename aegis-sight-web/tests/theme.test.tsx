@@ -158,6 +158,39 @@ describe('ThemeProvider', () => {
       (changeHandler as () => void)();
     }
   });
+
+  it('system theme change listener does nothing when theme is not system', () => {
+    let changeHandler: (() => void) | null = null;
+    matchMediaMock.mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn((_: string, handler: () => void) => {
+        changeHandler = handler;
+      }),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    // Start with dark theme (not system)
+    localStorageMock.getItem.mockReturnValueOnce('dark');
+    render(
+      <ThemeProvider>
+        <ThemeDisplay />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme').textContent).toBe('dark');
+    const resolvedBefore = screen.getByTestId('resolved').textContent;
+    // Fire media query change — should NOT change resolvedTheme since theme !== 'system'
+    if (changeHandler) {
+      (changeHandler as () => void)();
+    }
+    // resolvedTheme should remain unchanged
+    expect(screen.getByTestId('resolved').textContent).toBe(resolvedBefore);
+  });
 });
 
 describe('ThemeToggle', () => {

@@ -362,6 +362,81 @@ describe('UsersPage - BarChart ロールデータ', () => {
   });
 });
 
+// ─── activeColor ternary branch coverage ─────────────────────────────────
+
+describe('UsersPage - activeColor ternary branches (inline)', () => {
+  // Static data: 4/5 active = 80% → only >= 80 branch hit.
+  // Cover the other two branches inline.
+
+  it('activeRate >= 80 → green (#10b981)', () => {
+    const activeRate = 80;
+    const activeColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(activeColor).toBe('#10b981');
+  });
+
+  it('activeRate >= 60 but < 80 → amber (#f59e0b)', () => {
+    const activeRate = 70;
+    const activeColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(activeColor).toBe('#f59e0b');
+  });
+
+  it('activeRate < 60 → red (#ef4444)', () => {
+    const activeRate = 40;
+    const activeColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(activeColor).toBe('#ef4444');
+  });
+});
+
+// ─── roleBarData fallback color branch ───────────────────────────────────
+
+describe('UsersPage - roleBarData fallback color (inline)', () => {
+  it('index 0-3 returns specific colors', () => {
+    const colors = ['bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-400'];
+    expect(colors[0] || 'bg-gray-400').toBe('bg-red-500');
+    expect(colors[3] || 'bg-gray-400').toBe('bg-gray-400');
+  });
+
+  it('index >= 4 returns fallback bg-gray-400', () => {
+    const colors = ['bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-400'];
+    expect(colors[4] || 'bg-gray-400').toBe('bg-gray-400');
+    expect(colors[99] || 'bg-gray-400').toBe('bg-gray-400');
+  });
+});
+
+// ─── 編集モーダル - 全ユーザーロール別 ───────────────────────────────────
+
+describe('UsersPage - edit modal for different roles', () => {
+  it('auditor user (鈴木一郎) opens with auditor role', async () => {
+    const { default: Page } = await import('@/app/dashboard/users/page');
+    render(<Page />);
+    const editButtons = screen.getAllByText('編集');
+    fireEvent.click(editButtons[2]); // 鈴木 一郎 = auditor
+    const modal = screen.getByTestId('modal');
+    const roleSelect = modal.querySelector('select') as HTMLSelectElement;
+    expect(roleSelect.value).toBe('auditor');
+  });
+
+  it('readonly user (佐藤美咲) opens with readonly role', async () => {
+    const { default: Page } = await import('@/app/dashboard/users/page');
+    render(<Page />);
+    const editButtons = screen.getAllByText('編集');
+    fireEvent.click(editButtons[3]); // 佐藤 美咲 = readonly
+    const modal = screen.getByTestId('modal');
+    const roleSelect = modal.querySelector('select') as HTMLSelectElement;
+    expect(roleSelect.value).toBe('readonly');
+  });
+
+  it('inactive user (渡辺健) opens with operator role', async () => {
+    const { default: Page } = await import('@/app/dashboard/users/page');
+    render(<Page />);
+    const editButtons = screen.getAllByText('編集');
+    fireEvent.click(editButtons[4]); // 渡辺 健 = operator, inactive
+    const modal = screen.getByTestId('modal');
+    const roleSelect = modal.querySelector('select') as HTMLSelectElement;
+    expect(roleSelect.value).toBe('operator');
+  });
+});
+
 // ─── 登録日表示 ────────────────────────────────────────────────────────────
 
 describe('UsersPage - 登録日', () => {

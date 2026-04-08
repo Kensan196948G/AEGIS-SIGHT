@@ -146,4 +146,36 @@ describe('useWebSocket', () => {
     expect(result => result).toBeDefined();
     expect(onMessage).toHaveBeenCalledWith('plain text');
   });
+
+  it('send() does nothing when readyState is not OPEN', async () => {
+    const { result } = renderHook(() => useWebSocket('ws://test'));
+    await act(async () => { vi.runAllTimers(); });
+
+    // Set readyState to CLOSED so the send guard fails
+    lastWs.readyState = MockWebSocket.CLOSED;
+
+    act(() => { result.current.send({ action: 'test' }); });
+    // send should NOT have been called since readyState !== OPEN
+    expect(lastWs.send).not.toHaveBeenCalled();
+  });
+
+  it('disconnect() clears pending reconnect timeout and prevents reconnection', async () => {
+    const { result } = renderHook(() =>
+      useWebSocket('ws://test', { reconnect: true, maxRetries: 3 })
+    );
+    await act(async () => { vi.runAllTimers(); });
+    expect(result.current.status).toBe('connected');
+
+    // Simulate server-side close to trigger reconnect timer
+    act(() => { lastWs.simulateClose(); });
+    expect(result.current.status).toBe('disconnected');
+
+    // Immediately call disconnect() which should clear the reconnect timeout
+    act(() => { result.current.disconnect(); });
+    expect(result.current.status).toBe('disconnected');
+
+    // Advance past reconnect delay — should NOT reconnect because disconnect cleared timeout
+    await act(async () => { vi.advanceTimersByTime(5000); });
+    expect(result.current.status).toBe('disconnected');
+  });
 });

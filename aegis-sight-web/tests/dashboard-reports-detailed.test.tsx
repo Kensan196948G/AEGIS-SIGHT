@@ -348,6 +348,127 @@ describe('Reports page - preview table cell badge variants (inline logic)', () =
   });
 });
 
+describe('Reports page - typeBadgeVariant all branches via rendering', () => {
+  it('SAM report type shows info badge variant in preview header', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    const { container } = render(<Page />);
+    // Default is SAM, preview header badge should be info
+    const previewBadges = container.querySelectorAll('[data-variant="info"]');
+    expect(previewBadges.length).toBeGreaterThan(0);
+  });
+
+  it('assets report type shows success badge variant in preview header', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    const { container } = render(<Page />);
+    fireEvent.click(screen.getByText('資産レポート'));
+    const successBadges = container.querySelectorAll('[data-variant="success"]');
+    const assetBadge = Array.from(successBadges).find(el => el.textContent === '資産');
+    expect(assetBadge).toBeTruthy();
+  });
+
+  it('security report type shows danger badge variant in preview header', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    const { container } = render(<Page />);
+    fireEvent.click(screen.getByText('セキュリティレポート'));
+    const dangerBadges = container.querySelectorAll('[data-variant="danger"]');
+    const secBadge = Array.from(dangerBadges).find(el => el.textContent === 'セキュリティ');
+    expect(secBadge).toBeTruthy();
+  });
+
+  it('compliance report type shows purple badge variant in preview header', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    const { container } = render(<Page />);
+    fireEvent.click(screen.getByText('コンプライアンスレポート'));
+    const purpleBadges = container.querySelectorAll('[data-variant="purple"]');
+    const compBadge = Array.from(purpleBadges).find(el => el.textContent === 'コンプライアンス');
+    expect(compBadge).toBeTruthy();
+  });
+});
+
+describe('Reports page - typeLabel all branches via rendering', () => {
+  it('SAM type renders SAM label in report type cards', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    // SAM label is shown in the type selection card
+    const samLabels = screen.getAllByText('SAM');
+    expect(samLabels.length).toBeGreaterThan(0);
+  });
+
+  it('assets type renders 資産 label', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    const labels = screen.getAllByText('資産');
+    expect(labels.length).toBeGreaterThan(0);
+  });
+
+  it('security type renders セキュリティ label', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    const labels = screen.getAllByText('セキュリティ');
+    expect(labels.length).toBeGreaterThan(0);
+  });
+
+  it('compliance type renders コンプライアンス label', async () => {
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    const labels = screen.getAllByText('コンプライアンス');
+    expect(labels.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Reports page - CSV download with different report types', () => {
+  it('CSV download works after switching to assets report', async () => {
+    Object.defineProperty(window.URL, 'createObjectURL', {
+      value: vi.fn().mockReturnValue('blob:mock-url'),
+      configurable: true, writable: true,
+    });
+    Object.defineProperty(window.URL, 'revokeObjectURL', {
+      value: vi.fn(), configurable: true, writable: true,
+    });
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('資産レポート'));
+    const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    fireEvent.click(screen.getByText('CSVダウンロード'));
+    expect(createSpy).toHaveBeenCalled();
+    createSpy.mockRestore();
+  });
+
+  it('CSV download works after switching to security report', async () => {
+    Object.defineProperty(window.URL, 'createObjectURL', {
+      value: vi.fn().mockReturnValue('blob:mock-url'),
+      configurable: true, writable: true,
+    });
+    Object.defineProperty(window.URL, 'revokeObjectURL', {
+      value: vi.fn(), configurable: true, writable: true,
+    });
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('セキュリティレポート'));
+    const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    fireEvent.click(screen.getByText('CSVダウンロード'));
+    expect(createSpy).toHaveBeenCalled();
+    createSpy.mockRestore();
+  });
+
+  it('CSV download works after switching to compliance report', async () => {
+    Object.defineProperty(window.URL, 'createObjectURL', {
+      value: vi.fn().mockReturnValue('blob:mock-url'),
+      configurable: true, writable: true,
+    });
+    Object.defineProperty(window.URL, 'revokeObjectURL', {
+      value: vi.fn(), configurable: true, writable: true,
+    });
+    const { default: Page } = await import('@/app/dashboard/reports/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('コンプライアンスレポート'));
+    const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    fireEvent.click(screen.getByText('CSVダウンロード'));
+    expect(createSpy).toHaveBeenCalled();
+    createSpy.mockRestore();
+  });
+});
+
 describe('Reports page - report history table', () => {
   it('shows 生成済みレポート履歴 heading', async () => {
     const { default: Page } = await import('@/app/dashboard/reports/page');

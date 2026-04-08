@@ -12,6 +12,13 @@ vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
+vi.mock('@/components/ui/chart', () => ({
+  DonutChart: ({ label }: { label?: string }) => <div data-testid="donut-chart">{label}</div>,
+  BarChart: ({ data }: { data?: { label: string; value: number }[] }) => (
+    <div data-testid="bar-chart">{data?.map((d) => <span key={d.label}>{d.label}</span>)}</div>
+  ),
+}));
+
 afterEach(() => {
   vi.clearAllMocks();
 });
