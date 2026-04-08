@@ -123,6 +123,57 @@
 
 ---
 
+## 🔄 CI/CD パイプライン
+
+```mermaid
+flowchart LR
+    subgraph PR["📝 Pull Request"]
+        PUSH["git push"] --> TRIGGER["GitHub Actions\nトリガー"]
+    end
+
+    subgraph PARALLEL["⚡ 並列実行"]
+        direction TB
+        LINT["🔍 Lint\nRuff + ESLint"]
+        SEC["🔒 Security\nBandit + secrets"]
+        DEPS["📦 Dependency Audit\nPython + Node.js"]
+        CODEQL["🧬 CodeQL\n解析"]
+        TRIVY["🛡️ Trivy\nContainer Scan"]
+    end
+
+    subgraph TEST["🧪 テスト (DB付き)"]
+        PYTEST["🐍 pytest\n1,798件 + coverage"]
+        VITEST["⚛️ vitest\n1,942件 + coverage v8"]
+        REPORT["📊 PR Summary\nコメント自動投稿"]
+    end
+
+    subgraph ARTIFACTS["📦 成果物"]
+        PY_COV["Python Coverage\nXML + HTML"]
+        FE_COV["Frontend Coverage\n143ファイル / 778KB"]
+        CODECOV["☁️ Codecov\nバッジ更新"]
+    end
+
+    subgraph GATE["✅ マージゲート"]
+        GREEN["全チェック ✅"] --> MERGE["merge to main"]
+    end
+
+    TRIGGER --> PARALLEL
+    PARALLEL --> TEST
+    TEST --> PYTEST & VITEST
+    PYTEST --> PY_COV
+    VITEST --> FE_COV
+    PY_COV & FE_COV --> CODECOV
+    TEST --> REPORT
+    PARALLEL & TEST --> GREEN
+
+    style PR fill:#E3F2FD,stroke:#1565C0
+    style PARALLEL fill:#E8F5E9,stroke:#2E7D32
+    style TEST fill:#FFF3E0,stroke:#FFA000
+    style ARTIFACTS fill:#F3E5F5,stroke:#7B1FA2
+    style GATE fill:#E8F5E9,stroke:#2E7D32
+```
+
+---
+
 ## 🏗️ システムアーキテクチャ
 
 ```mermaid
