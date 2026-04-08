@@ -24,6 +24,7 @@
 
 [![CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/claudeos-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
 [![Frontend CI](https://github.com/Kensan196948G/AEGIS-SIGHT/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/Kensan196948G/AEGIS-SIGHT/actions)
+[![codecov](https://codecov.io/gh/Kensan196948G/AEGIS-SIGHT/branch/main/graph/badge.svg)](https://codecov.io/gh/Kensan196948G/AEGIS-SIGHT)
 [![Project](https://img.shields.io/badge/Project-司令盤-blue?style=flat-square)](https://github.com/users/Kensan196948G/projects/14)
 
 </div>
@@ -508,18 +509,31 @@ graph LR
 
 </details>
 
+<details>
+<summary>📅 Session 13 (2026-04-08) — カバレッジ設定・テスト追加・CI強化</summary>
+
+| 内容 | 詳細 | PR |
+|:---|:---|:---:|
+| フロントエンドテスト大量追加 | 75本テストファイル (1,940+テスト) → 推定カバレッジ 85%+ | #299 |
+| Backend coverage 設定 | pyproject.toml に [tool.coverage.*] セクション追加 | #301 |
+| StatCard テスト実装 | ui-components.test.tsx — StatCard 包括テスト | #301 |
+| useOnlineStatus hook テスト | useSyncExternalStore 多重呼出し対応テスト | #301 |
+| CI 強化 | vitest coverage artifact・Codecov 統合・PR summary 改善 | #301 |
+
+</details>
+
 ### STABLE 判定条件
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | ✅ |
+| テスト | 全テスト通過 | ✅ 73/73 ファイル |
 | CI | GitHub Actions 成功 | ✅ |
 | Lint | ruff + ESLint エラー 0 | ✅ |
 | Build | Docker build 成功 | ✅ |
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 2** (小規模変更・Phase50)：連続2回全条件クリアで STABLE ✅ **達成済み** (PR#117 merged 2026-04-02)
+> **N = 3** (通常変更)：PR#301 CI確認中 🔄 **Session 13 — カバレッジ向上フェーズ**
 
 ### Agent Teams
 
