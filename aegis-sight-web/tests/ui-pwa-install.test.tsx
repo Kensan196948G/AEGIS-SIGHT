@@ -110,4 +110,30 @@ describe('PWAInstallPrompt', () => {
     });
     expect(mockPrompt).toHaveBeenCalledTimes(1);
   });
+
+  it('removes dismiss key from localStorage when dismiss has expired', () => {
+    // Set dismiss timestamp to more than 7 days ago
+    const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(DISMISS_KEY, eightDaysAgo.toString());
+
+    render(<PWAInstallPrompt />);
+
+    // The expired dismiss key should have been removed
+    expect(localStorage.getItem(DISMISS_KEY)).toBeNull();
+  });
+
+  it('hides prompt and clears state on appinstalled event', () => {
+    render(<PWAInstallPrompt />);
+    fireInstallPromptEvent();
+    // Should be visible after beforeinstallprompt
+    expect(screen.getByRole('banner', { name: 'PWAインストール' })).toBeInTheDocument();
+
+    // Fire appinstalled event
+    act(() => {
+      window.dispatchEvent(new Event('appinstalled'));
+    });
+
+    // Should be hidden after appinstalled
+    expect(screen.queryByRole('banner', { name: 'PWAインストール' })).toBeNull();
+  });
 });
