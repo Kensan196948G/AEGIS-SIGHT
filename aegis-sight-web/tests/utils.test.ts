@@ -112,6 +112,30 @@ describe('date-utils', () => {
     });
   });
 
+  describe('formatRelative - additional branches', () => {
+    const now = new Date(2026, 2, 27, 12, 0, 0);
+
+    it('returns months ago for 30-364 days', () => {
+      const d = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      expect(formatRelative(d, now)).toBe('2ヶ月前');
+    });
+
+    it('returns years ago for 365+ days', () => {
+      const d = new Date(now.getTime() - 400 * 24 * 60 * 60 * 1000);
+      expect(formatRelative(d, now)).toBe('1年前');
+    });
+
+    it('accepts number timestamp as input', () => {
+      const ts = new Date(2026, 2, 27, 11, 55).getTime();
+      expect(formatRelative(ts, now)).toBe('5分前');
+    });
+
+    it('accepts ISO string as input', () => {
+      const d = new Date(2026, 2, 27, 11, 0);
+      expect(formatRelative(d.toISOString(), now)).toBe('1時間前');
+    });
+  });
+
   describe('isThisWeek', () => {
     // 2026-03-27 is a Friday
     const now = new Date(2026, 2, 27, 12, 0);
@@ -124,6 +148,18 @@ describe('date-utils', () => {
     it('returns false for last week', () => {
       const lastWeek = new Date(2026, 2, 20); // Previous Friday
       expect(isThisWeek(lastWeek, now)).toBe(false);
+    });
+
+    it('handles Sunday correctly (dayOfWeek === 0)', () => {
+      // 2026-03-29 is a Sunday
+      const sunday = new Date(2026, 2, 29, 12, 0);
+      const mondayOfWeek = new Date(2026, 2, 23);
+      expect(isThisWeek(mondayOfWeek, sunday)).toBe(true);
+    });
+
+    it('returns false for next week date', () => {
+      const nextWeek = new Date(2026, 3, 1); // April 1st, Wednesday
+      expect(isThisWeek(nextWeek, now)).toBe(false);
     });
   });
 });
