@@ -514,11 +514,22 @@ graph LR
 
 | 内容 | 詳細 | PR |
 |:---|:---|:---:|
-| フロントエンドテスト大量追加 | 75本テストファイル (1,940+テスト) → 推定カバレッジ 85%+ | #299 |
+| フロントエンドテスト大量追加 | 75本テストファイル (1,940+テスト) | #299 ✅ |
 | Backend coverage 設定 | pyproject.toml に [tool.coverage.*] セクション追加 | #301 |
 | StatCard テスト実装 | ui-components.test.tsx — StatCard 包括テスト | #301 |
 | useOnlineStatus hook テスト | useSyncExternalStore 多重呼出し対応テスト | #301 |
+| lib/types.ts テスト実装 | 全型定義の網羅テスト (coverage 0%→~100%) | #301 |
 | CI 強化 | vitest coverage artifact・Codecov 統合・PR summary 改善 | #301 |
+| Codecov バッジ追加 | README にカバレッジ可視化バッジ追加 | #301 |
+
+**実測フロントエンドカバレッジ (Loop 3 Verify済):**
+
+| メトリクス | 実績 | 目標 | 判定 |
+|:---|:---:|:---:|:---:|
+| Statements | **92.48%** | 80% | ✅ |
+| Branches | **85.49%** | 75% | ✅ |
+| Functions | **87.79%** | 80% | ✅ |
+| Lines | **93.55%** | 80% | ✅ |
 
 </details>
 
@@ -526,14 +537,15 @@ graph LR
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | ✅ 73/73 ファイル |
+| テスト | 全テスト通過 | ✅ 74/74 ファイル / 1942件 |
+| フロントカバレッジ | Lines ≥ 85% | ✅ **93.55%** |
 | CI | GitHub Actions 成功 | ✅ |
 | Lint | ruff + ESLint エラー 0 | ✅ |
 | Build | Docker build 成功 | ✅ |
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：PR#301 CI確認中 🔄 **Session 13 — カバレッジ向上フェーズ**
+> **N = 3** (通常変更)：PR#301 CI再実行中 🔄 (types.ts テスト追加) **Session 13 — カバレッジ向上フェーズ**
 
 ### Agent Teams
 
