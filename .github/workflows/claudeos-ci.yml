@@ -120,7 +120,7 @@ jobs:
       - name: Run Vitest (Frontend)
         run: |
           if [ -f aegis-sight-web/package.json ]; then
-            cd aegis-sight-web && npm ci && npx vitest run --coverage --reporter=junit --outputFile=../test-results/vitest-results.xml || true
+            cd aegis-sight-web && npm ci && npx vitest run --coverage --reporter=junit --outputFile=../test-results/vitest-results.xml 2>&1 | tee ../test-results/vitest-output.txt || true
           fi
 
       - name: Upload test results
@@ -139,12 +139,20 @@ jobs:
           path: aegis-sight-api/htmlcov/
           retention-days: 30
 
+      - name: Upload Frontend coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-coverage
+          path: aegis-sight-web/coverage/
+          retention-days: 30
+
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v6
         with:
-          files: aegis-sight-api/coverage.xml
-          flags: python
+          files: aegis-sight-api/coverage.xml,aegis-sight-web/coverage/coverage-final.json
+          flags: python,frontend
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -155,16 +163,27 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            let summary = '## Test Results Summary\n\n';
+            let summary = '## 🧪 Test Results Summary\n\n';
 
             // Read pytest output
             try {
               const pytestOutput = fs.readFileSync('test-results/pytest-output.txt', 'utf8');
               const lines = pytestOutput.split('\n');
               const resultLine = lines.find(l => l.includes('passed') || l.includes('failed') || l.includes('error') || l.includes('No tests'));
-              summary += `### Python (pytest)\n\`\`\`\n${resultLine || 'No result line found'}\n\`\`\`\n\n`;
+              summary += `### 🐍 Python (pytest)\n\`\`\`\n${resultLine || 'No result line found'}\n\`\`\`\n\n`;
             } catch (e) {
-              summary += '### Python (pytest)\nNo test output available.\n\n';
+              summary += '### 🐍 Python (pytest)\nNo test output available.\n\n';
+            }
+
+            // Read vitest output
+            try {
+              const vitestOutput = fs.readFileSync('test-results/vitest-output.txt', 'utf8');
+              const lines = vitestOutput.split('\n');
+              const resultLine = lines.find(l => l.includes('Tests') || l.includes('passed') || l.includes('failed') || l.includes('No tests'));
+              const coverageLine = lines.find(l => l.includes('Coverage') || l.includes('coverage'));
+              summary += `### ⚛️ Frontend (vitest)\n\`\`\`\n${resultLine || 'No result line found'}${coverageLine ? '\n' + coverageLine : ''}\n\`\`\`\n\n`;
+            } catch (e) {
+              summary += '### ⚛️ Frontend (vitest)\nNo test output available.\n\n';
             }
 
             summary += '---\n*Posted by ClaudeOS CI*';
