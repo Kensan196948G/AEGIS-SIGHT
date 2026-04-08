@@ -10,14 +10,9 @@ const config = [
     ignores: ['coverage/**'],
   },
   {
-    // TODO(#289): Re-enable react-hooks/immutability and react-hooks/set-state-in-effect
-    // after migrating to React 19 / React Compiler.
-    // These rules are new in eslint-plugin-react-hooks@5 and have false positives
-    // on valid React 18 patterns (e.g. calling setState inside useEffect for initial load,
-    // and let accumulator variables inside useMemo callbacks).
     rules: {
-      'react-hooks/immutability': 'off',
-      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'error',
+      'react-hooks/set-state-in-effect': 'error',
     },
   },
 ];

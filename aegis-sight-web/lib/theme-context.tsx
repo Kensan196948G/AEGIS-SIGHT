@@ -57,17 +57,15 @@ function applyTheme(resolved: 'light' | 'dark') {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setThemeState] = useState<ThemeMode>(getStoredTheme);
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() =>
+    resolveTheme(getStoredTheme())
+  );
 
-  // 初期化
+  // Apply theme to DOM on mount (side-effect only, no setState)
   useEffect(() => {
-    const stored = getStoredTheme();
-    setThemeState(stored);
-    const resolved = resolveTheme(stored);
-    setResolvedTheme(resolved);
-    applyTheme(resolved);
-  }, []);
+    applyTheme(resolveTheme(theme));
+  }, [theme]);
 
   // system テーマ変更を監視
   useEffect(() => {
