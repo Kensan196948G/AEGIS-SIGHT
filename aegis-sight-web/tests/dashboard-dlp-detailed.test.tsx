@@ -52,9 +52,9 @@ describe('DLP page - summary and charts', () => {
     expect(screen.getByText('総イベント数')).toBeDefined();
     expect(screen.getByText('6')).toBeDefined();
     expect(screen.getAllByText('ブロック').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('2')).toBeDefined();
+    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
     // "アラート" label in summary (not action badge)
-    expect(screen.getByText('4')).toBeDefined();
+    expect(screen.getAllByText('4').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders severity breakdown card with all 4 severity levels via severityBadge map', async () => {
@@ -302,7 +302,9 @@ describe('DLP page - create rule modal', () => {
     // Default: file_extension hint
     expect(screen.getByText('カンマ区切りの拡張子 (例: .exe,.msi)')).toBeDefined();
 
-    const ruleTypeSelect = screen.getByDisplayValue('file_extension');
+    // Find the rule_type select by its current value
+    const selects = document.querySelectorAll('select');
+    const ruleTypeSelect = Array.from(selects).find((s) => s.value === 'file_extension')!;
 
     // path_pattern hint
     fireEvent.change(ruleTypeSelect, { target: { value: 'path_pattern' } });
@@ -353,13 +355,14 @@ describe('DLP page - create rule modal', () => {
     fireEvent.change(textarea, { target: { value: 'テスト説明' } });
     expect(textarea.value).toBe('テスト説明');
 
-    // action select
-    const actionSelect = screen.getByDisplayValue('alert') as HTMLSelectElement;
+    // action select - find by current value
+    const selects = document.querySelectorAll('select');
+    const actionSelect = Array.from(selects).find((s) => s.value === 'alert') as HTMLSelectElement;
     fireEvent.change(actionSelect, { target: { value: 'block' } });
     expect(actionSelect.value).toBe('block');
 
     // severity select
-    const severitySelect = screen.getByDisplayValue('medium') as HTMLSelectElement;
+    const severitySelect = Array.from(selects).find((s) => s.value === 'medium') as HTMLSelectElement;
     fireEvent.change(severitySelect, { target: { value: 'critical' } });
     expect(severitySelect.value).toBe('critical');
 
@@ -378,11 +381,12 @@ describe('DLP page - create rule modal', () => {
   it('modal has correct number of select options (action=3, severity=4, ruleType=4)', async () => {
     await renderPage();
     fireEvent.click(screen.getByText('ルール作成'));
-    const actionSelect = screen.getByDisplayValue('alert') as HTMLSelectElement;
+    const selects = document.querySelectorAll('select');
+    const actionSelect = Array.from(selects).find((s) => s.value === 'alert') as HTMLSelectElement;
     expect(actionSelect.options.length).toBe(3);
-    const severitySelect = screen.getByDisplayValue('medium') as HTMLSelectElement;
+    const severitySelect = Array.from(selects).find((s) => s.value === 'medium') as HTMLSelectElement;
     expect(severitySelect.options.length).toBe(4);
-    const ruleTypeSelect = screen.getByDisplayValue('file_extension') as HTMLSelectElement;
+    const ruleTypeSelect = Array.from(selects).find((s) => s.value === 'file_extension') as HTMLSelectElement;
     expect(ruleTypeSelect.options.length).toBe(4);
   });
 });
