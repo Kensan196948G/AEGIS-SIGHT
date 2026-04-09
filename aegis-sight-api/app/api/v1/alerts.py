@@ -98,7 +98,7 @@ async def alert_stats(
     info = info_result.scalar_one()
 
     unacknowledged_result = await db.execute(
-        select(func.count(Alert.id)).where(Alert.is_acknowledged == False)  # noqa: E712
+        select(func.count(Alert.id)).where(Alert.is_acknowledged.is_(False))
     )
     unacknowledged = unacknowledged_result.scalar_one()
 

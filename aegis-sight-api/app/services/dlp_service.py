@@ -46,7 +46,7 @@ class DLPService:
         """
         # Fetch all enabled rules
         result = await self.db.execute(
-            select(DLPRule).where(DLPRule.is_enabled == True)  # noqa: E712
+            select(DLPRule).where(DLPRule.is_enabled.is_(True))
         )
         rules = result.scalars().all()
 

@@ -171,7 +171,7 @@ async def evaluate_policies(
     comparison, patch status check, security baseline scan).
     """
     # Determine policies to evaluate
-    policy_query = select(DevicePolicy).where(DevicePolicy.is_enabled == True)  # noqa: E712
+    policy_query = select(DevicePolicy).where(DevicePolicy.is_enabled .is_(True))
     if body.policy_ids:
         policy_query = policy_query.where(DevicePolicy.id.in_(body.policy_ids))
 
@@ -203,7 +203,7 @@ async def evaluate_policies(
                 select(PolicyViolation).where(
                     PolicyViolation.policy_id == policy.id,
                     PolicyViolation.device_id == device.id,
-                    PolicyViolation.is_resolved == False,  # noqa: E712
+                    PolicyViolation.is_resolved .is_(False),
                 )
             )
             if existing.scalar_one_or_none() is not None:
@@ -239,7 +239,7 @@ async def compliance_summary(
 
     enabled_result = await db.execute(
         select(func.count(DevicePolicy.id)).where(
-            DevicePolicy.is_enabled == True  # noqa: E712
+            DevicePolicy.is_enabled.is_(True)
         )
     )
     enabled_policies = enabled_result.scalar_one()
@@ -252,7 +252,7 @@ async def compliance_summary(
 
     unresolved_result = await db.execute(
         select(func.count(PolicyViolation.id)).where(
-            PolicyViolation.is_resolved == False  # noqa: E712
+            PolicyViolation.is_resolved.is_(False)
         )
     )
     unresolved_violations = unresolved_result.scalar_one()
@@ -271,7 +271,7 @@ async def compliance_summary(
             func.count(PolicyViolation.id),
         )
         .join(DevicePolicy, PolicyViolation.policy_id == DevicePolicy.id)
-        .where(PolicyViolation.is_resolved == False)  # noqa: E712
+        .where(PolicyViolation.is_resolved.is_(False))
         .group_by(DevicePolicy.policy_type)
     )
     by_type = {row[0].value: row[1] for row in by_type_result.all()}
