@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { getComplianceDonutColor, getComplianceStatusClass, getComplianceBarClass } from '@/app/dashboard/patches/page';
 
 // --- Mocks ---
 
@@ -381,63 +382,50 @@ describe('PatchesPage - ProgressBar rendering', () => {
 });
 
 // ==========================================================================
-// complianceRate ternary branches (inline)
-// complianceSummary.complianceRate = 86.1 always hits >= 70 arm:
-//   >= 90 → '#10b981'  NOT covered
-//   >= 70 → '#f59e0b'  COVERED by component
-//   < 70  → '#ef4444'  NOT covered
-// Same ternary pattern used for DonutChart color, status badge class, progress bar class
+// Exported compliance utility functions — covers all 3 arms of each ternary
+// complianceSummary.complianceRate = 86.1 always hits >= 70 arm in component
 // ==========================================================================
-describe('PatchesPage - complianceRate ternary branches (inline)', () => {
-  function complianceColor(rate: number): string {
-    return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
-  }
-
+describe('PatchesPage - getComplianceDonutColor branches', () => {
   it('rate >= 90 → green (#10b981)', () => {
-    expect(complianceColor(95)).toBe('#10b981');
-    expect(complianceColor(90)).toBe('#10b981');
+    expect(getComplianceDonutColor(95)).toBe('#10b981');
+    expect(getComplianceDonutColor(90)).toBe('#10b981');
   });
 
   it('rate >= 70 but < 90 → amber (#f59e0b)', () => {
-    // 86.1 is what the component uses
-    expect(complianceColor(86.1)).toBe('#f59e0b');
-    expect(complianceColor(70)).toBe('#f59e0b');
+    expect(getComplianceDonutColor(86.1)).toBe('#f59e0b');
+    expect(getComplianceDonutColor(70)).toBe('#f59e0b');
   });
 
   it('rate < 70 → red (#ef4444)', () => {
-    expect(complianceColor(65)).toBe('#ef4444');
-    expect(complianceColor(0)).toBe('#ef4444');
+    expect(getComplianceDonutColor(65)).toBe('#ef4444');
+    expect(getComplianceDonutColor(0)).toBe('#ef4444');
+  });
+});
+
+describe('PatchesPage - getComplianceStatusClass branches', () => {
+  it('rate >= 90 → emerald class', () => {
+    expect(getComplianceStatusClass(92)).toContain('emerald');
   });
 
-  function complianceStatusClass(rate: number): string {
-    return rate >= 90 ? 'text-emerald-600 bg-emerald-50' : rate >= 70 ? 'text-amber-600 bg-amber-50' : 'text-red-600 bg-red-50';
-  }
-
-  it('status badge class: rate >= 90 → emerald', () => {
-    expect(complianceStatusClass(92)).toBe('text-emerald-600 bg-emerald-50');
+  it('rate >= 70 but < 90 → amber class', () => {
+    expect(getComplianceStatusClass(86.1)).toContain('amber');
   });
 
-  it('status badge class: rate >= 70 but < 90 → amber', () => {
-    expect(complianceStatusClass(86.1)).toBe('text-amber-600 bg-amber-50');
+  it('rate < 70 → red class', () => {
+    expect(getComplianceStatusClass(60)).toContain('red');
+  });
+});
+
+describe('PatchesPage - getComplianceBarClass branches', () => {
+  it('rate >= 90 → bg-emerald-500', () => {
+    expect(getComplianceBarClass(91)).toBe('bg-emerald-500');
   });
 
-  it('status badge class: rate < 70 → red', () => {
-    expect(complianceStatusClass(60)).toBe('text-red-600 bg-red-50');
+  it('rate >= 70 but < 90 → bg-amber-500', () => {
+    expect(getComplianceBarClass(86.1)).toBe('bg-amber-500');
   });
 
-  function complianceBarClass(rate: number): string {
-    return rate >= 90 ? 'bg-emerald-500' : rate >= 70 ? 'bg-amber-500' : 'bg-red-500';
-  }
-
-  it('progress bar class: rate >= 90 → bg-emerald-500', () => {
-    expect(complianceBarClass(91)).toBe('bg-emerald-500');
-  });
-
-  it('progress bar class: rate >= 70 but < 90 → bg-amber-500', () => {
-    expect(complianceBarClass(86.1)).toBe('bg-amber-500');
-  });
-
-  it('progress bar class: rate < 70 → bg-red-500', () => {
-    expect(complianceBarClass(50)).toBe('bg-red-500');
+  it('rate < 70 → bg-red-500', () => {
+    expect(getComplianceBarClass(50)).toBe('bg-red-500');
   });
 });

@@ -75,6 +75,22 @@ function cvssBarColor(score: number): string {
   return 'bg-blue-500';
 }
 
+export function getComplianceDonutColor(rate: number): string {
+  return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
+}
+
+export function getComplianceStatusClass(rate: number): string {
+  return rate >= 90
+    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+    : rate >= 70
+      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+}
+
+export function getComplianceBarClass(rate: number): string {
+  return rate >= 90 ? 'bg-emerald-500' : rate >= 70 ? 'bg-amber-500' : 'bg-red-500';
+}
+
 // ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
@@ -110,13 +126,7 @@ export default function PatchesPage() {
               max={100}
               size={140}
               strokeWidth={14}
-              color={
-                complianceSummary.complianceRate >= 90
-                  ? '#10b981'
-                  : complianceSummary.complianceRate >= 70
-                    ? '#f59e0b'
-                    : '#ef4444'
-              }
+              color={getComplianceDonutColor(complianceSummary.complianceRate)}
               label={`${complianceSummary.complianceRate}%`}
             />
             <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -195,13 +205,7 @@ export default function PatchesPage() {
         <div className="aegis-card p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">適用率</p>
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              complianceSummary.complianceRate >= 90
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                : complianceSummary.complianceRate >= 70
-                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-            }`}>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getComplianceStatusClass(complianceSummary.complianceRate)}`}>
               {complianceSummary.fullyPatchedDevices} / {complianceSummary.totalDevices}台
             </span>
           </div>
@@ -210,13 +214,7 @@ export default function PatchesPage() {
           </p>
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
             <div
-              className={`h-full rounded-full transition-all ${
-                complianceSummary.complianceRate >= 90
-                  ? 'bg-emerald-500'
-                  : complianceSummary.complianceRate >= 70
-                    ? 'bg-amber-500'
-                    : 'bg-red-500'
-              }`}
+              className={`h-full rounded-full transition-all ${getComplianceBarClass(complianceSummary.complianceRate)}`}
               style={{ width: `${complianceSummary.complianceRate}%` }}
             />
           </div>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { getOperationalDonutColor } from '@/app/dashboard/lifecycle/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -613,25 +614,22 @@ describe('Lifecycle page - disposal form submit and cancel', () => {
 });
 
 // ==========================================================================
-// donutColor ternary branches (inline) — operationalRate = 83 always hits >= 80
-// Covers the amber (>= 60 but < 80) and red (< 60) arms not reachable via component
+// getOperationalDonutColor exported function — covers all 3 arms
+// operationalRate = 83 always hits >= 80 in component; other arms tested here
 // ==========================================================================
-describe('LifecyclePage - donutColor ternary branches (inline)', () => {
-  it('operationalRate >= 80 → green (#10b981)', () => {
-    const operationalRate = 83;
-    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#10b981');
+describe('LifecyclePage - getOperationalDonutColor branches', () => {
+  it('rate >= 80 → green (#10b981)', () => {
+    expect(getOperationalDonutColor(83)).toBe('#10b981');
+    expect(getOperationalDonutColor(80)).toBe('#10b981');
   });
 
-  it('operationalRate >= 60 but < 80 → amber (#f59e0b)', () => {
-    const operationalRate = 70;
-    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#f59e0b');
+  it('rate >= 60 but < 80 → amber (#f59e0b)', () => {
+    expect(getOperationalDonutColor(70)).toBe('#f59e0b');
+    expect(getOperationalDonutColor(60)).toBe('#f59e0b');
   });
 
-  it('operationalRate < 60 → red (#ef4444)', () => {
-    const operationalRate = 40;
-    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#ef4444');
+  it('rate < 60 → red (#ef4444)', () => {
+    expect(getOperationalDonutColor(40)).toBe('#ef4444');
+    expect(getOperationalDonutColor(0)).toBe('#ef4444');
   });
 });

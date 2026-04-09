@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { utilizationBarColor, getConflictStatus, summaryCardColorMap } from '@/app/dashboard/network/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -200,16 +201,10 @@ describe('Network page - overview charts and stats', () => {
 });
 
 // ==========================================================================
-// utilizationBarColor ternary branches (inline)
+// utilizationBarColor exported function — covers all 3 arms
 // Max utilization in data is 73.6 → >= 80 arm ('bg-red-500') never hit by component
 // ==========================================================================
-describe('NetworkPage - utilizationBarColor inline branches', () => {
-  function utilizationBarColor(pct: number): string {
-    if (pct >= 80) return 'bg-red-500';
-    if (pct >= 60) return 'bg-amber-500';
-    return 'bg-emerald-500';
-  }
-
+describe('NetworkPage - utilizationBarColor branches', () => {
   it('pct >= 80 → bg-red-500 (high utilization)', () => {
     expect(utilizationBarColor(85)).toBe('bg-red-500');
     expect(utilizationBarColor(80)).toBe('bg-red-500');
@@ -227,47 +222,36 @@ describe('NetworkPage - utilizationBarColor inline branches', () => {
 });
 
 // ==========================================================================
-// conflictCount > 0 false arm (inline)
+// getConflictStatus exported function — covers both arms of conflictCount > 0
 // Data has conflictCount=2 always → '問題なし' false arm never rendered
 // ==========================================================================
-describe('NetworkPage - conflictCount branches (inline)', () => {
-  it('conflictCount > 0 → 要確認 (true arm)', () => {
-    const conflictCount = 2;
-    const label = conflictCount > 0 ? '要確認' : '問題なし';
-    const color = conflictCount > 0 ? 'red' : 'emerald';
-    expect(label).toBe('要確認');
-    expect(color).toBe('red');
+describe('NetworkPage - getConflictStatus branches', () => {
+  it('count > 0 → 要確認 / red (true arm)', () => {
+    const result = getConflictStatus(2);
+    expect(result.label).toBe('要確認');
+    expect(result.color).toBe('red');
   });
 
-  it('conflictCount === 0 → 問題なし (false arm)', () => {
-    const conflictCount = 0;
-    const label = conflictCount > 0 ? '要確認' : '問題なし';
-    const color = conflictCount > 0 ? 'red' : 'emerald';
-    expect(label).toBe('問題なし');
-    expect(color).toBe('emerald');
+  it('count === 0 → 問題なし / emerald (false arm)', () => {
+    const result = getConflictStatus(0);
+    expect(result.label).toBe('問題なし');
+    expect(result.color).toBe('emerald');
   });
 });
 
 // ==========================================================================
-// colorMap fallback branch (inline)
+// summaryCardColorMap fallback branch
 // All SummaryCard colors ('blue','emerald','violet','red') are in map →
 // colorMap[color] || colorMap.blue fallback never triggered by component
 // ==========================================================================
-describe('NetworkPage - colorMap fallback branch (inline)', () => {
-  const colorMap: Record<string, string> = {
-    blue: 'text-blue-600',
-    emerald: 'text-emerald-600',
-    violet: 'text-violet-600',
-    red: 'text-red-600',
-  };
-
+describe('NetworkPage - summaryCardColorMap fallback branch', () => {
   it('known color returns mapped value (no fallback)', () => {
-    expect(colorMap['blue'] || colorMap.blue).toBe('text-blue-600');
-    expect(colorMap['emerald'] || colorMap.blue).toBe('text-emerald-600');
+    expect(summaryCardColorMap['blue'] || summaryCardColorMap.blue).toBe('from-blue-500 to-blue-600');
+    expect(summaryCardColorMap['emerald'] || summaryCardColorMap.blue).toBe('from-emerald-500 to-emerald-600');
   });
 
-  it('unknown color falls back to colorMap.blue (fallback arm)', () => {
-    const result = colorMap['unknown_color'] || colorMap.blue;
-    expect(result).toBe('text-blue-600');
+  it('unknown color falls back to summaryCardColorMap.blue (fallback arm)', () => {
+    const result = summaryCardColorMap['unknown_color'] || summaryCardColorMap.blue;
+    expect(result).toBe('from-blue-500 to-blue-600');
   });
 });
