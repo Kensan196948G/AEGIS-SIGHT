@@ -89,8 +89,8 @@ export default function SchedulerPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setTasks(data.items || []);
-    } catch (err: any) {
-      setError(err.message || 'タスクの取得に失敗しました');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'タスクの取得に失敗しました');
     }
   }, []);
 
@@ -131,8 +131,8 @@ export default function SchedulerPage() {
       setActionMessage(`${task.name} を${task.is_enabled ? '無効' : '有効'}にしました`);
       setTimeout(() => setActionMessage(null), 3000);
       await fetchTasks();
-    } catch (err: any) {
-      setError(err.message || '更新に失敗しました');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '更新に失敗しました');
     }
   }
 
@@ -149,8 +149,8 @@ export default function SchedulerPage() {
       setActionMessage(data.message || `${task.name} を実行しました`);
       setTimeout(() => setActionMessage(null), 3000);
       await Promise.all([fetchTasks(), fetchHistory()]);
-    } catch (err: any) {
-      setError(err.message || '実行に失敗しました');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '実行に失敗しました');
     }
   }
 

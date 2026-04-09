@@ -218,8 +218,8 @@ export default function AssetsPage() {
     setCurrentPage(1);
   };
 
-  const handleFilterChange = (setter: (v: any) => void, value: string) => {
-    setter(value);
+  const handleFilterChange = <T extends string>(setter: React.Dispatch<React.SetStateAction<T>>, value: string) => {
+    setter(value as T);
     setCurrentPage(1);
   };
 
