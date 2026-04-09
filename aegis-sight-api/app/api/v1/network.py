@@ -65,9 +65,9 @@ async def list_unmanaged_devices(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return network devices that are not linked to a managed device."""
-    base_query = select(NetworkDevice).where(NetworkDevice.is_managed == False)  # noqa: E712
+    base_query = select(NetworkDevice).where(NetworkDevice.is_managed .is_(False))
     count_query = select(func.count(NetworkDevice.id)).where(
-        NetworkDevice.is_managed == False  # noqa: E712
+        NetworkDevice.is_managed .is_(False)
     )
 
     total_result = await db.execute(count_query)

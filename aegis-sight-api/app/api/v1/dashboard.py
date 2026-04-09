@@ -81,7 +81,7 @@ async def get_dashboard_stats(
     # Active alerts: devices with Defender OFF or pending patches > 0
     alerts_result = await db.execute(
         select(func.count(func.distinct(SecurityStatus.device_id))).where(
-            (SecurityStatus.defender_on == False)  # noqa: E712
+            (SecurityStatus.defender_on .is_(False))
             | (SecurityStatus.pending_patches > 0)
         )
     )
@@ -115,9 +115,9 @@ async def get_dashboard_alerts(
         select(SecurityStatus, Device.hostname)
         .join(Device, SecurityStatus.device_id == Device.id)
         .where(
-            (SecurityStatus.defender_on == False)  # noqa: E712
+            (SecurityStatus.defender_on .is_(False))
             | (SecurityStatus.pending_patches > 0)
-            | (SecurityStatus.bitlocker_on == False)  # noqa: E712
+            | (SecurityStatus.bitlocker_on .is_(False))
         )
         .order_by(SecurityStatus.checked_at.desc())
         .limit(limit)
