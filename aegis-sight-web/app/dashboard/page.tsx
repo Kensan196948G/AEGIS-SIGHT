@@ -73,6 +73,10 @@ const severityConfig: Record<AlertSeverity, { variant: 'danger' | 'warning' | 'i
   info:     { variant: 'info',    label: '情報' },
 };
 
+export function getCompColor(rate: number): string {
+  return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
+}
+
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
@@ -87,7 +91,7 @@ export default function DashboardPage() {
       {/* ダッシュボード概要チャート */}
       {(() => {
         const compRate = Math.round(stats.licenseComplianceRate);
-        const compColor = compRate >= 90 ? '#10b981' : compRate >= 70 ? '#f59e0b' : '#ef4444';
+        const compColor = getCompColor(compRate);
         const overviewBarData = [
           { label: '管理端末', value: stats.totalDevices, color: 'bg-blue-500' },
           { label: 'アラート', value: stats.activeAlerts, color: 'bg-red-500' },

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { getComplianceDonutColor, getComplianceStatusClass, getComplianceBarClass } from '@/app/dashboard/patches/page';
 
 // --- Mocks ---
 
@@ -377,5 +378,54 @@ describe('PatchesPage - ProgressBar rendering', () => {
     expect(screen.getAllByText('Important').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Moderate').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Low').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ==========================================================================
+// Exported compliance utility functions — covers all 3 arms of each ternary
+// complianceSummary.complianceRate = 86.1 always hits >= 70 arm in component
+// ==========================================================================
+describe('PatchesPage - getComplianceDonutColor branches', () => {
+  it('rate >= 90 → green (#10b981)', () => {
+    expect(getComplianceDonutColor(95)).toBe('#10b981');
+    expect(getComplianceDonutColor(90)).toBe('#10b981');
+  });
+
+  it('rate >= 70 but < 90 → amber (#f59e0b)', () => {
+    expect(getComplianceDonutColor(86.1)).toBe('#f59e0b');
+    expect(getComplianceDonutColor(70)).toBe('#f59e0b');
+  });
+
+  it('rate < 70 → red (#ef4444)', () => {
+    expect(getComplianceDonutColor(65)).toBe('#ef4444');
+    expect(getComplianceDonutColor(0)).toBe('#ef4444');
+  });
+});
+
+describe('PatchesPage - getComplianceStatusClass branches', () => {
+  it('rate >= 90 → emerald class', () => {
+    expect(getComplianceStatusClass(92)).toContain('emerald');
+  });
+
+  it('rate >= 70 but < 90 → amber class', () => {
+    expect(getComplianceStatusClass(86.1)).toContain('amber');
+  });
+
+  it('rate < 70 → red class', () => {
+    expect(getComplianceStatusClass(60)).toContain('red');
+  });
+});
+
+describe('PatchesPage - getComplianceBarClass branches', () => {
+  it('rate >= 90 → bg-emerald-500', () => {
+    expect(getComplianceBarClass(91)).toBe('bg-emerald-500');
+  });
+
+  it('rate >= 70 but < 90 → bg-amber-500', () => {
+    expect(getComplianceBarClass(86.1)).toBe('bg-amber-500');
+  });
+
+  it('rate < 70 → bg-red-500', () => {
+    expect(getComplianceBarClass(50)).toBe('bg-red-500');
   });
 });

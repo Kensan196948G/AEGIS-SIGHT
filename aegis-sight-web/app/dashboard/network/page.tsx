@@ -67,10 +67,16 @@ const typeLabel: Record<string, string> = {
   reserved: 'Reserved',
 };
 
-function utilizationBarColor(pct: number): string {
+export function utilizationBarColor(pct: number): string {
   if (pct >= 80) return 'bg-red-500';
   if (pct >= 60) return 'bg-amber-500';
   return 'bg-emerald-500';
+}
+
+export function getConflictStatus(count: number): { label: string; color: string } {
+  return count > 0
+    ? { label: '要確認', color: 'red' }
+    : { label: '問題なし', color: 'emerald' };
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +403,13 @@ export default function NetworkPage() {
 // Sub-components
 // ---------------------------------------------------------------------------
 
+export const summaryCardColorMap: Record<string, string> = {
+  blue: 'from-blue-500 to-blue-600',
+  emerald: 'from-emerald-500 to-emerald-600',
+  violet: 'from-violet-500 to-violet-600',
+  red: 'from-red-500 to-red-600',
+};
+
 function SummaryCard({
   label,
   value,
@@ -408,18 +421,11 @@ function SummaryCard({
   sub: string;
   color: string;
 }) {
-  const colorMap: Record<string, string> = {
-    blue: 'from-blue-500 to-blue-600',
-    emerald: 'from-emerald-500 to-emerald-600',
-    violet: 'from-violet-500 to-violet-600',
-    red: 'from-red-500 to-red-600',
-  };
-
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-dark">
       <div className="p-5">
         <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${colorMap[color] || colorMap.blue} text-white shadow-sm`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${summaryCardColorMap[color] || summaryCardColorMap.blue} text-white shadow-sm`}>
             <span className="text-lg font-bold">{value}</span>
           </div>
           <div>

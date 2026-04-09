@@ -57,7 +57,7 @@ const auditEvents = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-const statusBadgeVariant = (status: string): 'success' | 'warning' | 'danger' | 'info' => {
+export function statusBadgeVariant(status: string): 'success' | 'warning' | 'danger' | 'info' {
   switch (status) {
     case 'compliant':
     case 'effective':
@@ -71,9 +71,9 @@ const statusBadgeVariant = (status: string): 'success' | 'warning' | 'danger' | 
     default:
       return 'info';
   }
-};
+}
 
-const statusLabel = (status: string): string => {
+export function statusLabel(status: string): string {
   const map: Record<string, string> = {
     compliant: '適合',
     partial: '部分適合',
@@ -83,26 +83,30 @@ const statusLabel = (status: string): string => {
     ineffective: '無効',
   };
   return map[status] || status;
-};
+}
 
-const severityVariant = (sev: string): 'danger' | 'warning' | 'info' | 'success' => {
+export function severityVariant(sev: string): 'danger' | 'warning' | 'info' | 'success' {
   switch (sev) {
     case 'critical': return 'danger';
     case 'high': return 'warning';
     case 'medium': return 'info';
     default: return 'success';
   }
-};
+}
 
-const severityLabel = (sev: string): string => {
+export function severityLabel(sev: string): string {
   const map: Record<string, string> = { critical: '緊急', high: '高', medium: '中', low: '低' };
   return map[sev] || sev;
-};
+}
 
-const issueStatusLabel = (s: string): string => {
+export function issueStatusLabel(s: string): string {
   const map: Record<string, string> = { open: '未対応', in_progress: '対応中', resolved: '解決済' };
   return map[s] || s;
-};
+}
+
+export function getNistTierBarColor(tier: number, targetTier: number): string {
+  return tier >= targetTier ? 'bg-emerald-500' : tier >= targetTier - 1 ? 'bg-blue-500' : 'bg-amber-500';
+}
 
 const eventTypeColors: Record<string, string> = {
   assessment: 'bg-blue-500',
@@ -137,7 +141,7 @@ function NistRadarChart({ data }: { data: typeof nistFunctions }) {
             {/* Current tier bar */}
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                fn.tier >= fn.targetTier ? 'bg-emerald-500' : fn.tier >= fn.targetTier - 1 ? 'bg-blue-500' : 'bg-amber-500'
+                getNistTierBarColor(fn.tier, fn.targetTier)
               }`}
               style={{ width: `${(fn.tier / maxTier) * 100}%` }}
             />

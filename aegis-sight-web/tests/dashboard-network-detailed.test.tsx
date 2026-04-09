@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { utilizationBarColor, getConflictStatus, summaryCardColorMap } from '@/app/dashboard/network/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -196,5 +197,61 @@ describe('Network page - overview charts and stats', () => {
                      document.body.textContent?.includes('使用中') ||
                      document.body.textContent?.includes('Available');
     expect(hasStats || document.body.textContent?.length).toBeTruthy();
+  });
+});
+
+// ==========================================================================
+// utilizationBarColor exported function — covers all 3 arms
+// Max utilization in data is 73.6 → >= 80 arm ('bg-red-500') never hit by component
+// ==========================================================================
+describe('NetworkPage - utilizationBarColor branches', () => {
+  it('pct >= 80 → bg-red-500 (high utilization)', () => {
+    expect(utilizationBarColor(85)).toBe('bg-red-500');
+    expect(utilizationBarColor(80)).toBe('bg-red-500');
+  });
+
+  it('pct >= 60 but < 80 → bg-amber-500 (medium utilization)', () => {
+    expect(utilizationBarColor(73.6)).toBe('bg-amber-500');
+    expect(utilizationBarColor(60)).toBe('bg-amber-500');
+  });
+
+  it('pct < 60 → bg-emerald-500 (low utilization)', () => {
+    expect(utilizationBarColor(35)).toBe('bg-emerald-500');
+    expect(utilizationBarColor(9.1)).toBe('bg-emerald-500');
+  });
+});
+
+// ==========================================================================
+// getConflictStatus exported function — covers both arms of conflictCount > 0
+// Data has conflictCount=2 always → '問題なし' false arm never rendered
+// ==========================================================================
+describe('NetworkPage - getConflictStatus branches', () => {
+  it('count > 0 → 要確認 / red (true arm)', () => {
+    const result = getConflictStatus(2);
+    expect(result.label).toBe('要確認');
+    expect(result.color).toBe('red');
+  });
+
+  it('count === 0 → 問題なし / emerald (false arm)', () => {
+    const result = getConflictStatus(0);
+    expect(result.label).toBe('問題なし');
+    expect(result.color).toBe('emerald');
+  });
+});
+
+// ==========================================================================
+// summaryCardColorMap fallback branch
+// All SummaryCard colors ('blue','emerald','violet','red') are in map →
+// colorMap[color] || colorMap.blue fallback never triggered by component
+// ==========================================================================
+describe('NetworkPage - summaryCardColorMap fallback branch', () => {
+  it('known color returns mapped value (no fallback)', () => {
+    expect(summaryCardColorMap['blue'] || summaryCardColorMap.blue).toBe('from-blue-500 to-blue-600');
+    expect(summaryCardColorMap['emerald'] || summaryCardColorMap.blue).toBe('from-emerald-500 to-emerald-600');
+  });
+
+  it('unknown color falls back to summaryCardColorMap.blue (fallback arm)', () => {
+    const result = summaryCardColorMap['unknown_color'] || summaryCardColorMap.blue;
+    expect(result).toBe('from-blue-500 to-blue-600');
   });
 });

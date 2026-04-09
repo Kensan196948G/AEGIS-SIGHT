@@ -53,6 +53,10 @@ const eventTypeIcon: Record<string, { color: string; label: string }> = {
   disposed: { color: 'bg-red-600', label: '廃棄済' },
 };
 
+export function getOperationalDonutColor(rate: number): string {
+  return rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
+}
+
 export default function LifecyclePage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'disposals' | 'timeline' | 'new'>('overview');
   const [disposalForm, setDisposalForm] = useState({ device_id: '', reason: '', method: 'recycle' as DisposalMethod });
@@ -67,7 +71,7 @@ export default function LifecyclePage() {
 
   const totalAssets = stats[0].value; // 調達済が総数基準
   const operationalRate = Math.round((stats[1].value / totalAssets) * 100);
-  const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
+  const donutColor = getOperationalDonutColor(operationalRate);
 
   const lifecycleBarData = [
     { label: '稼働中', value: 285, color: 'bg-emerald-500' },

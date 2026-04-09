@@ -35,7 +35,11 @@ const vendorCosts = Object.entries(
   .map(([vendor, cost]) => ({ label: vendor, value: Math.round(cost / 10000) }))
   .sort((a, b) => b.value - a.value);
 
-const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
+export function getSamDonutColor(rate: number): string {
+  return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
+}
+
+const donutColor = getSamDonutColor(complianceRate);
 
 export default function SAMPage() {
   return (

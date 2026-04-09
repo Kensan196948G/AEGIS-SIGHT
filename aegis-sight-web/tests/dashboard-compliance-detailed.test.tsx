@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import {
+  statusBadgeVariant,
+  statusLabel,
+  severityVariant,
+  severityLabel,
+  issueStatusLabel,
+  getNistTierBarColor,
+} from '@/app/dashboard/compliance/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -226,31 +234,87 @@ describe('Compliance page - J-SOX findings branch (line 323)', () => {
   });
 });
 
-describe('Compliance page - statusBadgeVariant danger branch (inline coverage)', () => {
-  // statusBadgeVariant 'danger' is unreachable via demo data (no non_compliant/ineffective items)
-  // Testing the logic inline to document expected behavior
-  it('danger branch: non_compliant → danger variant', () => {
-    const statusBadgeVariant = (status: string): string => {
-      switch (status) {
-        case 'compliant': case 'effective': return 'success';
-        case 'partial': case 'partially_effective': return 'warning';
-        case 'non_compliant': case 'ineffective': return 'danger';
-        default: return 'info';
-      }
-    };
+// ==========================================================================
+// Exported helper functions — branch coverage for all arms
+// ==========================================================================
+
+describe('CompliancePage - statusBadgeVariant branches', () => {
+  it('compliant/effective → success', () => {
+    expect(statusBadgeVariant('compliant')).toBe('success');
+    expect(statusBadgeVariant('effective')).toBe('success');
+  });
+
+  it('partial/partially_effective → warning', () => {
+    expect(statusBadgeVariant('partial')).toBe('warning');
+    expect(statusBadgeVariant('partially_effective')).toBe('warning');
+  });
+
+  it('non_compliant/ineffective → danger (never hit by demo data)', () => {
     expect(statusBadgeVariant('non_compliant')).toBe('danger');
     expect(statusBadgeVariant('ineffective')).toBe('danger');
   });
 
-  it('default branch: unknown status → info variant', () => {
-    const statusBadgeVariant = (status: string): string => {
-      switch (status) {
-        case 'compliant': case 'effective': return 'success';
-        case 'partial': case 'partially_effective': return 'warning';
-        case 'non_compliant': case 'ineffective': return 'danger';
-        default: return 'info';
-      }
-    };
-    expect(statusBadgeVariant('unknown_status')).toBe('info');
+  it('unknown status → info (default branch)', () => {
+    expect(statusBadgeVariant('unknown')).toBe('info');
+  });
+});
+
+describe('CompliancePage - statusLabel branches', () => {
+  it('known status returns Japanese label', () => {
+    expect(statusLabel('compliant')).toBe('適合');
+    expect(statusLabel('non_compliant')).toBe('不適合');
+  });
+
+  it('unknown status falls back to raw value (|| fallback)', () => {
+    expect(statusLabel('custom_status')).toBe('custom_status');
+  });
+});
+
+describe('CompliancePage - severityVariant branches', () => {
+  it('critical → danger', () => { expect(severityVariant('critical')).toBe('danger'); });
+  it('high → warning', () => { expect(severityVariant('high')).toBe('warning'); });
+  it('medium → info', () => { expect(severityVariant('medium')).toBe('info'); });
+  it('low/unknown → success (default branch)', () => {
+    expect(severityVariant('low')).toBe('success');
+    expect(severityVariant('other')).toBe('success');
+  });
+});
+
+describe('CompliancePage - severityLabel branches', () => {
+  it('known severity returns Japanese label', () => {
+    expect(severityLabel('critical')).toBe('緊急');
+    expect(severityLabel('low')).toBe('低');
+  });
+
+  it('unknown severity falls back to raw value (|| fallback)', () => {
+    expect(severityLabel('unknown_sev')).toBe('unknown_sev');
+  });
+});
+
+describe('CompliancePage - issueStatusLabel branches', () => {
+  it('known status returns Japanese label', () => {
+    expect(issueStatusLabel('open')).toBe('未対応');
+    expect(issueStatusLabel('resolved')).toBe('解決済');
+  });
+
+  it('unknown status falls back to raw value (|| fallback)', () => {
+    expect(issueStatusLabel('unknown_s')).toBe('unknown_s');
+  });
+});
+
+describe('CompliancePage - getNistTierBarColor branches', () => {
+  it('tier >= targetTier → bg-emerald-500 (goal achieved, never hit by demo data)', () => {
+    expect(getNistTierBarColor(4, 4)).toBe('bg-emerald-500');
+    expect(getNistTierBarColor(5, 4)).toBe('bg-emerald-500');
+  });
+
+  it('tier = targetTier - 1 → bg-blue-500 (near goal, all demo data hits this)', () => {
+    expect(getNistTierBarColor(3, 4)).toBe('bg-blue-500');
+    expect(getNistTierBarColor(2, 3)).toBe('bg-blue-500');
+  });
+
+  it('tier < targetTier - 1 → bg-amber-500 (needs improvement, never hit by demo data)', () => {
+    expect(getNistTierBarColor(1, 4)).toBe('bg-amber-500');
+    expect(getNistTierBarColor(0, 3)).toBe('bg-amber-500');
   });
 });
