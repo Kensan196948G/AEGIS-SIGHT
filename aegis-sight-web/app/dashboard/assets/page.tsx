@@ -218,7 +218,7 @@ export default function AssetsPage() {
     setCurrentPage(1);
   };
 
-  const handleFilterChange = (setter: (v: any) => void, value: string) => {
+  const handleFilterChange = (setter: (v: string) => void, value: string) => {
     setter(value);
     setCurrentPage(1);
   };

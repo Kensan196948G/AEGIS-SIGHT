@@ -99,9 +99,14 @@ export async function getOfflineOperationCount(): Promise<number> {
 /**
  * Request background sync if supported.
  */
+interface SyncManager {
+  register(tag: string): Promise<void>;
+}
+
 export async function requestSync(): Promise<void> {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
     const registration = await navigator.serviceWorker.ready;
-    await (registration as any).sync.register('sync-offline-operations');
+    const syncManager = (registration as unknown as { sync: SyncManager }).sync;
+    await syncManager.register('sync-offline-operations');
   }
 }
