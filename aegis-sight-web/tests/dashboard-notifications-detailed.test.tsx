@@ -479,6 +479,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('opens Add Rule modal on + Add Rule click (showAddRuleModal=true branch)', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
@@ -493,6 +494,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('Rule Name input change covers setNewRuleName branch', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
@@ -514,6 +516,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('Event Type select change covers setNewRuleEventType branch', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
@@ -537,6 +540,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('Channel select change covers setNewRuleChannelId branch', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
@@ -561,6 +565,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('Cancel button in Add Rule modal calls resetRuleForm (showAddRuleModal=false branch)', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
@@ -579,6 +584,7 @@ describe('Notifications page - Add Rule modal branch coverage', () => {
   it('Create Rule button in Add Rule modal calls resetRuleForm (showAddRuleModal=false branch)', async () => {
     const { default: Page } = await import('@/app/dashboard/notifications/page');
     render(<Page />);
+    fireEvent.click(screen.getByText('Rules'));
     const addRuleBtn = screen.queryByText('+ Add Rule');
     if (addRuleBtn) {
       fireEvent.click(addRuleBtn);
