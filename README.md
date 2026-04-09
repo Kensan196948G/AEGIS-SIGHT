@@ -54,7 +54,7 @@
 | 🏢 **対象組織** | みらい建設工業（約550名） |
 | 🖥️ **管理対象** | Windows 11/10 クライアントPC 約500台 + サーバ群 |
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
-| 🛠️ **開発方式** | ClaudeOS v6 自律型開発（AI-Augmented Development） |
+| 🛠️ **開発方式** | ClaudeOS v7.1 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
 | 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・IAMS pytest 1,798件移植完結・フロントエンド強化継続中 |
 
@@ -79,7 +79,7 @@
 | 📦 IT資産管理 | HW/SW情報自動収集（WMI/CIM） | ✅ Done |
 | 📋 ログ管理 | ログオン/USB/ファイル操作追跡 | ✅ Done |
 | 🛡️ セキュリティ監視 | Defender/BitLocker/パッチ管理 | ✅ Done |
-| 📊 統合ダッシュボード | Next.js 14 リアルタイム可視化 | ✅ Done |
+| 📊 統合ダッシュボード | Next.js 16 リアルタイム可視化 | ✅ Done |
 | 🖥️ デバイス管理画面 | デバイス一覧・詳細・フィルタ・HW情報（Phase B-5） | ✅ Done |
 | 🔐 認証・RBAC | Entra ID SSO + 4ロール制御 | ✅ Done |
 
@@ -200,7 +200,7 @@ graph TB
     end
 
     subgraph FRONTEND["🌐 フロントエンド層"]
-        WEB["⚛️ Next.js 14<br/>管理ダッシュボード"]
+        WEB["⚛️ Next.js 16<br/>管理ダッシュボード"]
     end
 
     subgraph EXTERNAL["☁️ 外部連携"]
@@ -271,7 +271,7 @@ graph TB
 │   ├── scripts/                  # シードデータ
 │   └── tests/                    # pytest (100+ファイル, 850+テスト)
 │
-├── ⚛️ aegis-sight-web/           # Next.js 14 フロントエンド (~220ファイル)
+├── ⚛️ aegis-sight-web/           # Next.js 16 フロントエンド (~220ファイル)
 │   ├── app/dashboard/            # ダッシュボード (45+ページ)
 │   │   ├── page.tsx              #   統計概要 (API接続, 60秒自動更新)
 │   │   ├── assets/               #   IT資産一覧 (検索/フィルタ/ページネーション)
@@ -396,7 +396,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (2,750+ケース) | ✅ Done | pytest 1,798件 + Vitest 1,905件 + Playwright E2E |
+| 🧪 テスト (3,740+ケース) | ✅ Done | pytest 1,798件 + Vitest 1,942件 + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|
@@ -441,55 +441,37 @@ gantt
 
 ### GitHub Issues トラッカー
 
-| # | タイトル | Phase | 状態 |
-|:--|:---|:---|:---:|
-| [#1](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/1) | 全ドキュメント作成 | Done | ✅ |
-| [#3](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/3) | Phase1 スキャフォールド | Done | ✅ |
-| [#5](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/5) | Phase2 Backend深化 | Done | ✅ |
-| [#7](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/7) | Phase3 テスト基盤・API追加 | Done | ✅ |
-| [#9](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/9) | Phase4 ログ/SW API・DevOps | Done | ✅ |
-| [#30](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/30) | Phase6 監査・通知・レポート | Done | ✅ |
-| [#32](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/32) | Phase7 アラート・ユーザー管理 | Done | ✅ |
-| [#34](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/34) | Phase8 部門・バッチ・ヘルスチェック | Done | ✅ |
-| [#36](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/36) | Phase9 CI修復・設定・ネットワーク | Done | ✅ |
-| [#38](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/38) | Phase10 M365・WebSocket・スケジューラ | Done | ✅ |
-| [#40](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/40) | Phase11 統合テスト・RBAC・OpenAPI | Done | ✅ |
-| [#42](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/42) | Phase12 README最終更新・品質強化 | Done | ✅ |
-| - | Phase13-25 国際化基盤・メッセージ日本語化・全機能完了 | Done | ✅ |
-| - | Phase26 Webhook配信・エクスポート機能 | Done | ✅ |
-| - | Phase27 タグ管理・全文検索基盤 | Done | ✅ |
-| - | Phase28 チャート/ウィジェットシステム | Done | ✅ |
-| - | Phase29 コンプライアンスダッシュボード・監査UI | Done | ✅ |
-| - | Phase30 最終品質保証・リリース v0.30.0 | Done | ✅ |
-| - | Phase31 パッチ管理・配信基盤 | Done | ✅ |
-| - | Phase32 デバイスグループ・ポリシー管理 | Done | ✅ |
-| - | Phase33 廃棄ワークフロー | Done | ✅ |
-| - | Phase34 ETag/圧縮・パフォーマンス最適化 | Done | ✅ |
-| - | Phase35 最終統合・リリース v0.35.0 | Done | ✅ |
-| - | Phase36 IPアドレス管理 (IPAM) | Done | ✅ |
-| - | Phase37 ポリシーエンジン | Done | ✅ |
-| - | Phase38 変更追跡システム | Done | ✅ |
-| - | Phase39 最終統合・リリース v0.39.0 | Done | ✅ |
-| - | Phase40 容量計画・予測分析 | Done | ✅ |
-| - | Phase41 自動修復エンジン | Done | ✅ |
-| - | Phase42 最終統合・リリース v0.42.0 | Done | ✅ |
-| - | Phase43 印刷管理システム | Done | ✅ |
-| - | Phase44 リモートワーク・VPN追跡 | Done | ✅ |
-| - | Phase45 最終統合・リリース v0.45.0 | Done | ✅ |
-| - | Phase46 ナレッジベース管理 | Done | ✅ |
-| - | Phase47 SLA管理ダッシュボード | Done | ✅ |
-| - | Phase48 最終統合・リリース v0.48.0 | Done | ✅ |
-| [#116](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/116) | **Phase50 本番デプロイ準備・IAMS統合完成** | Done | ✅ |
-| [#118](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/118) | **Phase51 依存関係更新・ステージング環境・pytest変換計画** | Done | ✅ |
-| [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | **依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 / React 19** | Backlog | 📋 |
-| [#239](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/239) | **依存関係移行計画: vitest 4 / jsdom 29 / @vitejs/plugin-react 6** | Backlog | 📋 |
-| [#240](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/240) | **GitHub Actions: actions/checkout@v4 の Node.js 24対応** | Done | ✅ |
-| [#264](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/264) | **Ruff UP035/UP007/F401/I001 lint 修正 (Dependabot CI unblock)** | Done | ✅ |
-| [#266](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/266) | **vitest 1→3→4 / @vitest/coverage-v8 / jsdom 24→29 アップグレード** | Done | ✅ |
-| [#289](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/289) | **React 19 移行後 react-hooks/immutability + set-state-in-effect 再有効化** | Done | ✅ |
-| [#298](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/298) | **README.md バージョン記載修正 + .env 設定例追加** | Done | ✅ |
-| [#300](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/300) | **フロントエンドテストカバレッジ向上 — 75本テスト追加 (PR#299)** | Done | ✅ |
-| [#301 PR](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/301) | **coverage設定追加・StatCardテスト実装** | In Review | 🔄 |
+**🔄 アクティブ / バックログ:**
+
+| # | タイトル | 状態 |
+|:--|:---|:---:|
+| [#307](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/307) | カバレッジ閾値ラチェット (PR#308) | 🔄 In Review |
+| [#309](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/309) | README.md 大幅更新 | 🔨 Development |
+| [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | 依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 | 📋 Backlog |
+| [#273](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/273) | pytest 高速化計画 (pytest-xdist) | 📋 Backlog |
+
+<details>
+<summary>✅ 完了済み Issues (50+ 件)</summary>
+
+| # | タイトル | Phase |
+|:--|:---|:---|
+| #1 | 全ドキュメント作成 | Done |
+| #3 | Phase1 スキャフォールド | Done |
+| #5 | Phase2 Backend深化 | Done |
+| #7-#42 | Phase3-12 各種機能実装 | Done |
+| - | Phase13-48 全機能実装 (v0.48.0) | Done |
+| #116 | Phase50 本番デプロイ準備 | Done |
+| #118 | Phase51 依存関係更新 | Done |
+| #240 | GitHub Actions Node.js 24対応 | Done |
+| #264 | Ruff lint 修正 | Done |
+| #266 | vitest 1→4 アップグレード | Done |
+| #289 | React 19 hooks lint 再有効化 | Done |
+| #298 | README バージョン修正 | Done |
+| #300 | coverage設定・StatCardテスト | Done |
+| #302 | ブランチカバレッジ87→90%テスト | Done |
+| #305 | ブランチカバレッジ90%達成 | Done |
+
+</details>
 
 ---
 
@@ -499,9 +481,9 @@ gantt
 
 ```mermaid
 graph LR
-    M["🔍 Monitor<br/>1h間隔"] --> B["🔨 Build<br/>2h間隔"]
-    B --> V["✅ Verify<br/>2h間隔"]
-    V --> I["🔧 Improve<br/>3h間隔"]
+    M["🔍 Monitor<br/>30min間隔"] --> B["🔨 Build<br/>2h間隔"]
+    B --> V["✅ Verify<br/>1h間隔"]
+    V --> I["🔧 Improve<br/>1h間隔"]
     I --> M
 
     V -->|失敗| R["🔄 Auto Repair"]
@@ -573,14 +555,35 @@ graph LR
 | CI 強化 | vitest coverage artifact・Codecov 統合・PR summary 改善 | #301 |
 | Codecov バッジ追加 | README にカバレッジ可視化バッジ追加 | #301 |
 
-**実測フロントエンドカバレッジ (Loop 3 Verify済):**
+**実測フロントエンドカバレッジ (Session 14 Verify済):**
 
-| メトリクス | 実績 | 目標 | 判定 |
+| メトリクス | 実績 | 閾値 | 判定 |
 |:---|:---:|:---:|:---:|
-| Statements | **92.48%** | 80% | ✅ |
-| Branches | **85.49%** | 75% | ✅ |
-| Functions | **87.79%** | 80% | ✅ |
-| Lines | **93.55%** | 80% | ✅ |
+| Statements | **97.08%** | 90% | ✅ |
+| Branches | **90.21%** | 85% | ✅ |
+| Functions | **94.56%** | 88% | ✅ |
+| Lines | **96.26%** | 90% | ✅ |
+
+</details>
+
+<details>
+<summary>📅 Session 14 (2026-04-09) — ブランチカバレッジ90%達成・閾値ラチェット</summary>
+
+| 内容 | 詳細 | PR |
+|:---|:---|:---:|
+| ブランチカバレッジ90%達成 | 3ソースファイルから条件分岐をexport関数化→テスト直接検証 | #306 ✅ |
+| CI テスト修正 | DLP/alerts テスト修正 (getByDisplayValue→DOM query) | merged ✅ |
+| カバレッジ閾値ラチェット | vitest thresholds 引き上げ (branches 75→85, statements 80→90) | #308 🔄 |
+| README 大幅更新 | カバレッジ数値・バージョン整合・ダイアグラム強化 | #309 🔨 |
+
+**フロントエンドカバレッジ改善:**
+
+| メトリクス | Session 13 | Session 14 | 改善幅 |
+|:---|:---:|:---:|:---:|
+| Statements | 92.48% | **97.08%** | +4.60 |
+| Branches | 85.49% | **90.21%** | +4.72 |
+| Functions | 87.79% | **94.56%** | +6.77 |
+| Lines | 93.55% | **96.26%** | +2.71 |
 
 </details>
 
@@ -588,27 +591,33 @@ graph LR
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | ✅ 74/74 ファイル / 1942件 |
-| フロントカバレッジ | Lines ≥ 85% | ✅ **93.55%** |
+| テスト | 全テスト通過 | ✅ 81 ファイル / 1,942件 |
+| フロントカバレッジ | Lines ≥ 90% | ✅ **96.26%** |
+| ブランチカバレッジ | Branches ≥ 85% | ✅ **90.21%** |
 | CI | GitHub Actions 成功 | ✅ |
 | Lint | ruff + ESLint エラー 0 | ✅ |
 | Build | Docker build 成功 | ✅ |
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：PR#301 CI再実行中 🔄 (types.ts テスト追加) **Session 13 — カバレッジ向上フェーズ**
+> **N = 3** (通常変更)：✅ STABLE — Session 14 全チェック通過 (PR#306 merged, Branch coverage 90.21%)
 
 ### Agent Teams
 
 | 役割 | 責務 |
 |:---|:---|
-| 🧠 **CTO** | 優先順位判断、8時間制御、最終判断 |
+| 🧠 **CTO** | 優先順位判断、5時間制御、最終判断 |
+| 📋 **ProductManager** | Issue 生成、要件整理 |
 | 📐 **Architect** | アーキテクチャ設計、責務分離 |
 | 💻 **Developer** | 実装、修正、修復 |
-| 👀 **Reviewer** | コード品質、保守性確認 |
+| 👀 **Reviewer** | Codex レビュー、コード品質、保守性確認 |
+| 🔍 **Debugger** | 原因分析、Codex rescue 実行 |
 | 🧪 **QA** | テスト、回帰確認、品質評価 |
 | 🔐 **Security** | secrets、権限、脆弱性確認 |
 | 🚀 **DevOps** | CI/CD、PR、Projects制御 |
+| 📊 **Analyst** | KPI 分析、メトリクス評価 |
+| 🔄 **EvolutionManager** | 改善提案、自己進化管理 |
+| 📦 **ReleaseManager** | リリース管理、マージ判断 |
 
 ---
 
@@ -675,7 +684,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 | **Phase B** | ⚙️ コア機能実装 | 〜2026-05-31 | ✅ 完了 (B-5 デバイス管理まで) |
 | **Phase C** | 🔄 IAMS選択移植 | 〜2026-06-30 | ✅ 完了 (1,798件 pytest 移植完結) |
 | **Phase D** | 📊 監視・チャート統合 | 〜2026-07-31 | ✅ 完了 (D-1〜D-27 全チャート実装) |
-| **Phase E** | 🛡️ QA・セキュリティ・品質強化 | 〜2026-08-31 | 🔄 進行中 |
+| **Phase E** | 🛡️ QA・セキュリティ・品質強化 | 〜2026-08-31 | 🔄 進行中 (Coverage 90%+達成) |
 | **Phase F** | 🚀 リリース準備 | 〜2026-09-22 | ⏳ 未開始 |
 
 > 📋 詳細: [docs/development-phases/](./docs/development-phases/)
@@ -715,7 +724,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 - `main` への直接 push 禁止
 - feature branch または Git WorkTree で開発
 - PR 必須、CI 通過必須（lint / test / build / security）
-- テストカバレッジ 80% 以上目標
+- テストカバレッジ: Statements 90%+, Branches 85%+, Functions 88%+, Lines 90%+
 - ClaudeOS 自律開発ループによる継続的品質改善
 
 ---
@@ -724,6 +733,6 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 **🏗️ みらい建設工業 IT部門 | AEGIS-SIGHT | 2026**
 
-*Built with [ClaudeOS v6](./CLAUDE.md) Autonomous Development*
+*Built with [ClaudeOS v7.1](./CLAUDE.md) Autonomous Development*
 
 </div>
