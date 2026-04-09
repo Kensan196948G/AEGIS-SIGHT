@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { getSamDonutColor } from '@/app/dashboard/sam/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -79,38 +80,20 @@ describe('SAM page - compliance rate display (complianceRate=50, red branch)', (
   });
 });
 
-describe('SAM page - donutColor branch logic (inline coverage)', () => {
-  // complianceRate=50 in static data → hits red branch only
-  // Test other branches via inline logic
-
-  it('green branch: complianceRate >= 90 → #10b981', () => {
-    const complianceRate = 95;
-    const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#10b981');
+describe('SAM page - getSamDonutColor branch coverage', () => {
+  it('green branch: rate >= 90 → #10b981', () => {
+    expect(getSamDonutColor(95)).toBe('#10b981');
+    expect(getSamDonutColor(90)).toBe('#10b981');
   });
 
-  it('amber branch: 70 <= complianceRate < 90 → #f59e0b', () => {
-    const complianceRate = 75;
-    const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#f59e0b');
+  it('amber branch: 70 <= rate < 90 → #f59e0b', () => {
+    expect(getSamDonutColor(75)).toBe('#f59e0b');
+    expect(getSamDonutColor(70)).toBe('#f59e0b');
   });
 
-  it('red branch: complianceRate < 70 → #ef4444', () => {
-    const complianceRate = 50;
-    const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#ef4444');
-  });
-
-  it('boundary: exactly 90 → green', () => {
-    const complianceRate = 90;
-    const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#10b981');
-  });
-
-  it('boundary: exactly 70 → amber', () => {
-    const complianceRate = 70;
-    const donutColor = complianceRate >= 90 ? '#10b981' : complianceRate >= 70 ? '#f59e0b' : '#ef4444';
-    expect(donutColor).toBe('#f59e0b');
+  it('red branch: rate < 70 → #ef4444', () => {
+    expect(getSamDonutColor(50)).toBe('#ef4444');
+    expect(getSamDonutColor(0)).toBe('#ef4444');
   });
 });
 

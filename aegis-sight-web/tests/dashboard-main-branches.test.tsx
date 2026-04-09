@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { getCompColor } from '@/app/dashboard/page';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -120,20 +121,19 @@ describe('Dashboard page - basic render with default data (compRate=94, green br
   });
 });
 
-describe('Dashboard page - amber compColor branch (compRate 70-89)', () => {
-  it('DonutChart receives amber color when compRate is 75 (70 <= 75 < 90)', async () => {
-    // We test the compColor logic by directly calling the inline IIFE logic
-    // Since stats is module-level, we verify what branch the mocked DonutChart receives
-    // This test uses the real page module (compRate=94 → green)
-    // To cover amber branch, we test the logic in isolation using inline rendering
-    const compRate75 = 75;
-    const color75 = compRate75 >= 90 ? '#10b981' : compRate75 >= 70 ? '#f59e0b' : '#ef4444';
-    expect(color75).toBe('#f59e0b');
+describe('Dashboard page - getCompColor branch coverage', () => {
+  it('green branch: rate >= 90 → #10b981', () => {
+    expect(getCompColor(94)).toBe('#10b981');
+    expect(getCompColor(90)).toBe('#10b981');
   });
 
-  it('DonutChart receives red color when compRate is 65 (< 70)', () => {
-    const compRate65 = 65;
-    const color65 = compRate65 >= 90 ? '#10b981' : compRate65 >= 70 ? '#f59e0b' : '#ef4444';
-    expect(color65).toBe('#ef4444');
+  it('amber branch: 70 <= rate < 90 → #f59e0b', () => {
+    expect(getCompColor(75)).toBe('#f59e0b');
+    expect(getCompColor(70)).toBe('#f59e0b');
+  });
+
+  it('red branch: rate < 70 → #ef4444', () => {
+    expect(getCompColor(65)).toBe('#ef4444');
+    expect(getCompColor(0)).toBe('#ef4444');
   });
 });

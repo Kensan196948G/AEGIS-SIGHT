@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { getDeviceStatusDotColor, getDiskBarColor } from '@/app/dashboard/devices/[id]/page';
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) =>
@@ -332,5 +333,45 @@ describe('Device Detail page - quick actions section', () => {
       fireEvent.click(btn);
     });
     expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+});
+
+// ==========================================================================
+// Exported helper functions — branch coverage for all arms
+// ==========================================================================
+
+describe('DeviceDetailPage - getDeviceStatusDotColor branches', () => {
+  it('online → bg-green-500', () => {
+    expect(getDeviceStatusDotColor('online')).toBe('bg-green-500');
+  });
+
+  it('warning → bg-yellow-500', () => {
+    expect(getDeviceStatusDotColor('warning')).toBe('bg-yellow-500');
+  });
+
+  it('maintenance → bg-blue-500', () => {
+    expect(getDeviceStatusDotColor('maintenance')).toBe('bg-blue-500');
+  });
+
+  it('offline/unknown → bg-gray-400 (default branch)', () => {
+    expect(getDeviceStatusDotColor('offline')).toBe('bg-gray-400');
+    expect(getDeviceStatusDotColor('unknown')).toBe('bg-gray-400');
+  });
+});
+
+describe('DeviceDetailPage - getDiskBarColor branches', () => {
+  it('pct >= 80 → bg-red-500 (high usage)', () => {
+    expect(getDiskBarColor(80)).toBe('bg-red-500');
+    expect(getDiskBarColor(95)).toBe('bg-red-500');
+  });
+
+  it('60 <= pct < 80 → bg-yellow-500 (medium usage)', () => {
+    expect(getDiskBarColor(60)).toBe('bg-yellow-500');
+    expect(getDiskBarColor(75)).toBe('bg-yellow-500');
+  });
+
+  it('pct < 60 → bg-green-500 (low usage)', () => {
+    expect(getDiskBarColor(54)).toBe('bg-green-500');
+    expect(getDiskBarColor(0)).toBe('bg-green-500');
   });
 });

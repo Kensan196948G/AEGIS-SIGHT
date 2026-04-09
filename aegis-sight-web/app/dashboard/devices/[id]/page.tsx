@@ -93,6 +93,17 @@ const eventTypeConfig: Record<RecentEvent['type'], { label: string; color: strin
   config_change: { label: '設定変更', color: 'text-yellow-600 dark:text-yellow-400' },
 };
 
+export function getDeviceStatusDotColor(status: string): string {
+  return status === 'online' ? 'bg-green-500' :
+    status === 'warning' ? 'bg-yellow-500' :
+    status === 'maintenance' ? 'bg-blue-500' :
+    'bg-gray-400';
+}
+
+export function getDiskBarColor(pct: number): string {
+  return pct >= 80 ? 'bg-red-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-green-500';
+}
+
 export default function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const device = demoDevice; // 実際にはAPIからid でfetch
@@ -113,12 +124,7 @@ export default function DeviceDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className={`h-3 w-3 rounded-full ${
-            device.status === 'online' ? 'bg-green-500' :
-            device.status === 'warning' ? 'bg-yellow-500' :
-            device.status === 'maintenance' ? 'bg-blue-500' :
-            'bg-gray-400'
-          }`} />
+          <div className={`h-3 w-3 rounded-full ${getDeviceStatusDotColor(device.status)}`} />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{device.hostname}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -189,7 +195,7 @@ export default function DeviceDetailPage() {
                 </div>
                 <div className="mt-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
-                    className={`h-2 rounded-full transition-all ${diskUsedPct >= 80 ? 'bg-red-500' : diskUsedPct >= 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                    className={`h-2 rounded-full transition-all ${getDiskBarColor(diskUsedPct)}`}
                     style={{ width: `${diskUsedPct}%` }}
                   />
                 </div>
