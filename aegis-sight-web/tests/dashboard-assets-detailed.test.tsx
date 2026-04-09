@@ -359,13 +359,15 @@ describe('Assets page - pagination branches', () => {
   it('totalPages > 1: multiple page buttons rendered', async () => {
     const { default: Page } = await import('@/app/dashboard/assets/page');
     render(<Page />);
-    // 10 assets / 8 per page = 2 pages → buttons "1" and "2"
-    const btn1 = screen.queryByText('1');
-    const btn2 = screen.queryByText('2');
+    // 10 assets / 8 per page = 2 pages → page number buttons exist
+    // Use querySelectorAll to find buttons with exact page number text
+    const allButtons = Array.from(document.querySelectorAll('button'));
+    const pageBtn1 = allButtons.find((b) => b.textContent?.trim() === '1');
+    const pageBtn2 = allButtons.find((b) => b.textContent?.trim() === '2');
     // At least the next button should exist (we have 2 pages)
-    const nextBtn = screen.getByText('次へ');
+    const nextBtn = allButtons.find((b) => b.textContent?.trim() === '次へ');
     expect(nextBtn).toBeTruthy();
-    expect(btn1 || btn2 || document.body.textContent?.length).toBeTruthy();
+    expect(pageBtn1 || pageBtn2 || document.body.textContent?.length).toBeTruthy();
   });
 
   it('page === currentPage: page 1 button gets primary style (ternary true arm)', async () => {
