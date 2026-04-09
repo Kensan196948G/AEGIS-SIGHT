@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { getActiveRateColor } from '@/app/dashboard/users/page';
 
 // Mock chart components (use ResizeObserver / SVG)
 vi.mock('@/components/ui/chart', () => ({
@@ -456,5 +457,27 @@ describe('UsersPage - 編集ボタン', () => {
     render(<Page />);
     const editButtons = screen.getAllByText('編集');
     expect(editButtons).toHaveLength(5);
+  });
+});
+
+// ==========================================================================
+// Exported helper - getActiveRateColor branches
+// Demo data: activeRate = 80 (4/5 active) → always hits >= 80 (green)
+// amber and red branches are never hit by component rendering
+// ==========================================================================
+describe('UsersPage - getActiveRateColor branches', () => {
+  it('rate >= 80 → green (#10b981)', () => {
+    expect(getActiveRateColor(80)).toBe('#10b981');
+    expect(getActiveRateColor(100)).toBe('#10b981');
+  });
+
+  it('rate >= 60 but < 80 → amber (#f59e0b, never hit by demo data)', () => {
+    expect(getActiveRateColor(79)).toBe('#f59e0b');
+    expect(getActiveRateColor(60)).toBe('#f59e0b');
+  });
+
+  it('rate < 60 → red (#ef4444, never hit by demo data)', () => {
+    expect(getActiveRateColor(59)).toBe('#ef4444');
+    expect(getActiveRateColor(0)).toBe('#ef4444');
   });
 });

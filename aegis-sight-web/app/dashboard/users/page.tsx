@@ -30,6 +30,10 @@ const roleLabel: Record<Role, string> = {
   readonly: '閲覧者',
 };
 
+export function getActiveRateColor(rate: number): string {
+  return rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
+}
+
 // Demo data
 const demoUsers: UserItem[] = [
   {
@@ -95,7 +99,7 @@ export default function UsersPage() {
       {(() => {
         const activeCount = demoUsers.filter(u => u.is_active).length;
         const activeRate = Math.round((activeCount / demoUsers.length) * 100);
-        const activeColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
+        const activeColor = getActiveRateColor(activeRate);
         const roleCounts: Record<string, number> = {};
         demoUsers.forEach(u => { roleCounts[roleLabel[u.role]] = (roleCounts[roleLabel[u.role]] || 0) + 1; });
         const roleBarData = Object.entries(roleCounts).map(([role, count], i) => ({
