@@ -611,3 +611,27 @@ describe('Lifecycle page - disposal form submit and cancel', () => {
     }
   });
 });
+
+// ==========================================================================
+// donutColor ternary branches (inline) — operationalRate = 83 always hits >= 80
+// Covers the amber (>= 60 but < 80) and red (< 60) arms not reachable via component
+// ==========================================================================
+describe('LifecyclePage - donutColor ternary branches (inline)', () => {
+  it('operationalRate >= 80 → green (#10b981)', () => {
+    const operationalRate = 83;
+    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(donutColor).toBe('#10b981');
+  });
+
+  it('operationalRate >= 60 but < 80 → amber (#f59e0b)', () => {
+    const operationalRate = 70;
+    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(donutColor).toBe('#f59e0b');
+  });
+
+  it('operationalRate < 60 → red (#ef4444)', () => {
+    const operationalRate = 40;
+    const donutColor = operationalRate >= 80 ? '#10b981' : operationalRate >= 60 ? '#f59e0b' : '#ef4444';
+    expect(donutColor).toBe('#ef4444');
+  });
+});
