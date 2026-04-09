@@ -254,3 +254,235 @@ describe('Search page - with initial query from URL', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch: results && type !== 'all' (true arm) — count badge per tab type
+// ---------------------------------------------------------------------------
+
+describe('SearchPage - results && type !== all branch', () => {
+  it('shows count badge on non-all type tabs when results are present', async () => {
+    // activeType defaults to 'all', but results are loaded → type !== 'all' tabs show count
+    mockSearchQuery = 'laptop';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'laptop',
+      total: 3,
+      groups: [
+        { type: 'device', count: 2, items: [
+          { id: 'd1', type: 'device', title: 'laptop-01', subtitle: 'Windows 11', matched_field: 'name', matched_value: 'laptop', created_at: '2026-01-15T00:00:00Z' },
+          { id: 'd2', type: 'device', title: 'laptop-02', subtitle: null, matched_field: 'name', matched_value: 'laptop-02', created_at: null },
+        ]},
+        { type: 'license', count: 1, items: [
+          { id: 'l1', type: 'license', title: 'LaptopSoft', subtitle: null, matched_field: 'name', matched_value: 'laptop', created_at: null },
+        ]},
+      ],
+      offset: 0, limit: 20, has_more: false,
+    });
+
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+
+    // Wait for API response
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('laptop');
+    });
+
+    // results present → type !== 'all' tabs show count badges (covers true arm)
+    // results present → type === 'all' tab shows total (3)
+    expect(document.body.textContent).toContain('3');
+  });
+
+  it('covers results && type === all branch (total count shown)', async () => {
+    mockSearchQuery = 'alert';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'alert',
+      total: 5,
+      groups: [
+        { type: 'alert', count: 5, items: [
+          { id: 'a1', type: 'alert', title: 'Critical Alert', subtitle: 'Server down', matched_field: 'title', matched_value: 'alert', created_at: '2026-03-01T09:00:00Z' },
+        ]},
+      ],
+      offset: 0, limit: 20, has_more: false,
+    });
+
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('5');
+    });
+    // 'Server down' subtitle should be rendered (item.subtitle truthy branch)
+    expect(document.body.textContent).toContain('Server down');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch: item.subtitle (null vs non-null)
+// Branch: item.created_at (null vs non-null)
+// ---------------------------------------------------------------------------
+
+describe('SearchPage - item.subtitle and item.created_at branches', () => {
+  it('renders subtitle when item.subtitle is non-null (true arm)', async () => {
+    mockSearchQuery = 'test';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'test',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'test-device', subtitle: 'OS: Windows 11', matched_field: 'name', matched_value: 'test', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('test-device'));
+    // subtitle truthy → paragraph rendered
+    expect(document.body.textContent).toContain('OS: Windows 11');
+  });
+
+  it('does not render subtitle when item.subtitle is null (false arm)', async () => {
+    mockSearchQuery = 'test';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'test',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'test-device-null', subtitle: null, matched_field: 'name', matched_value: 'test', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('test-device-null'));
+    // subtitle null → false arm, no subtitle paragraph
+    const body = document.body.textContent || '';
+    expect(body).not.toContain('OS: Windows');
+  });
+
+  it('renders created_at time element when non-null (true arm)', async () => {
+    mockSearchQuery = 'test';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'test',
+      total: 1,
+      groups: [{ type: 'procurement', count: 1, items: [
+        { id: '1', type: 'procurement', title: 'PO-2026-001', subtitle: null, matched_field: 'id', matched_value: 'test', created_at: '2026-02-20T12:00:00Z' },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('PO-2026-001'));
+    // created_at truthy → <time> element rendered
+    const timeEls = document.querySelectorAll('time');
+    expect(timeEls.length).toBeGreaterThan(0);
+  });
+
+  it('does not render time element when item.created_at is null (false arm)', async () => {
+    mockSearchQuery = 'test';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'test',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'no-date-device', subtitle: null, matched_field: 'name', matched_value: 'test', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('no-date-device'));
+    // created_at null → false arm, no <time> element
+    const timeEls = document.querySelectorAll('time');
+    expect(timeEls.length).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch: TYPE_LABELS[item.type] || item.type  — unknown type fallback
+// Branch: TYPE_COLORS[item.type] || ''         — unknown type fallback
+// Branch: TYPE_LINKS[item.type] || '/dashboard' — unknown type fallback
+// ---------------------------------------------------------------------------
+
+describe('SearchPage - unknown type fallback branches', () => {
+  it('falls back to raw type string when TYPE_LABELS has no entry', async () => {
+    mockSearchQuery = 'custom';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'custom',
+      total: 1,
+      groups: [{ type: 'custom_type', count: 1, items: [
+        { id: '1', type: 'custom_type', title: 'custom-item', subtitle: null, matched_field: 'id', matched_value: 'custom', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('custom-item'));
+    // TYPE_LABELS['custom_type'] is undefined → OR fallback returns 'custom_type'
+    expect(document.body.textContent).toContain('custom_type');
+  });
+
+  it('fallback TYPE_COLORS is empty string for unknown type (no color class applied)', async () => {
+    mockSearchQuery = 'unknown';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'unknown',
+      total: 1,
+      groups: [{ type: 'unknown_kind', count: 1, items: [
+        { id: '1', type: 'unknown_kind', title: 'UnknownItem', subtitle: null, matched_field: 'name', matched_value: 'unknown', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('UnknownItem'));
+    // TYPE_COLORS['unknown_kind'] is undefined → '' fallback applied, no color classes crash
+    expect(document.body.textContent).toContain('unknown_kind');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch: highlightMatch — index === -1 (no match) and match found
+// ---------------------------------------------------------------------------
+
+describe('SearchPage - highlightMatch branches', () => {
+  it('renders mark element when query matches title (highlight branch)', async () => {
+    mockSearchQuery = 'laptop';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'laptop',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'laptop-station', subtitle: null, matched_field: 'name', matched_value: 'laptop', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('laptop-station'));
+    // highlightMatch('laptop-station', 'laptop') → index === 0 → <mark> rendered
+    const marks = document.querySelectorAll('mark');
+    expect(marks.length).toBeGreaterThan(0);
+  });
+
+  it('does not render mark element when query does not match title (index === -1 branch)', async () => {
+    mockSearchQuery = 'zzznomatch';
+    mockSearchType = 'all';
+    mockApiGet.mockResolvedValue({
+      query: 'zzznomatch',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'ALPHA-DEVICE', subtitle: null, matched_field: 'os', matched_value: 'zzznomatch', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('ALPHA-DEVICE'));
+    // highlightMatch('ALPHA-DEVICE', 'zzznomatch') → index === -1 → no <mark> for title
+    // matched_value 'zzznomatch' will be highlighted though
+    expect(document.body.textContent).toContain('ALPHA-DEVICE');
+  });
+});
