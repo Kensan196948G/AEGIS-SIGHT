@@ -122,6 +122,30 @@ describe('PWAInstallPrompt', () => {
     expect(localStorage.getItem(DISMISS_KEY)).toBeNull();
   });
 
+  it('does not set isInstalled when outcome is dismissed', async () => {
+    render(<PWAInstallPrompt />);
+    const mockPrompt = vi.fn().mockResolvedValue(undefined);
+    const mockUserChoice = Promise.resolve({ outcome: 'dismissed' as const });
+    const event = new Event('beforeinstallprompt') as Event & {
+      prompt: () => Promise<void>;
+      userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    };
+    event.prompt = mockPrompt;
+    event.userChoice = mockUserChoice;
+    act(() => {
+      window.dispatchEvent(event);
+    });
+    // Install button is visible
+    expect(screen.getByText('インストール')).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByText('インストール'));
+    });
+    // prompt() was called but outcome is 'dismissed' → not installed, prompt hidden
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
+    // Banner is hidden after the flow completes regardless of outcome
+    expect(screen.queryByRole('banner', { name: 'PWAインストール' })).toBeNull();
+  });
+
   it('hides prompt and clears state on appinstalled event', () => {
     render(<PWAInstallPrompt />);
     fireInstallPromptEvent();

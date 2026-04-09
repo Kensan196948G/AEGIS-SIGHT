@@ -165,6 +165,42 @@ describe('LicenseComplianceWidget', () => {
     expect(screen.getByText('TestApp')).toBeTruthy();
     expect(screen.getByText('残り5日')).toBeTruthy();
   });
+
+  it('shows amber color for complianceRate in 70-89 range (GaugeBar amber branch)', () => {
+    const data = {
+      complianceRate: 80,
+      overDeployed: [],
+      expiring: [],
+    };
+    const { container } = render(<LicenseComplianceWidget data={data} />);
+    expect(screen.getByText('80%')).toBeTruthy();
+    // amber bar should be present for 70-89 range
+    expect(container.querySelector('.bg-amber-500')).toBeTruthy();
+  });
+
+  it('shows red color for complianceRate below 70 (GaugeBar red branch)', () => {
+    const data = {
+      complianceRate: 60,
+      overDeployed: [],
+      expiring: [],
+    };
+    const { container } = render(<LicenseComplianceWidget data={data} />);
+    expect(screen.getByText('60%')).toBeTruthy();
+    expect(container.querySelector('.bg-red-500')).toBeTruthy();
+  });
+
+  it('shows red badge for license expiring in 14 days or fewer', () => {
+    const data = {
+      complianceRate: 90,
+      overDeployed: [],
+      expiring: [{ name: 'UrgentApp', daysLeft: 10 }],
+    };
+    render(<LicenseComplianceWidget data={data} />);
+    expect(screen.getByText('残り10日')).toBeTruthy();
+    // daysLeft <= 14 → red badge
+    const badge = screen.getByText('残り10日');
+    expect(badge.className).toContain('red');
+  });
 });
 
 // ─── ProcurementSummaryWidget ────────────────────────────────────────────
