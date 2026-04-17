@@ -11,7 +11,7 @@ import csv
 import io
 import re
 from dataclasses import dataclass, field
-from typing import BinaryIO
+from typing import BinaryIO, ClassVar
 
 from app.models.device import DeviceStatus
 from app.models.license import LicenseType
@@ -60,8 +60,8 @@ class ImportValidator:
     # ------------------------------------------------------------------
     # Device CSV
     # ------------------------------------------------------------------
-    DEVICE_REQUIRED_COLUMNS = {"hostname"}
-    DEVICE_OPTIONAL_COLUMNS = {
+    DEVICE_REQUIRED_COLUMNS: ClassVar[set[str]] = {"hostname"}
+    DEVICE_OPTIONAL_COLUMNS: ClassVar[set[str]] = {
         "os_version",
         "ip_address",
         "mac_address",
@@ -160,8 +160,8 @@ class ImportValidator:
     # ------------------------------------------------------------------
     # License CSV
     # ------------------------------------------------------------------
-    LICENSE_REQUIRED_COLUMNS = {"software_name", "vendor", "license_type"}
-    LICENSE_OPTIONAL_COLUMNS = {
+    LICENSE_REQUIRED_COLUMNS: ClassVar[set[str]] = {"software_name", "vendor", "license_type"}
+    LICENSE_OPTIONAL_COLUMNS: ClassVar[set[str]] = {
         "license_key",
         "purchased_count",
         "installed_count",
