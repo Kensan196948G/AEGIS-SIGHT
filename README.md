@@ -54,7 +54,7 @@
 | 🏢 **対象組織** | ABCDE.Inc（約550名） |
 | 🖥️ **管理対象** | Windows 11/10 クライアントPC 約500台 + サーバ群 |
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
-| 🛠️ **開発方式** | ClaudeOS v7.1 自律型開発（AI-Augmented Development） |
+| 🛠️ **開発方式** | ClaudeOS v8 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
 | 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・IAMS pytest 1,798件移植完結・フロントエンド強化継続中 |
 
@@ -733,6 +733,6 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 **🏗️ みらい建設工業 IT部門 | AEGIS-SIGHT | 2026**
 
-*Built with [ClaudeOS v7.1](./CLAUDE.md) Autonomous Development*
+*Built with [ClaudeOS v8](./CLAUDE.md) Autonomous Development*
 
 </div>

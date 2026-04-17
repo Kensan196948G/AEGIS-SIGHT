@@ -27,6 +27,8 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+# macOS AppleDouble metadata (from NFS/SMB clients)
+._*
 
 # Environment
 .env
