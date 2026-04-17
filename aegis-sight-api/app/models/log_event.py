@@ -1,7 +1,7 @@
 """Log event models: Logon, USB, and File events collected from endpoint agents."""
 
 import enum
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import INET, UUID

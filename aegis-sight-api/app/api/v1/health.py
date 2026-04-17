@@ -1,6 +1,6 @@
 import shutil
 import time
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import datetime, timedelta, UTC
 
 from fastapi import APIRouter
 from sqlalchemy import func, select, text

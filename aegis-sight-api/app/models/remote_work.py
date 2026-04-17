@@ -6,7 +6,7 @@ for telework monitoring and compliance.
 
 import enum
 import uuid
-from datetime import datetime, time, timezone, UTC
+from datetime import datetime, time, UTC
 
 from sqlalchemy import (
     BigInteger,

@@ -22,7 +22,7 @@ import hmac
 import json
 import logging
 import uuid
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 

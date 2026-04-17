@@ -8,7 +8,7 @@ and creates ConfigChange records for every detected difference.
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 from typing import Any
 
 from sqlalchemy import select

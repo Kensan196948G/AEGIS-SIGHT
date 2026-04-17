@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID

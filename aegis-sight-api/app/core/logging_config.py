@@ -22,7 +22,7 @@ import logging
 import sys
 import uuid
 from contextvars import ContextVar
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any
 

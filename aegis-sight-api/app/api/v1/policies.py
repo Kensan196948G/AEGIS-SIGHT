@@ -7,7 +7,7 @@ compliance.
 """
 
 import uuid
-from datetime import datetime, timezone, UTC
+from datetime import datetime, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
