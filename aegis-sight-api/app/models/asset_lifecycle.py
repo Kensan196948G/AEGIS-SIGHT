@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import date, datetime, timezone, UTC
+from datetime import UTC, date, datetime
 
 from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID

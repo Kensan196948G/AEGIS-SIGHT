@@ -1,7 +1,7 @@
 import csv
 import io
 import uuid
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import StreamingResponse

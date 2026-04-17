@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select

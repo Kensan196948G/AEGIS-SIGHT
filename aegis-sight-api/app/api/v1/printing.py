@@ -1,7 +1,7 @@
 """Print management API endpoints."""
 
 import uuid
-from datetime import datetime, timedelta, timezone, UTC
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
