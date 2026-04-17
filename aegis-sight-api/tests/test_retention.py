@@ -75,7 +75,7 @@ async def _insert_hw_snapshots(
     count: int,
     snapped_at: datetime,
 ) -> None:
-    for i in range(count):
+    for _ in range(count):
         snap = HardwareSnapshot(
             device_id=device_id,
             cpu_model="Intel i7",

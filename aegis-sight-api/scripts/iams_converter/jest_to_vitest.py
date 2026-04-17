@@ -119,7 +119,7 @@ class JestToVitestConverter:
         final_lines: list[str] = []
         vitest_import_added = False
 
-        for i, line in enumerate(output_lines):
+        for _, line in enumerate(output_lines):
             # @jest/ パッケージの import を除去
             if re.match(r"\s*import\s+.*from\s+['\"]@jest/", line):
                 continue
