@@ -127,7 +127,7 @@ class TestUnregister:
         d = WebhookDispatcher()
         d.register("https://a.com", ["device.created"])
         d.unregister("https://a.com")
-        assert "https://a.com" not in d.list_registrations()
+        assert "https://a.com" not in d.list_registrations().keys()
 
     def test_unregister_nonexistent_noop(self) -> None:
         d = WebhookDispatcher()
@@ -138,8 +138,8 @@ class TestUnregister:
         d.register("https://a.com", ["device.created"])
         d.register("https://b.com", ["alert.created"])
         d.unregister("https://a.com")
-        assert "https://b.com" in d.list_registrations()
-        assert "https://a.com" not in d.list_registrations()
+        assert "https://b.com" in d.list_registrations().keys()
+        assert "https://a.com" not in d.list_registrations().keys()
 
 
 # ---------------------------------------------------------------------------
