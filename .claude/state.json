@@ -7,15 +7,15 @@
     "current_phase": "Post-IAMS Integration / Maintenance"
   },
   "execution": {
-    "loop_count": 5,
-    "current_loop_phase": "Improvement",
+    "loop_count": 6,
+    "current_loop_phase": "Verify",
     "start_time": "2026-04-17T10:50:00+09:00",
-    "last_update": "2026-04-17T13:03:00+09:00",
-    "remaining_time_minutes": 110
+    "last_update": "2026-04-17T14:00:00+09:00",
+    "remaining_time_minutes": 90
   },
   "task": {
-    "current_issue": "PR #334 (UP017 116件) CI待ち / PR #336 (Ruff残存13件+README) CI待ち / Issue #325 ESLint upstream待ち",
-    "current_branch": "main",
+    "current_issue": "PR #349 (RUF002/003) CI待ち / PR #351 (ImportValidator test44件) CI待ち / Issue #325 ESLint upstream待ち",
+    "current_branch": "feat/test-import-validator-350",
     "current_worktree": "",
     "priority": "Low",
     "status": "STABLE"
@@ -36,18 +36,20 @@
     "stable_judgment": "achieved"
   },
   "decision": {
-    "next_action": "PR #334 CI待ち→merge. PR #336 CI待ち→merge. Issue #325 ESLint upstream待ち. Ruff 残存 RUF012/RUF001 は手動修正必要。",
+    "next_action": "PR #342/#344/#346 CI完了後 --admin merge. Issue #325 ESLint upstream待ち. 全Ruff errors解消予定.",
     "blocker": "",
     "risk_level": "low",
     "requires_human": false
   },
   "learning": {
-    "last_failure_pattern": "@vitest/coverage-v8 peer dependency: v4.x requires vitest@4, must pin to v1.6.1 to match vitest@1.6.1",
-    "improvement_notes": "1) vitest coverage include pattern needed to avoid Next.js source map errors. 2) PR branch rebased onto main triggers CI; first PR creation may not trigger if branch is far behind. 3) Use git stash + rebase + force-push to resolve conflicts and trigger CI. 4) Current coverage: Statements 8%, Branches 48.9%, Functions 23.6%. 5) auth-context.tsx tests: need vi.mock('next/navigation'), localStorage mock, global.fetch mock. 6) git add path issue in subdirectory: use git -C /repo/root add instead.",
+    "last_failure_pattern": "UP038 unsafe-fix 後に Union import が孤立し F401 → I001 連鎖発生。UP017 連鎖と同じパターン。unsafe-fix 後は必ず F401+I001 追加チェック必要",
+    "improvement_notes": "1) vitest coverage include pattern needed to avoid Next.js source map errors. 2) PR branch rebased onto main triggers CI; first PR creation may not trigger if branch is far behind. 3) Use git stash + rebase + force-push to resolve conflicts and trigger CI. 4) Current coverage: Statements 8%, Branches 48.9%, Functions 23.6%. 5) auth-context.tsx tests: need vi.mock('next/navigation'), localStorage mock, global.fetch mock. 6) git add path issue in subdirectory: use git -C /repo/root add instead. 7) UP038 unsafe-fix後はF401+I001を必ず追加チェック (UP017連鎖と同じパターン).",
     "prevented_issues": [
       "Merging Next.js 14->16 without migration",
       "Merging Tailwind 3->4 without config update",
-      "Installing @vitest/coverage-v8@4 with vitest@1"
+      "Installing @vitest/coverage-v8@4 with vitest@1",
+      "UP017連鎖: datetime.timezone.utc→datetime.UTC後のF401+I001連鎖",
+      "UP038連鎖: isinstance PEP604修正後のUnion import孤立F401+I001連鎖"
     ]
   },
   "session_history": [
@@ -100,6 +102,11 @@
       "date": "2026-04-17",
       "work": "Monitor→Development→Verify→Improvement: Dependabot 11 PR処理(#319/#320/#322/#318/#324/#327/#328/#329/#330 merge / #323/#326 close). ESLint 10 breaking change対策(Issue #325 / dependabot ignore PR #328). ClaudeOS v5→v8 policy update (PR #327). postcss/typescript/types patch merge (#329/#330). macOS ._* gitignore追加. PR #321(nextjs-ecosystem) CI待ち.",
       "result": "STABLE - 本日マージ合計11件. CI全pass. ESLint 10互換問題根治. state.json更新."
+    },
+    {
+      "date": "2026-04-17",
+      "work": "Ruff 全件修正シリーズ: PR #332(UP017 app/): merged / PR #334(UP017 app/ 116件): merged / PR #336(Ruff残存13件+noqa): merged / PR #338(UP017 2件+RUF100): merged / PR #340(F401+I001 UP017連鎖54件): merged / PR #342(UP035 typing.Callable→collections.abc): CI待ち / PR #344(UP017+UP038 tests/scripts): CI待ち / PR #346(B007/B017/RUF012 手動5件): CI待ち",
+      "result": "STABLE - Ruff errors 大幅削減. PR #342/#344/#346 CI待ち. UP038連鎖教訓習得."
     }
   ]
 }
