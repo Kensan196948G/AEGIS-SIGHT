@@ -3,6 +3,7 @@
 import hashlib
 
 import pytest
+from cryptography.exceptions import InvalidTag
 
 from app.services.encryption_service import EncryptionService
 
@@ -42,7 +43,7 @@ class TestEncryptDecrypt:
         svc1 = EncryptionService(secret_key="key-one")
         svc2 = EncryptionService(secret_key="key-two")
         ciphertext = svc1.encrypt("secret data")
-        with pytest.raises(Exception):
+        with pytest.raises(InvalidTag):
             svc2.decrypt(ciphertext)
 
     def test_empty_string(self, svc: EncryptionService):

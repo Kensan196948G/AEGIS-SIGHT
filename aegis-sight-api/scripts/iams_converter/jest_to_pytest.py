@@ -11,6 +11,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class JestToPytestConverter:
     """Jest テストを pytest に変換するコンバーター."""
 
     # expect().toBe(x) -> assert ... == x
-    EXPECT_MATCHERS: dict[str, str] = {
+    EXPECT_MATCHERS: ClassVar[dict[str, str]] = {
         "toBe": "==",
         "toEqual": "==",
         "toStrictEqual": "==",

@@ -87,7 +87,7 @@ async def test_get_nonexistent_session(manager: SessionManager):
 async def test_max_sessions_eviction(manager: SessionManager):
     """Oldest session is evicted when max_sessions is exceeded."""
     sessions = []
-    for i in range(4):
+    for _ in range(4):
         s = await manager.create_session(user_id="user-1")
         sessions.append(s)
 
