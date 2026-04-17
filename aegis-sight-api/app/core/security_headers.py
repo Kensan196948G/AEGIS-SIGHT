@@ -57,7 +57,7 @@ class SecurityHeadersConfig:
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Inject security headers into every HTTP response."""
 
-    def __init__(self, app, config: SecurityHeadersConfig | None = None) -> None:  # noqa: ANN001
+    def __init__(self, app, config: SecurityHeadersConfig | None = None) -> None:
         super().__init__(app)
         self.config = config or SecurityHeadersConfig()
 

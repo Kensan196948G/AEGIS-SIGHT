@@ -284,11 +284,11 @@ class ImportValidator:
         and (None, []) is returned.
         """
         try:
-            if hasattr(file, "mode") or isinstance(file, (bytes, bytearray)):
+            if hasattr(file, "mode") or isinstance(file, bytes | bytearray):
                 # Binary file-like object
                 content = (
                     file.read().decode("utf-8-sig")
-                    if isinstance(file, (bytes, bytearray))
+                    if isinstance(file, bytes | bytearray)
                     else file.read().decode("utf-8-sig")
                 )
             else:

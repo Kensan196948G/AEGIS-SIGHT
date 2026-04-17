@@ -53,7 +53,7 @@ class ETagMiddleware(BaseHTTPMiddleware):
                 body += chunk
 
         # Generate ETag from MD5 hash of response body
-        etag = f'"{hashlib.md5(body).hexdigest()}"'  # noqa: S324
+        etag = f'"{hashlib.md5(body).hexdigest()}"'
 
         # Check If-None-Match header
         if_none_match = request.headers.get("if-none-match")

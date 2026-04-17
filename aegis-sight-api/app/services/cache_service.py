@@ -138,7 +138,7 @@ _cache = CacheService()
 def _build_cache_key(prefix: str, args: tuple, kwargs: dict) -> str:
     """Deterministic cache key from function arguments."""
     raw = json.dumps({"a": args, "k": kwargs}, sort_keys=True, default=str)
-    digest = hashlib.md5(raw.encode()).hexdigest()  # noqa: S324
+    digest = hashlib.md5(raw.encode()).hexdigest()
     return f"{prefix}:{digest}"
 
 

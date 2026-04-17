@@ -61,7 +61,7 @@ class ConnectionManager:
     async def broadcast(self, message: dict[str, Any]) -> None:
         """Broadcast a message to all connected clients."""
         payload = json.dumps(message)
-        for user_id, connections in list(self._active_connections.items()):
+        for _user_id, connections in list(self._active_connections.items()):
             dead: list[WebSocket] = []
             for ws in connections:
                 try:

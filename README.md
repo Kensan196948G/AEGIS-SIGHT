@@ -438,6 +438,11 @@ gantt
 | 📦 **Dependabot type-tools グループ** | ✅ **Done** | typescript/eslint/@types/* グループ化 (PR#274 merged) |
 | 📋 **Issue #238 移行計画詳細化** | ✅ **Done** | Step 1-6 段階移行ロードマップ策定・セキュリティ残存影響記録 |
 | 🐌 **Issue #273 pytest 高速化計画** | 📋 **Backlog** | pytest-xdist 並列化 18分→5分短縮・Issue作成済み |
+| 🔒 **Dependabot 2026-04-17 一括更新 (11 PR)** | ✅ **Done** | vitest/React/postcss/typescript/ClaudeOS v8/ESLint ignore (#319-#330 merged) |
+| 🐛 **FastAPI Query regex→pattern 修正** | ✅ **Done** | DeprecationWarning 排除 (PR#332 merged) |
+| 🔤 **Ruff UP017 datetime.UTC 統一 (116件)** | 🔄 **CI中** | `datetime.timezone.utc` → `datetime.UTC` 54ファイル (PR#334) |
+| 🔤 **Ruff 残存 auto-fix 13件** | 🔄 **CI中** | RUF100/RUF005/UP038/B007 一括修正 (PR#336) |
+| ⏳ **ESLint 10 移行** | 🚫 **Blocked** | eslint-plugin-react upstream 非互換・upstream 対応待ち (Issue#325) |
 
 ### GitHub Issues トラッカー
 
@@ -445,8 +450,7 @@ gantt
 
 | # | タイトル | 状態 |
 |:--|:---|:---:|
-| [#307](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/307) | カバレッジ閾値ラチェット (PR#308) | 🔄 In Review |
-| [#309](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/309) | README.md 大幅更新 | 🔨 Development |
+| [#325](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/325) | ESLint 10 移行ブロック (upstream待ち) | 🚫 Blocked |
 | [#238](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/238) | 依存関係移行計画: Next.js 16 / Tailwind 4 / ESLint 10 | 📋 Backlog |
 | [#273](https://github.com/Kensan196948G/AEGIS-SIGHT/issues/273) | pytest 高速化計画 (pytest-xdist) | 📋 Backlog |
 
@@ -463,8 +467,11 @@ gantt
 | #116 | Phase50 本番デプロイ準備 | Done |
 | #118 | Phase51 依存関係更新 | Done |
 | #240 | GitHub Actions Node.js 24対応 | Done |
-| #264 | Ruff lint 修正 | Done |
+| #264 | Ruff lint 修正 (UP035/UP007/F401/I001) | Done |
 | #266 | vitest 1→4 アップグレード | Done |
+| #331 | FastAPI Query regex→pattern 修正 (PR#332) | Done |
+| #333 | Ruff UP017 datetime.UTC 統一 116件 (PR#334) | 🔄 CI中 |
+| #335 | Ruff 残存 auto-fix RUF100/RUF005/UP038/B007 (PR#336) | 🔄 CI中 |
 | #289 | React 19 hooks lint 再有効化 | Done |
 | #298 | README バージョン修正 | Done |
 | #300 | coverage設定・StatCardテスト | Done |

@@ -36,7 +36,7 @@ class IPRestrictionConfig:
 class IPRestrictionMiddleware(BaseHTTPMiddleware):
     """Block requests to restricted paths unless the client IP is allowed."""
 
-    def __init__(self, app, config: IPRestrictionConfig | None = None) -> None:  # noqa: ANN001
+    def __init__(self, app, config: IPRestrictionConfig | None = None) -> None:
         super().__init__(app)
         self.config = config or IPRestrictionConfig()
         # Pre-parse networks once at startup.

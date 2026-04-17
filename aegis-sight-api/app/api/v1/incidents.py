@@ -308,7 +308,7 @@ async def update_incident(
         if timeline_entry and timeline_entry.details:
             entry["details"] = timeline_entry.details
         current_timeline = incident.timeline or []
-        incident.timeline = current_timeline + [entry]
+        incident.timeline = [*current_timeline, entry]
 
     await db.flush()
     await db.refresh(incident)
@@ -339,13 +339,7 @@ async def assign_incident(
     # Add timeline entry
     now = datetime.now(UTC)
     current_timeline = incident.timeline or []
-    incident.timeline = current_timeline + [
-        {
-            "timestamp": now.isoformat(),
-            "event": f"Assigned to {data.assigned_to}",
-            "user": str(current_user.id),
-        }
-    ]
+    incident.timeline = [*current_timeline, {"timestamp": now.isoformat(), "event": f"Assigned to {data.assigned_to}", "user": str(current_user.id)}]
 
     await db.flush()
     await db.refresh(incident)
@@ -385,14 +379,7 @@ async def resolve_incident(
 
     # Add timeline entry
     current_timeline = incident.timeline or []
-    incident.timeline = current_timeline + [
-        {
-            "timestamp": now.isoformat(),
-            "event": "Incident resolved",
-            "user": str(current_user.id),
-            "details": f"Root cause: {data.root_cause}",
-        }
-    ]
+    incident.timeline = [*current_timeline, {"timestamp": now.isoformat(), "event": "Incident resolved", "user": str(current_user.id), "details": f"Root cause: {data.root_cause}"}]
 
     await db.flush()
     await db.refresh(incident)
