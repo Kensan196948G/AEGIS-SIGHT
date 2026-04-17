@@ -233,7 +233,7 @@ class RetentionService:
         for table in tables:
             # Exact count (acceptable for reporting)
             row_count_result = await self.db.execute(
-                text(f"SELECT COUNT(*) FROM {table}")  # noqa: S608 -- table names are hardcoded
+                text(f"SELECT COUNT(*) FROM {table}")
             )
             row_count = row_count_result.scalar_one()
 
@@ -256,7 +256,7 @@ class RetentionService:
             }[table]
 
             oldest_result = await self.db.execute(
-                text(f"SELECT MIN({ts_col}) FROM {table}")  # noqa: S608
+                text(f"SELECT MIN({ts_col}) FROM {table}")
             )
             oldest = oldest_result.scalar_one()
 

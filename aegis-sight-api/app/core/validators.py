@@ -182,7 +182,7 @@ def validate_cron_expression(value: str) -> str:
             f"Cron expression must have exactly 5 fields, got {len(fields)}: {value}"
         )
 
-    for field, (min_val, max_val) in zip(fields, _CRON_FIELD_RANGES):
+    for field, (min_val, max_val) in zip(fields, _CRON_FIELD_RANGES, strict=False):
         if not _validate_cron_field(field, min_val, max_val):
             raise ValueError(f"Invalid cron field '{field}' in expression: {value}")
 
