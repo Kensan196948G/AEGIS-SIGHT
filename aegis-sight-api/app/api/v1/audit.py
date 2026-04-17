@@ -58,7 +58,7 @@ async def list_audit_logs(
     description="Export audit logs as CSV or JSON. Requires auditor or admin role.",
 )
 async def export_audit_logs(
-    format: str = Query("csv", regex="^(csv|json)$", description="Export format: csv or json"),
+    format: str = Query("csv", pattern="^(csv|json)$", description="Export format: csv or json"),
     action: AuditAction | None = Query(None),
     user_id: uuid.UUID | None = Query(None),
     resource_type: str | None = Query(None),
