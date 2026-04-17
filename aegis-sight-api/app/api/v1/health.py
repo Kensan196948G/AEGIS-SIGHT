@@ -1,6 +1,6 @@
 import shutil
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from fastapi import APIRouter
 from sqlalchemy import func, select, text
@@ -124,7 +124,7 @@ async def health_detail():
 
     # Unresponsive devices (last_seen > 1 hour ago)
     try:
-        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
         async with engine.connect() as conn:
             result = await conn.execute(
                 select(func.count())
@@ -144,7 +144,7 @@ async def health_detail():
 
     # License expiry alerts (licenses expiring within 30 days)
     try:
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         alert_threshold = today + timedelta(days=30)
         async with engine.connect() as conn:
             result = await conn.execute(

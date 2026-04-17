@@ -1,7 +1,7 @@
 """User session and activity tracking API endpoints."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import extract, func, select
@@ -161,7 +161,7 @@ async def end_session(
     if session is None:
         raise NotFoundError("UserSession", str(session_id))
 
-    now = data.ended_at or datetime.now(timezone.utc)
+    now = data.ended_at or datetime.now(UTC)
     session.ended_at = now
     session.is_active = False
 

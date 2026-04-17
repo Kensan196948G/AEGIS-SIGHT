@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -100,7 +100,7 @@ async def register_scan(
     """
     created = 0
     updated = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for entry in data.devices:
         result = await db.execute(

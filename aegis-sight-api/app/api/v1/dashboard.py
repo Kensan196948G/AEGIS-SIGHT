@@ -1,7 +1,7 @@
 """Dashboard statistics and alerts endpoints."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -42,7 +42,7 @@ async def get_dashboard_stats(
     total_devices = total_result.scalar_one()
 
     # Online devices (active + seen in last 30 minutes)
-    online_cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+    online_cutoff = datetime.now(UTC) - timedelta(minutes=30)
     online_result = await db.execute(
         select(func.count(Device.id)).where(
             Device.status == DeviceStatus.active,

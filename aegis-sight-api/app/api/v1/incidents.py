@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -95,7 +95,7 @@ async def create_incident(
     current_user: User = Depends(get_current_active_user),
 ):
     """Create a new incident."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     incident = Incident(
         title=data.title,
         description=data.description,
@@ -299,7 +299,7 @@ async def update_incident(
 
     # Add timeline entry for status changes
     if data.status is not None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         entry = {
             "timestamp": now.isoformat(),
             "event": f"Status changed to {data.status.value}",
@@ -337,7 +337,7 @@ async def assign_incident(
     incident.assigned_to = data.assigned_to
 
     # Add timeline entry
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     current_timeline = incident.timeline or []
     incident.timeline = current_timeline + [
         {
@@ -376,7 +376,7 @@ async def resolve_incident(
     if incident.resolved_at is not None:
         raise BadRequestError("Incident is already resolved")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     incident.status = IncidentStatus.resolved
     incident.root_cause = data.root_cause
     incident.resolution = data.resolution

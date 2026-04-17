@@ -1,7 +1,7 @@
 """Log event models: Logon, USB, and File events collected from endpoint agents."""
 
 import enum
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import INET, UUID
@@ -41,7 +41,7 @@ class LogonEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     device = relationship("Device", lazy="selectin")
@@ -69,7 +69,7 @@ class UsbEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     device = relationship("Device", lazy="selectin")
@@ -95,7 +95,7 @@ class FileEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     device = relationship("Device", lazy="selectin")

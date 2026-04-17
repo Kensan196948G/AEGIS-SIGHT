@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -117,7 +117,7 @@ async def run_task(
 
     # Mark as running
     task.last_status = TaskStatus.running
-    task.last_run_at = datetime.now(timezone.utc)
+    task.last_run_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(task)
 

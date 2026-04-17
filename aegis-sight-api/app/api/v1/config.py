@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
@@ -82,7 +82,7 @@ async def update_config(
 
     config.value = data.value
     config.updated_by = current_user.id
-    config.updated_at = datetime.now(timezone.utc)
+    config.updated_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(config)
     return config
@@ -113,7 +113,7 @@ async def reset_config(
     defaults = DEFAULT_CONFIGS[key]
     config.value = defaults["value"]
     config.updated_by = current_user.id
-    config.updated_at = datetime.now(timezone.utc)
+    config.updated_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(config)
     return config

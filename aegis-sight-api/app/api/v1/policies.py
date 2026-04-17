@@ -7,7 +7,7 @@ compliance.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -338,7 +338,7 @@ async def update_policy(
     for field, value in update_data.items():
         setattr(policy, field, value)
 
-    policy.updated_at = datetime.now(timezone.utc)
+    policy.updated_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(policy)
     return policy

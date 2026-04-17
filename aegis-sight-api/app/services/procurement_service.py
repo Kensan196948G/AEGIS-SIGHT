@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
@@ -16,7 +16,7 @@ class ProcurementService:
 
     async def _generate_request_number(self) -> str:
         """Generate a unique request number like PRQ-2026-00001."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         result = await self.db.execute(
             select(func.count(ProcurementRequest.id)).where(
                 ProcurementRequest.request_number.like(f"PRQ-{year}-%")
@@ -74,7 +74,7 @@ class ProcurementService:
             )
         procurement.status = ProcurementStatus.approved
         procurement.approver_id = approver.id
-        procurement.approved_at = datetime.now(timezone.utc)
+        procurement.approved_at = datetime.now(UTC)
         await self.db.flush()
         await self.db.refresh(procurement)
         return procurement
@@ -90,7 +90,7 @@ class ProcurementService:
                 detail=f"Cannot mark as ordered in '{procurement.status.value}' status.",
             )
         procurement.status = ProcurementStatus.ordered
-        procurement.ordered_at = datetime.now(timezone.utc)
+        procurement.ordered_at = datetime.now(UTC)
         await self.db.flush()
         await self.db.refresh(procurement)
         return procurement
@@ -106,7 +106,7 @@ class ProcurementService:
                 detail=f"Cannot mark as received in '{procurement.status.value}' status.",
             )
         procurement.status = ProcurementStatus.received
-        procurement.received_at = datetime.now(timezone.utc)
+        procurement.received_at = datetime.now(UTC)
         await self.db.flush()
         await self.db.refresh(procurement)
         return procurement
@@ -125,7 +125,7 @@ class ProcurementService:
                 detail=f"Cannot dispose request in '{procurement.status.value}' status.",
             )
         procurement.status = ProcurementStatus.disposed
-        procurement.disposal_at = datetime.now(timezone.utc)
+        procurement.disposal_at = datetime.now(UTC)
         procurement.disposal_cert = disposal_cert
         await self.db.flush()
         await self.db.refresh(procurement)

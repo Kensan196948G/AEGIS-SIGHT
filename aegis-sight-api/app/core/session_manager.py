@@ -10,7 +10,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 import redis.asyncio as aioredis
 
@@ -88,7 +88,7 @@ class SessionManager:
         """
         redis = await self._get_redis()
         session_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         session = SessionInfo(
             session_id=session_id,
@@ -172,7 +172,7 @@ class SessionManager:
         if data is None:
             return
         info = json.loads(data)
-        info["last_activity"] = datetime.now(timezone.utc).isoformat()
+        info["last_activity"] = datetime.now(UTC).isoformat()
         await redis.set(session_key, json.dumps(info), keepttl=True)
 
     # ------------------------------------------------------------------

@@ -6,7 +6,7 @@ missing-patch reports, and CVE vulnerability management.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
@@ -133,14 +133,14 @@ async def report_device_patch_status(
     if existing is not None:
         existing.status = data.status
         existing.installed_at = data.installed_at
-        existing.checked_at = data.checked_at or datetime.now(timezone.utc)
+        existing.checked_at = data.checked_at or datetime.now(UTC)
         await db.flush()
         await db.refresh(existing)
         return existing
 
     record = DevicePatchStatus(**data.model_dump())
     if record.checked_at is None:
-        record.checked_at = datetime.now(timezone.utc)
+        record.checked_at = datetime.now(UTC)
     db.add(record)
     await db.flush()
     await db.refresh(record)
@@ -461,7 +461,7 @@ async def resolve_vulnerability(
         raise BadRequestError("Vulnerability is already resolved")
 
     vuln.is_resolved = True
-    vuln.resolved_at = datetime.now(timezone.utc)
+    vuln.resolved_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(vuln)
     return vuln

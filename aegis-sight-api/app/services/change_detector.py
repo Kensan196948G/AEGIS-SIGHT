@@ -8,7 +8,7 @@ and creates ConfigChange records for every detected difference.
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from typing import Any
 
 from sqlalchemy import select
@@ -55,7 +55,7 @@ class ChangeDetector:
             snapshot_type=snapshot_type,
             data=new_data,
             checksum=checksum,
-            captured_at=datetime.now(timezone.utc),
+            captured_at=datetime.now(UTC),
         )
         self.db.add(new_snapshot)
         await self.db.flush()
@@ -72,7 +72,7 @@ class ChangeDetector:
         diffs = self._recursive_diff(old_data, new_data, prefix="")
 
         changes: list[ConfigChange] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for field_path, change_type, old_val, new_val in diffs:
             change = ConfigChange(

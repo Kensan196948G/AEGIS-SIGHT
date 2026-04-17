@@ -1,6 +1,6 @@
 """Software inventory model: tracks installed software detected on each device."""
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, UTC
 
 from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -30,7 +30,7 @@ class SoftwareInventory(Base):
     detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     device = relationship("Device", lazy="selectin")
