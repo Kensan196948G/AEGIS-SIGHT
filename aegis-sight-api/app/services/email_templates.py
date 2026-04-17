@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Callable, ClassVar
 
 
 @dataclass
@@ -351,7 +352,7 @@ Log in to the AEGIS-SIGHT dashboard for detailed information.""",
     # ------------------------------------------------------------------
     # Dispatcher
     # ------------------------------------------------------------------
-    TEMPLATES = {
+    TEMPLATES: ClassVar[dict[str, Callable[..., RenderedEmail]]] = {
         "license_violation": license_violation,
         "license_expiry": license_expiry,
         "security_alert": security_alert,
