@@ -1,7 +1,7 @@
 """Asset lifecycle tracking and disposal management endpoints."""
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
@@ -107,7 +107,7 @@ async def add_lifecycle_event(
         event_type=data.event_type,
         performed_by=current_user.id,
         detail=data.detail,
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
     db.add(event)
     await db.flush()
@@ -193,7 +193,7 @@ async def create_disposal_request(
         event_type=LifecycleEventType.disposal_requested,
         performed_by=current_user.id,
         detail={"reason": data.reason, "method": data.method.value},
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
     db.add(event)
     await db.flush()
@@ -241,7 +241,7 @@ async def approve_disposal(
         event_type=LifecycleEventType.disposal_approved,
         performed_by=current_user.id,
         detail={"disposal_request_id": str(disposal.id)},
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
     db.add(event)
     await db.flush()
@@ -320,7 +320,7 @@ async def complete_disposal(
             "disposal_request_id": str(disposal.id),
             "certificate_number": data.certificate_number,
         },
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
     db.add(event)
     await db.flush()

@@ -1,7 +1,7 @@
 """Print management API endpoints."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
@@ -284,7 +284,7 @@ async def print_stats(
     ]
 
     # Monthly trend (last 12 months)
-    twelve_months_ago = datetime.now(timezone.utc) - timedelta(days=365)
+    twelve_months_ago = datetime.now(UTC) - timedelta(days=365)
     monthly_result = await db.execute(
         select(
             func.to_char(PrintJob.printed_at, "YYYY-MM").label("month"),
@@ -433,7 +433,7 @@ async def evaluate_print_policies(
 
         # Check daily page limit
         if policy.max_pages_per_day is not None:
-            today_start = datetime.now(timezone.utc).replace(
+            today_start = datetime.now(UTC).replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
             daily_result = await db.execute(
@@ -457,7 +457,7 @@ async def evaluate_print_policies(
 
         # Check monthly page limit
         if policy.max_pages_per_month is not None:
-            month_start = datetime.now(timezone.utc).replace(
+            month_start = datetime.now(UTC).replace(
                 day=1, hour=0, minute=0, second=0, microsecond=0
             )
             monthly_result = await db.execute(

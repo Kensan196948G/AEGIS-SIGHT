@@ -10,7 +10,7 @@ excessive lock contention.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +40,7 @@ class RetentionService:
         Affected tables: logon_events, usb_events, file_events.
         Returns a summary with the number of deleted rows per table.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        cutoff = datetime.now(UTC) - timedelta(days=retention_days)
         summary: dict[str, int] = {}
 
         for model, ts_col in [
@@ -84,7 +84,7 @@ class RetentionService:
     # ------------------------------------------------------------------
     async def cleanup_old_snapshots(self, retention_days: int = 365) -> dict:
         """Delete hardware snapshots older than *retention_days* (default 1 year)."""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        cutoff = datetime.now(UTC) - timedelta(days=retention_days)
         total_deleted = 0
 
         while True:
@@ -129,7 +129,7 @@ class RetentionService:
         the *only* sanctioned deletion path and must itself be audited by
         the caller.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+        cutoff = datetime.now(UTC) - timedelta(days=older_than_days)
 
         # Check whether the archive table already exists
         check = await self.db.execute(

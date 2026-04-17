@@ -6,7 +6,7 @@ for telework monitoring and compliance.
 
 import enum
 import uuid
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timezone, UTC
 
 from sqlalchemy import (
     BigInteger,
@@ -52,7 +52,7 @@ class VPNConnection(Base):
     )
     connected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
@@ -83,6 +83,6 @@ class RemoteAccessPolicy(Base):
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )

@@ -22,7 +22,7 @@ import hmac
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from enum import Enum
 from typing import Any
 
@@ -144,7 +144,7 @@ class WebhookDispatcher:
         envelope: dict[str, Any] = {
             "id": str(uuid.uuid4()),
             "event_type": event_type_str,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "payload": payload,
         }
         envelope_bytes = json.dumps(envelope, default=str).encode("utf-8")

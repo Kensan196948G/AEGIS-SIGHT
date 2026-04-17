@@ -1,7 +1,7 @@
 """Remote work (VPN / telework) API endpoints."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -145,7 +145,7 @@ async def disconnect_vpn(
     if conn is None:
         raise NotFoundError("VPNConnection", str(connection_id))
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     conn.disconnected_at = now
     conn.is_active = False
     conn.duration_minutes = int((now - conn.connected_at).total_seconds() / 60)

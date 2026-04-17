@@ -1,7 +1,7 @@
 import csv
 import io
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import StreamingResponse
@@ -46,8 +46,8 @@ def _record_job(
             "total_rows": total_rows,
             "success_count": success_count,
             "error_count": error_count,
-            "created_at": datetime.now(timezone.utc),
-            "completed_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "completed_at": datetime.now(UTC),
             "created_by": user_email,
         }
     )

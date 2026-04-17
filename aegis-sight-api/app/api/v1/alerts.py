@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -182,7 +182,7 @@ async def acknowledge_alert(
 
     alert.is_acknowledged = True
     alert.acknowledged_by = current_user.id
-    alert.acknowledged_at = datetime.now(timezone.utc)
+    alert.acknowledged_at = datetime.now(UTC)
     await db.flush()
     await db.refresh(alert)
     return alert
@@ -211,7 +211,7 @@ async def resolve_alert(
     if alert.resolved_at is not None:
         raise BadRequestError("Alert is already resolved")
 
-    alert.resolved_at = datetime.now(timezone.utc)
+    alert.resolved_at = datetime.now(UTC)
     # Auto-acknowledge if not already
     if not alert.is_acknowledged:
         alert.is_acknowledged = True

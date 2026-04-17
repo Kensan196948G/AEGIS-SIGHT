@@ -1,7 +1,7 @@
 """Telemetry data ingestion endpoint for AEGIS-SIGHT agents."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -52,7 +52,7 @@ async def receive_telemetry(
             mac_address=payload.device_info.mac_address,
             domain=payload.device_info.domain,
             status=DeviceStatus.active,
-            last_seen=datetime.now(timezone.utc),
+            last_seen=datetime.now(UTC),
         )
         db.add(device)
         await db.flush()
@@ -64,7 +64,7 @@ async def receive_telemetry(
         device.mac_address = payload.device_info.mac_address or device.mac_address
         device.domain = payload.device_info.domain or device.domain
         device.status = DeviceStatus.active
-        device.last_seen = datetime.now(timezone.utc)
+        device.last_seen = datetime.now(UTC)
         await db.flush()
         logger.info("Updated existing device: %s", device.hostname)
 

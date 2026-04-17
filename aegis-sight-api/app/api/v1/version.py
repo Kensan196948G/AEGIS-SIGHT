@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from functools import lru_cache
 
 from fastapi import APIRouter
@@ -55,7 +55,7 @@ def _git_commit_hash() -> str:
 @lru_cache(maxsize=1)
 def _build_date() -> str:
     """Return an ISO-8601 UTC timestamp captured at first invocation."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 # ---------------------------------------------------------------------------
