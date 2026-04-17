@@ -1,7 +1,7 @@
 """User session and activity tracking API endpoints."""
 
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import extract, func, select

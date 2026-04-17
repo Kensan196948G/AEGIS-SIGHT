@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text

@@ -6,7 +6,7 @@ missing-patch reports, and CVE vulnerability management.
 """
 
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select

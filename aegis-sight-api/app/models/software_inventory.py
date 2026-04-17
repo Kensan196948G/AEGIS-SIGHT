@@ -1,6 +1,6 @@
 """Software inventory model: tracks installed software detected on each device."""
 
-from datetime import date, datetime, UTC
+from datetime import UTC, date, datetime
 
 from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID

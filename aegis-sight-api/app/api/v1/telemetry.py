@@ -1,7 +1,7 @@
 """Telemetry data ingestion endpoint for AEGIS-SIGHT agents."""
 
 import logging
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
