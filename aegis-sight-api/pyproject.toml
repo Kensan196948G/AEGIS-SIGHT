@@ -22,6 +22,8 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # FastAPI Depends() in function defaults is correct usage (false positive)
+    "RUF002", # ambiguous-unicode-character-docstring: Japanese text is intentional
+    "RUF003", # ambiguous-unicode-character-comment: Japanese text is intentional
 ]
 
 [tool.ruff.lint.isort]
