@@ -29,6 +29,11 @@ updates:
       - "Kensan196948G"
     commit-message:
       prefix: "deps(npm):"
+    ignore:
+      # eslint v10 breaks eslint-plugin-react (context.getFilename API removal).
+      # Block major bumps until upstream plugins support v10. See Issue #325.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     groups:
       # vitest ecosystem: must stay at same major version (peer dependency)
       vitest-ecosystem:
