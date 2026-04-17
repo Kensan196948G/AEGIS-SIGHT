@@ -54,7 +54,7 @@ _NIST_FUNCTIONS = [
 
 _ISSUES: list[ComplianceIssue] = [
     ComplianceIssue(id="CI-001", framework="ISO 27001", severity="high", title="A.12 運用セキュリティ: ログ監視の自動化不足", status="in_progress", due_date="2026-04-15"),
-    ComplianceIssue(id="CI-002", framework="J-SOX", severity="medium", title="アクセス権の定期レビュー未実施（Q1）", status="open", due_date="2026-04-30"),  # noqa: RUF001
+    ComplianceIssue(id="CI-002", framework="J-SOX", severity="medium", title="アクセス権の定期レビュー未実施（Q1）", status="open", due_date="2026-04-30"),
     ComplianceIssue(id="CI-003", framework="NIST CSF", severity="high", title="インシデント対応計画の更新遅延", status="in_progress", due_date="2026-04-10"),
     ComplianceIssue(id="CI-004", framework="ISO 27001", severity="critical", title="A.14 開発環境と本番環境の分離不十分", status="open", due_date="2026-04-05"),
     ComplianceIssue(id="CI-005", framework="J-SOX", severity="low", title="変更管理チケットの承認記録不備", status="open", due_date="2026-05-01"),

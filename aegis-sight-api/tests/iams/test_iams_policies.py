@@ -289,7 +289,7 @@ class TestPolicyComplianceSummary:
         assert response.status_code == 200
         data = response.json()
         for key, value in data.items():
-            if isinstance(value, (int, float)):
+            if isinstance(value, int | float):
                 assert value >= 0, f"Negative value for {key}"
 
 

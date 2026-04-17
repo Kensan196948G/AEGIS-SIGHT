@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import text
@@ -46,7 +46,7 @@ engine = create_async_engine(settings.DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 DEFAULT_PASSWORD = get_password_hash("Password123!")
-NOW = datetime.now(timezone.utc)
+NOW = datetime.now(UTC)
 TODAY = date.today()
 
 

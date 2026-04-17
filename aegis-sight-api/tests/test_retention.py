@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
@@ -96,8 +96,8 @@ class TestCleanupOldLogs:
     async def test_deletes_old_logon_events(
         self, db_session: AsyncSession, sample_device
     ):
-        old_date = datetime.now(timezone.utc) - timedelta(days=1100)
-        recent_date = datetime.now(timezone.utc) - timedelta(days=10)
+        old_date = datetime.now(UTC) - timedelta(days=1100)
+        recent_date = datetime.now(UTC) - timedelta(days=10)
 
         await _insert_logon_events(db_session, sample_device.id, 3, old_date)
         await _insert_logon_events(db_session, sample_device.id, 2, recent_date)
@@ -115,7 +115,7 @@ class TestCleanupOldLogs:
     async def test_deletes_old_usb_events(
         self, db_session: AsyncSession, sample_device
     ):
-        old_date = datetime.now(timezone.utc) - timedelta(days=1100)
+        old_date = datetime.now(UTC) - timedelta(days=1100)
         await _insert_usb_events(db_session, sample_device.id, 5, old_date)
 
         svc = RetentionService(db_session)
@@ -126,7 +126,7 @@ class TestCleanupOldLogs:
     async def test_deletes_old_file_events(
         self, db_session: AsyncSession, sample_device
     ):
-        old_date = datetime.now(timezone.utc) - timedelta(days=1100)
+        old_date = datetime.now(UTC) - timedelta(days=1100)
         await _insert_file_events(db_session, sample_device.id, 4, old_date)
 
         svc = RetentionService(db_session)
@@ -137,7 +137,7 @@ class TestCleanupOldLogs:
     async def test_no_deletion_when_all_recent(
         self, db_session: AsyncSession, sample_device
     ):
-        recent = datetime.now(timezone.utc) - timedelta(days=10)
+        recent = datetime.now(UTC) - timedelta(days=10)
         await _insert_logon_events(db_session, sample_device.id, 3, recent)
 
         svc = RetentionService(db_session)
@@ -153,8 +153,8 @@ class TestCleanupOldSnapshots:
     async def test_deletes_old_snapshots(
         self, db_session: AsyncSession, sample_device
     ):
-        old_date = datetime.now(timezone.utc) - timedelta(days=400)
-        recent_date = datetime.now(timezone.utc) - timedelta(days=30)
+        old_date = datetime.now(UTC) - timedelta(days=400)
+        recent_date = datetime.now(UTC) - timedelta(days=30)
 
         await _insert_hw_snapshots(db_session, sample_device.id, 3, old_date)
         await _insert_hw_snapshots(db_session, sample_device.id, 2, recent_date)
@@ -168,7 +168,7 @@ class TestCleanupOldSnapshots:
     async def test_no_deletion_when_all_recent(
         self, db_session: AsyncSession, sample_device
     ):
-        recent = datetime.now(timezone.utc) - timedelta(days=30)
+        recent = datetime.now(UTC) - timedelta(days=30)
         await _insert_hw_snapshots(db_session, sample_device.id, 5, recent)
 
         svc = RetentionService(db_session)

@@ -251,7 +251,7 @@ class TestPatchComplianceSummary:
         """compliance_rateが数値型であること"""
         response = await client.get("/api/v1/patches/compliance", headers=auth_headers)
         assert response.status_code == 200
-        assert isinstance(response.json()["compliance_rate"], (int, float))
+        assert isinstance(response.json()["compliance_rate"], int | float)
 
     @pytest.mark.asyncio
     async def test_compliance_counts_are_non_negative(

@@ -10,7 +10,7 @@ Usage in tests:
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import factory
@@ -64,7 +64,7 @@ class DeviceFactory(factory.Factory):
     )
     domain = "test.local"
     status = DeviceStatus.active
-    last_seen = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    last_seen = factory.LazyFunction(lambda: datetime.now(UTC))
 
 
 class LicenseFactory(factory.Factory):

@@ -1,7 +1,7 @@
 """Tests for the change tracking API endpoints."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -39,7 +39,7 @@ async def _create_snapshot(
         snapshot_type=snapshot_type,
         data=data or {"cpu": "i7", "memory_gb": 16},
         checksum=checksum,
-        captured_at=datetime.now(timezone.utc),
+        captured_at=datetime.now(UTC),
     )
     db.add(snap)
     await db.flush()
@@ -63,7 +63,7 @@ async def _create_change(
         field_path=field_path,
         old_value={"value": 16},
         new_value={"value": 32},
-        detected_at=datetime.now(timezone.utc),
+        detected_at=datetime.now(UTC),
     )
     db.add(change)
     await db.flush()

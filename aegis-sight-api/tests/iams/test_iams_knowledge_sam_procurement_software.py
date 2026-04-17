@@ -97,7 +97,7 @@ class TestKnowledgeBase:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, (dict, list))
+        assert isinstance(data, dict | list)
 
 
 # ===================================================================

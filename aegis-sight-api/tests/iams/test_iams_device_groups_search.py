@@ -222,7 +222,7 @@ class TestFullTextSearch:
         response = await client.get("/api/v1/search?q=test", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert "groups" in data or "results" in data or isinstance(data, (list, dict))
+        assert "groups" in data or "results" in data or isinstance(data, list | dict)
 
     @pytest.mark.asyncio
     async def test_search_empty_query_returns_400_or_422(

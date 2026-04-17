@@ -18,7 +18,7 @@ import asyncio
 import os
 import statistics
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -44,9 +44,6 @@ def _ensure_models():
     if _models_loaded:
         return
     # Import models so SQLAlchemy metadata is populated.
-    import app.models.device  # noqa: F401
-    import app.models.license  # noqa: F401
-    import app.models.log_event  # noqa: F401
 
     _models_loaded = True
 
@@ -137,7 +134,7 @@ async def bench_license_compliance(session: AsyncSession):
 
 async def bench_logon_events_date_range(session: AsyncSession):
     """Logon events filtered by date range (exercises BRIN index on timestamp)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     start = now - timedelta(days=7)
     result = await session.execute(
         text(
@@ -155,7 +152,7 @@ async def bench_logon_events_date_range(session: AsyncSession):
 
 async def bench_logon_events_no_index_hint(session: AsyncSession):
     """Logon events with sequential scan (for BRIN comparison)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     start = now - timedelta(days=7)
     # Force seq scan to measure baseline
     await session.execute(text("SET LOCAL enable_indexscan = off"))
@@ -178,7 +175,7 @@ async def bench_logon_events_no_index_hint(session: AsyncSession):
 
 async def bench_usb_events_search(session: AsyncSession):
     """USB events search (recent 30 days)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     start = now - timedelta(days=30)
     result = await session.execute(
         text(

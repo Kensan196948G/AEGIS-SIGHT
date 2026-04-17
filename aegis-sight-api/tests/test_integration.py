@@ -8,7 +8,7 @@ verifying that data flows correctly between subsystems.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -49,7 +49,7 @@ class TestTelemetryDashboardIntegration:
                 "pending_patches": 0,
             },
             "software_inventory": [],
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
         }
 
         # Send telemetry
@@ -58,7 +58,7 @@ class TestTelemetryDashboardIntegration:
         data = resp.json()
         assert data["status"] == "accepted"
         assert data["hostname"] == hostname
-        device_id = data["device_id"]
+        data["device_id"]
 
         # Verify device appears in asset list
         assets_resp = await client.get("/api/v1/assets", headers=auth_headers)
@@ -91,7 +91,7 @@ class TestTelemetryDashboardIntegration:
                 "bitlocker_on": False,
                 "pending_patches": 12,
             },
-            "collected_at": datetime.now(timezone.utc).isoformat(),
+            "collected_at": datetime.now(UTC).isoformat(),
         }
 
         resp = await client.post("/api/v1/telemetry", json=payload)
