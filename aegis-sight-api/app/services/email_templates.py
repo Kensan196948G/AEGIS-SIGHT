@@ -368,10 +368,9 @@ Log in to the AEGIS-SIGHT dashboard for detailed information.""",
 
         Raises KeyError if the template name is not recognized.
         """
-        func = cls.TEMPLATES.get(template_name)
-        if func is None:
+        if template_name not in cls.TEMPLATES:
             raise KeyError(
                 f"Unknown email template: '{template_name}'. "
                 f"Available: {', '.join(cls.TEMPLATES.keys())}"
             )
-        return func(variables)
+        return getattr(cls, template_name)(variables)
