@@ -10,12 +10,12 @@
     "loop_count": 6,
     "current_loop_phase": "Verify",
     "start_time": "2026-04-17T10:50:00+09:00",
-    "last_update": "2026-04-17T14:34:00+09:00",
-    "remaining_time_minutes": 110
+    "last_update": "2026-04-17T14:00:00+09:00",
+    "remaining_time_minutes": 90
   },
   "task": {
-    "current_issue": "PR #352 (GraphService 47tests) CI待ち / PR #354 (EmailTemplateService 53tests+render bugfix) CI待ち / Issue #325 ESLint upstream待ち",
-    "current_branch": "main",
+    "current_issue": "PR #349 (RUF002/003) CI待ち / PR #351 (ImportValidator test44件) CI待ち / Issue #325 ESLint upstream待ち",
+    "current_branch": "feat/test-import-validator-350",
     "current_worktree": "",
     "priority": "Low",
     "status": "STABLE"
@@ -36,7 +36,7 @@
     "stable_judgment": "achieved"
   },
   "decision": {
-    "next_action": "PR #352 CI pass→merge (Issue #347 close). PR #354 CI pass→merge (Issue #353 close). Issue #325 ESLint upstream待ち.",
+    "next_action": "PR #342/#344/#346 CI完了後 --admin merge. Issue #325 ESLint upstream待ち. 全Ruff errors解消予定.",
     "blocker": "",
     "risk_level": "low",
     "requires_human": false
