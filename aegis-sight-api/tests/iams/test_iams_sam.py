@@ -187,7 +187,7 @@ class TestLicenseVendorFilter:
             headers=auth_headers,
         )
         response = await client.get(
-            f"/api/v1/sam/licenses?vendor=Partial", headers=auth_headers
+            "/api/v1/sam/licenses?vendor=Partial", headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -206,7 +206,7 @@ class TestLicenseVendorFilter:
             headers=auth_headers,
         )
         response = await client.get(
-            f"/api/v1/sam/licenses?vendor=casetest", headers=auth_headers
+            "/api/v1/sam/licenses?vendor=casetest", headers=auth_headers
         )
         assert response.status_code == 200
 

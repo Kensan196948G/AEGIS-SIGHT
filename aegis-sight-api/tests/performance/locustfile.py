@@ -11,7 +11,7 @@ Or via ``make load-test``.
 
 import random
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from locust import HttpUser, between, tag, task
 
@@ -182,7 +182,7 @@ class AgentTelemetryUser(HttpUser):
             "security": {
                 "defender_on": random.random() > 0.05,
                 "bitlocker_on": random.random() > 0.1,
-                "pattern_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "pattern_date": datetime.now(UTC).strftime("%Y-%m-%d"),
                 "pending_patches": random.randint(0, 15),
             },
             "software": [

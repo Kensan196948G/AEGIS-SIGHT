@@ -207,7 +207,7 @@ class JestToPytestConverter:
             # .not. 対応
             is_negated = ".not." in line
             if is_negated:
-                line_before = line.replace(".not.", ".")
+                line.replace(".not.", ".")
 
             if matcher == "toBe" or matcher == "toEqual" or matcher == "toStrictEqual":
                 op = "!=" if is_negated else "=="

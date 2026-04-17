@@ -116,7 +116,7 @@ class TestRemoteWorkCRUD:
         response = await client.get("/api/v1/remote/policies", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, (dict, list))
+        assert isinstance(data, dict | list)
 
 
 # ===================================================================

@@ -6,7 +6,7 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class ConversionReport:
 
     def __init__(self) -> None:
         self.entries: list[FileConversionEntry] = []
-        self.started_at: datetime = datetime.now(timezone.utc)
+        self.started_at: datetime = datetime.now(UTC)
         self.finished_at: datetime | None = None
         self.coverage: CoverageEstimate = CoverageEstimate()
 
@@ -61,7 +61,7 @@ class ConversionReport:
 
     def finalize(self) -> None:
         """レポートを確定する."""
-        self.finished_at = datetime.now(timezone.utc)
+        self.finished_at = datetime.now(UTC)
 
     @property
     def success_count(self) -> int:

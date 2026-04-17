@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -39,7 +39,7 @@ async def _create_update(
         kb_number=kb_number,
         title=title,
         severity=severity,
-        release_date=datetime(2026, 3, 1, tzinfo=timezone.utc),
+        release_date=datetime(2026, 3, 1, tzinfo=UTC),
     )
     db.add(update)
     await db.flush()
@@ -59,7 +59,7 @@ async def _create_vulnerability(
         title="Windows Kernel Elevation of Privilege",
         severity=severity,
         cvss_score=cvss_score,
-        published_at=datetime(2024, 2, 13, tzinfo=timezone.utc),
+        published_at=datetime(2024, 2, 13, tzinfo=UTC),
     )
     db.add(vuln)
     await db.flush()

@@ -284,7 +284,7 @@ class TestSecurityAudit:
         assert response.status_code in (200, 403)
         if response.status_code == 200:
             data = response.json()
-            assert isinstance(data, (dict, list))
+            assert isinstance(data, dict | list)
 
 
 # ===================================================================

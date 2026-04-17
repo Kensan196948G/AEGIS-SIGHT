@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -55,7 +55,7 @@ async def _create_violation(
         violation_type="usb_mass_storage_connected",
         detail={"usb_vendor": "SanDisk"},
         is_resolved=is_resolved,
-        resolved_at=datetime.now(timezone.utc) if is_resolved else None,
+        resolved_at=datetime.now(UTC) if is_resolved else None,
     )
     db.add(violation)
     await db.flush()

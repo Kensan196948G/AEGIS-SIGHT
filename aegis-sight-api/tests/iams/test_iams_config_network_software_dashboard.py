@@ -84,7 +84,7 @@ class TestConfigManagement:
         response = await client.get("/api/v1/config", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, (dict, list))
+        assert isinstance(data, dict | list)
 
     @pytest.mark.asyncio
     async def test_update_config_requires_auth(self, client: AsyncClient):
@@ -300,7 +300,7 @@ class TestDashboardStats:
         response = await client.get("/api/v1/dashboard/alerts", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, (dict, list))
+        assert isinstance(data, dict | list)
 
     @pytest.mark.asyncio
     async def test_dashboard_accessible_after_auth(

@@ -57,7 +57,7 @@ async def test_etag_is_md5_of_body(client: AsyncClient):
     """ETag value should be the MD5 hex digest of the response body, quoted."""
     response = await client.get("/openapi.json")
     body = response.content
-    expected = f'"{hashlib.md5(body).hexdigest()}"'  # noqa: S324
+    expected = f'"{hashlib.md5(body).hexdigest()}"'
     assert response.headers["etag"] == expected
 
 
