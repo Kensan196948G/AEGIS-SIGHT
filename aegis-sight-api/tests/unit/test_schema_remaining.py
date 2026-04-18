@@ -30,15 +30,18 @@ from app.schemas.custom_view import (
     ShareToggleRequest,
 )
 from app.schemas.export import ExportDataType, ExportFormat, ExportParams
-from app.schemas.ip_management import IPAssignmentCreate, IPRangeCreate, IPRangeUtilization
+from app.schemas.ip_management import (
+    IPAssignmentCreate,
+    IPRangeCreate,
+    IPRangeUtilization,
+)
 from app.schemas.knowledge_base import (
     HelpfulResponse,
     KBArticleCreate,
     KBArticleUpdate,
     KBCategoryCreate,
 )
-from app.schemas.log_event import LogSummaryResponse, UsbEventResponse
-
+from app.schemas.log_event import LogSummaryResponse
 
 # ---------------------------------------------------------------------------
 # BatchJobStatus / BatchJobType enums

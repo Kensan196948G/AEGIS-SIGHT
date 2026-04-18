@@ -20,11 +20,9 @@ from app.schemas.change_tracking import (
     ChangeTypeSummary,
     ConfigSnapshotCreate,
     DiffEntry,
-    SnapshotDiffResponse,
     SnapshotTypeSummary,
     TimelineEntry,
 )
-
 
 # ---------------------------------------------------------------------------
 # BatchJobStatus / BatchJobType

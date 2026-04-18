@@ -197,7 +197,6 @@ class TestKeyPrefix:
     def test_different_args_different_keys(self) -> None:
         keys_seen = []
         mock_cache = _mock_cache(get_value=None)
-        orig_get = mock_cache.get
 
         async def _tracking_get(key):
             keys_seen.append(key)

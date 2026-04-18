@@ -162,7 +162,7 @@ class TestGetAllPages:
         svc = _make_service()
         _mock_token_on(svc)
         responses = [{"value": []}]
-        transport = _json_transport(responses)
+        _json_transport(responses)
 
         async def _run():
             svc._app.acquire_token_for_client.return_value = {"access_token": "tok"}

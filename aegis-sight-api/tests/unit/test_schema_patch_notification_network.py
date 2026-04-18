@@ -27,12 +27,10 @@ from app.schemas.notification_channel import (
 )
 from app.schemas.patch import (
     DevicePatchStatusCreate,
-    MissingPatchEntry,
     PatchComplianceSummary,
     VulnerabilityCreate,
     WindowsUpdateCreate,
 )
-
 
 # ---------------------------------------------------------------------------
 # WindowsUpdateCreate

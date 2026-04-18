@@ -8,7 +8,6 @@ from datetime import date, datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.models.scheduled_task import TaskStatus, TaskType
 from app.schemas.m365 import (
     M365LicenseListResponse,
     M365LicenseResponse,
@@ -20,7 +19,6 @@ from app.schemas.m365 import (
 from app.schemas.scheduled_task import (
     ScheduledTaskRunResponse,
     ScheduledTaskUpdate,
-    TaskHistoryEntry,
 )
 from app.schemas.security import (
     BitLockerSummary,
@@ -29,8 +27,10 @@ from app.schemas.security import (
     PatchSummary,
     SecurityOverview,
 )
-from app.schemas.software_inventory import SoftwareAggregation, SoftwareInventoryResponse
-
+from app.schemas.software_inventory import (
+    SoftwareAggregation,
+    SoftwareInventoryResponse,
+)
 
 # ---------------------------------------------------------------------------
 # SoftwareInventoryResponse

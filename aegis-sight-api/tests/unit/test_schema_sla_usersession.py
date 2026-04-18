@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from app.models.sla import MeasurementPeriod, SLAMetricType, ViolationSeverity
+from app.models.sla import MeasurementPeriod, SLAMetricType
 from app.models.user_session import ActivityType, SessionType
 from app.schemas.sla import (
     SLADashboard,
@@ -26,7 +26,6 @@ from app.schemas.user_session import (
     SessionEnd,
     UserBehaviorProfile,
 )
-
 
 # ---------------------------------------------------------------------------
 # SLADefinitionCreate
