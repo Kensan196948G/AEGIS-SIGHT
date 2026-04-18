@@ -13,7 +13,6 @@ from fastapi import BackgroundTasks
 from app.core.background import BackgroundTaskManager
 from app.models.audit_log import AuditAction
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 """Unit tests for app/services/graph_service.py — URL constants."""
 
-import pytest
 
 from app.services.graph_service import GRAPH_BASE_URL, GRAPH_BETA_URL
 

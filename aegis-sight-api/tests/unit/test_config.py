@@ -1,6 +1,5 @@
 """Unit tests for app/core/config.py — default value validation."""
 
-import pytest
 
 from app.core.config import Settings
 

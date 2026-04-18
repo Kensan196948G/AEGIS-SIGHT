@@ -11,7 +11,6 @@ import pytest
 
 from app.services.graph_service import GRAPH_BASE_URL, GRAPH_BETA_URL, GraphService
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

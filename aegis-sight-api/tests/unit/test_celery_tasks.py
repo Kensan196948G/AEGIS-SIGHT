@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.tasks import procurement_tasks, retention_tasks, sam_tasks
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

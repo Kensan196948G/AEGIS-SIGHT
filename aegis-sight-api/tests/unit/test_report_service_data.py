@@ -6,11 +6,10 @@ import asyncio
 import csv
 import io
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from app.services.report_service import ReportService
-
 
 # ---------------------------------------------------------------------------
 # Mock helpers
@@ -71,7 +70,7 @@ def _device(
     dev.status = MagicMock()
     dev.status.value = status_value
     dev.last_seen = last_seen
-    dev.created_at = created_at or datetime(2024, 1, 1, tzinfo=timezone.utc)
+    dev.created_at = created_at or datetime(2024, 1, 1, tzinfo=UTC)
     return dev
 
 
@@ -88,7 +87,7 @@ def _security_status(
     sec.bitlocker_on = bitlocker_on
     sec.pattern_date = pattern_date
     sec.pending_patches = pending_patches
-    sec.checked_at = checked_at or datetime(2024, 1, 15, tzinfo=timezone.utc)
+    sec.checked_at = checked_at or datetime(2024, 1, 15, tzinfo=UTC)
     return sec
 
 
@@ -220,7 +219,7 @@ class TestAssetReportDataRows:
         assert rows[0]["status"] == "inactive"
 
     def test_last_seen_formatted_when_set(self) -> None:
-        ts = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
         dev = _device(last_seen=ts)
         svc = ReportService(db=_make_scalars_db([dev]))
         result = asyncio.run(svc.generate_asset_report())
@@ -304,7 +303,7 @@ class TestSecurityReportDataRows:
         assert rows[0]["hostname"] == "CRITICAL-HOST"
 
     def test_checked_at_is_isoformat(self) -> None:
-        ts = datetime(2024, 3, 20, 8, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 3, 20, 8, 30, 0, tzinfo=UTC)
         sec = _security_status(checked_at=ts)
         dev = _device()
         svc = ReportService(db=_make_all_db([(sec, dev)]))

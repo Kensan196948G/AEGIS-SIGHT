@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import logging
 
-import pytest
-
 from app.core.logging_config import (
     JSONFormatter,
     StructuredLogger,

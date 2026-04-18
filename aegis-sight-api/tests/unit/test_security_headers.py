@@ -1,9 +1,7 @@
 """Unit tests for app/core/security_headers.py — pure config testing."""
 
-import pytest
 
 from app.core.security_headers import SecurityHeadersConfig, SecurityHeadersMiddleware
-
 
 # ---------------------------------------------------------------------------
 # SecurityHeadersConfig — default values

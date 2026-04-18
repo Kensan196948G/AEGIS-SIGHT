@@ -12,40 +12,21 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-# ---------------------------------------------------------------------------
-# Device schemas
-# ---------------------------------------------------------------------------
-from app.schemas.device import DeviceCreate, DeviceResponse, DeviceUpdate
+from app.models.alert import AlertCategory, AlertSeverity
+from app.models.audit_log import AuditAction
 from app.models.device import DeviceStatus
+from app.models.license import LicenseType
+from app.models.procurement import ProcurementCategory
 
 # ---------------------------------------------------------------------------
 # Alert schemas
 # ---------------------------------------------------------------------------
-from app.schemas.alert import AlertAcknowledge, AlertCreate, AlertResponse, AlertStats
-from app.models.alert import AlertCategory, AlertSeverity
+from app.schemas.alert import AlertCreate, AlertResponse, AlertStats
 
 # ---------------------------------------------------------------------------
-# User schemas
+# Audit log schemas
 # ---------------------------------------------------------------------------
-from app.schemas.user import Token, TokenData, UserCreate, UserSettings, UserSettingsUpdate, UserUpdate
-
-# ---------------------------------------------------------------------------
-# Procurement schemas
-# ---------------------------------------------------------------------------
-from app.schemas.procurement import ProcurementCreate, ProcurementResponse, ProcurementUpdate
-from app.models.procurement import ProcurementCategory, ProcurementStatus
-
-# ---------------------------------------------------------------------------
-# License schemas
-# ---------------------------------------------------------------------------
-from app.schemas.license import (
-    ComplianceCheckResponse,
-    ExpiringLicenseResponse,
-    LicenseCreate,
-    LicenseResponse,
-    LicenseUpdate,
-)
-from app.models.license import LicenseType
+from app.schemas.audit_log import AuditLogFilter, AuditLogResponse
 
 # ---------------------------------------------------------------------------
 # Department schemas
@@ -59,15 +40,47 @@ from app.schemas.department import (
 )
 
 # ---------------------------------------------------------------------------
-# Audit log schemas
+# Device schemas
 # ---------------------------------------------------------------------------
-from app.schemas.audit_log import AuditLogFilter, AuditLogResponse
-from app.models.audit_log import AuditAction
+from app.schemas.device import DeviceCreate, DeviceResponse, DeviceUpdate
+
+# ---------------------------------------------------------------------------
+# License schemas
+# ---------------------------------------------------------------------------
+from app.schemas.license import (
+    ComplianceCheckResponse,
+    LicenseCreate,
+    LicenseUpdate,
+)
+
+# ---------------------------------------------------------------------------
+# Procurement schemas
+# ---------------------------------------------------------------------------
+from app.schemas.procurement import (
+    ProcurementCreate,
+    ProcurementResponse,
+    ProcurementUpdate,
+)
 
 # ---------------------------------------------------------------------------
 # Software inventory schemas
 # ---------------------------------------------------------------------------
-from app.schemas.software_inventory import SoftwareAggregation, SoftwareInventoryResponse
+from app.schemas.software_inventory import (
+    SoftwareAggregation,
+    SoftwareInventoryResponse,
+)
+
+# ---------------------------------------------------------------------------
+# User schemas
+# ---------------------------------------------------------------------------
+from app.schemas.user import (
+    Token,
+    TokenData,
+    UserCreate,
+    UserSettings,
+    UserSettingsUpdate,
+    UserUpdate,
+)
 
 
 # ===========================================================================

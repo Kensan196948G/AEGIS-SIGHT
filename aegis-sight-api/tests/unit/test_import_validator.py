@@ -2,10 +2,7 @@
 
 import io
 
-import pytest
-
 from app.services.import_validator import ImportValidator, ValidationReport
-
 
 # ---------------------------------------------------------------------------
 # ValidationReport

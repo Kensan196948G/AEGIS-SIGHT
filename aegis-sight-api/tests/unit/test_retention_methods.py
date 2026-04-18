@@ -7,12 +7,9 @@ and get_retention_stats using an AsyncMock session — no real database.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, call, patch
-
-import pytest
+from unittest.mock import AsyncMock, MagicMock
 
 from app.services.retention_service import BATCH_SIZE, RetentionService
-
 
 # ---------------------------------------------------------------------------
 # Helpers

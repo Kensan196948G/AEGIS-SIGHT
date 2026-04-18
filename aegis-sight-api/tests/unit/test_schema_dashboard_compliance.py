@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -19,7 +19,6 @@ from app.schemas.compliance import (
     NISTResponse,
 )
 from app.schemas.dashboard import AlertItem, AlertListResponse, DashboardStats
-
 
 # ---------------------------------------------------------------------------
 # DashboardStats
@@ -76,7 +75,7 @@ class TestAlertItem:
             "severity": "high",
             "title": "Test Alert",
             "description": "Something happened",
-            "created_at": datetime(2026, 1, 1, tzinfo=timezone.utc),
+            "created_at": datetime(2026, 1, 1, tzinfo=UTC),
         }
         base.update(kwargs)
         return AlertItem(**base)
@@ -117,7 +116,7 @@ class TestAlertItem:
             title = "ORM Alert"
             description = "from orm"
             device_hostname = "HOST-A"
-            created_at = datetime(2026, 3, 1, tzinfo=timezone.utc)
+            created_at = datetime(2026, 3, 1, tzinfo=UTC)
 
         item = AlertItem.model_validate(FakeAlert())
         assert item.id == "orm-1"
@@ -136,7 +135,7 @@ class TestAlertListResponse:
         assert r.total == 0
 
     def test_accepts_alert_items(self) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         item = AlertItem(id="a1", severity="medium", title="T", description="D", created_at=now)
         r = AlertListResponse(alerts=[item], total=1)
         assert len(r.alerts) == 1

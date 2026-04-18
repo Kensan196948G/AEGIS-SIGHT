@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import pytest
-
 from app.services.cache_service import (
     TTL_DASHBOARD_STATS,
     TTL_DEVICE_LIST,
     TTL_LICENSE_LIST,
     _build_cache_key,
 )
-
 
 # ---------------------------------------------------------------------------
 # TTL constants

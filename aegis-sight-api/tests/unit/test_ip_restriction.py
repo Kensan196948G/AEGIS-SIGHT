@@ -1,6 +1,5 @@
 """Unit tests for app/core/ip_restriction.py — pure method testing."""
 
-import pytest
 
 from app.core.ip_restriction import IPRestrictionConfig, IPRestrictionMiddleware
 

@@ -5,10 +5,7 @@ from __future__ import annotations
 import hashlib
 from unittest.mock import MagicMock
 
-import pytest
-
 from app.core.etag import ETagMiddleware
-
 
 # ---------------------------------------------------------------------------
 # ETagMiddleware.__init__ — default configuration

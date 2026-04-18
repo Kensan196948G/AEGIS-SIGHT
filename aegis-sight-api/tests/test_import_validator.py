@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import io
 
-import pytest
-
 from app.services.import_validator import ImportValidator, ValidationReport
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -86,7 +83,7 @@ class TestReadCsv:
     def test_empty_csv_returns_error(self):
         f = _make_csv("")
         report = ValidationReport()
-        reader, header = ImportValidator._read_csv(f, report)
+        reader, _header = ImportValidator._read_csv(f, report)
         assert reader is None
         assert any("no header" in e.lower() for e in report.errors)
 
@@ -94,7 +91,7 @@ class TestReadCsv:
         # Inject raw invalid bytes (Latin-1 encoded text, not valid UTF-8)
         f = io.BytesIO(b"hostname\r\n\xff\xfe")
         report = ValidationReport()
-        reader, header = ImportValidator._read_csv(f, report)
+        reader, _header = ImportValidator._read_csv(f, report)
         assert reader is None
         assert any("utf-8" in e.lower() or "unicode" in e.lower() for e in report.errors)
 

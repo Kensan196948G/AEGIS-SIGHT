@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -12,15 +12,11 @@ from app.models.tag import TagCategory
 from app.schemas.search import SearchResponse, SearchResultGroup, SearchResultItem
 from app.schemas.system_config import (
     SystemConfigListResponse,
-    SystemConfigResponse,
     SystemConfigUpdate,
 )
 from app.schemas.tag import (
     TagAssignRequest,
-    TagAssignResponse,
     TagCreate,
-    TagEntityItem,
-    TagResponse,
 )
 from app.schemas.telemetry import (
     DeviceInfo,
@@ -30,7 +26,6 @@ from app.schemas.telemetry import (
     TelemetryPayload,
     TelemetryResponse,
 )
-
 
 # ---------------------------------------------------------------------------
 # TagCreate
@@ -277,7 +272,7 @@ class TestTelemetryPayload:
     def test_minimal_payload(self) -> None:
         p = TelemetryPayload(
             device_info=DeviceInfo(hostname="PC-001"),
-            collected_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            collected_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert p.hardware is None
         assert p.security is None
@@ -289,7 +284,7 @@ class TestTelemetryPayload:
             hardware=HardwareInfo(memory_gb=16.0),
             security=SecurityInfo(defender_on=True),
             software_inventory=[SoftwareItem(name="Office")],
-            collected_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            collected_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert p.hardware.memory_gb == 16.0
         assert len(p.software_inventory) == 1

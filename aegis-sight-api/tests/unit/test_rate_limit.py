@@ -1,6 +1,5 @@
 """Unit tests for app/core/rate_limit.py — constants and RateLimiter init."""
 
-import pytest
 
 from app.core.rate_limit import (
     RATE_AUTH,
@@ -12,7 +11,6 @@ from app.core.rate_limit import (
     default_rate_limit,
     telemetry_rate_limit,
 )
-
 
 # ---------------------------------------------------------------------------
 # Module-level constants
