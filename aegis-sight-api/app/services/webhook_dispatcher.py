@@ -51,7 +51,7 @@ class WebhookDeliveryResult:
         status_code: int | None = None,
         attempts: int = 0,
         error: str | None = None,
-    ):
+    ) -> None:
         self.url = url
         self.success = success
         self.status_code = status_code
@@ -86,7 +86,7 @@ class WebhookDispatcher:
     BASE_DELAY: float = 1.0  # seconds
     TIMEOUT: float = 30.0  # seconds
 
-    def __init__(self, secret: str = ""):
+    def __init__(self, secret: str = "") -> None:
         self._secret = secret
         # url -> set of event types
         self._registrations: dict[str, set[str]] = {}

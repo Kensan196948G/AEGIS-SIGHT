@@ -11,7 +11,7 @@ from app.schemas.procurement import ProcurementCreate
 
 
 class ProcurementService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
     async def _generate_request_number(self) -> str:
