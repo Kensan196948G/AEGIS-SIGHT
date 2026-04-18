@@ -1,14 +1,16 @@
 """Unit tests for security domain model Enum classes (extended) — no DB required."""
 
-import enum
 
 from app.models.alert import AlertCategory, AlertSeverity
-from app.models.asset_lifecycle import DisposalMethod, DisposalStatus, LifecycleEventType
+from app.models.asset_lifecycle import (
+    DisposalMethod,
+    DisposalStatus,
+    LifecycleEventType,
+)
 from app.models.change_tracking import ChangeType, SnapshotType
 from app.models.device import DeviceStatus
 from app.models.dlp import DLPAction, DLPActionTaken, DLPRuleType, DLPSeverity
 from app.models.ip_management import AssignmentStatus, AssignmentType
-
 
 # ---------------------------------------------------------------------------
 # AlertSeverity

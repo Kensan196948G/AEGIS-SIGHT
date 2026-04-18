@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +16,6 @@ from app.models.incident import (
 )
 from app.models.policy import PolicyType
 from app.schemas.incident import (
-    IncidentAssign,
     IncidentCreate,
     IncidentResolve,
     IncidentStats,
@@ -32,7 +30,6 @@ from app.schemas.policy import (
     PolicyEvaluateRequest,
     PolicyEvaluateResponse,
 )
-
 
 # ---------------------------------------------------------------------------
 # IncidentCreate

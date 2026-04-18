@@ -1,6 +1,6 @@
 """Unit tests for app/core/compression.py — setup_compression function."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 from fastapi import FastAPI
 from starlette.middleware.gzip import GZipMiddleware
@@ -22,7 +22,7 @@ class TestSetupCompressionDefaults:
     def test_adds_gzip_middleware(self) -> None:
         app = MagicMock(spec=FastAPI)
         setup_compression(app)
-        args, kwargs = app.add_middleware.call_args
+        args, _kwargs = app.add_middleware.call_args
         assert args[0] is GZipMiddleware
 
     def test_default_minimum_size_is_1000(self) -> None:

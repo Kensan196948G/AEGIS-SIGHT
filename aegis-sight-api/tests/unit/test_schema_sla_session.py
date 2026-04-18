@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from app.models.sla import MeasurementPeriod, SLAMetricType, ViolationSeverity
+from app.models.sla import MeasurementPeriod, SLAMetricType
 from app.models.user_session import ActivityType, SessionType
 from app.schemas.sla import (
     SLADashboard,
@@ -18,17 +18,14 @@ from app.schemas.sla import (
     SLADefinitionUpdate,
     SLAMeasurementCreate,
     SLAReportRow,
-    SLAViolationResponse,
 )
 from app.schemas.user_session import (
     ActivityCreate,
-    ActivityResponse,
     SessionAnalytics,
     SessionCreate,
     SessionEnd,
     UserBehaviorProfile,
 )
-
 
 # ---------------------------------------------------------------------------
 # SLADefinitionCreate
@@ -193,7 +190,7 @@ class TestSLAReportRow:
             is_met=False,
             period_start=date(2026, 1, 1),
             period_end=date(2026, 1, 31),
-            measured_at=datetime(2026, 2, 1, tzinfo=timezone.utc),
+            measured_at=datetime(2026, 2, 1, tzinfo=UTC),
         )
         assert row.sla_name == "Availability"
         assert row.is_met is False
@@ -238,7 +235,7 @@ class TestSessionEnd:
         assert s.ended_at is None
 
     def test_ended_at_can_be_set(self) -> None:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         s = SessionEnd(ended_at=now)
         assert s.ended_at == now
 

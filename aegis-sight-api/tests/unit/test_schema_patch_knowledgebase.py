@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -13,11 +13,9 @@ from app.models.knowledge_base import ArticleCategory, ArticleStatus
 from app.models.patch import PatchStatus, UpdateSeverity, VulnerabilitySeverity
 from app.schemas.knowledge_base import (
     HelpfulResponse,
-    KBArticleBrief,
     KBArticleCreate,
     KBArticleUpdate,
     KBCategoryCreate,
-    KBCategoryResponse,
 )
 from app.schemas.patch import (
     DevicePatchStatusCreate,
@@ -27,7 +25,6 @@ from app.schemas.patch import (
     WindowsUpdateCreate,
 )
 
-
 # ---------------------------------------------------------------------------
 # WindowsUpdateCreate
 # ---------------------------------------------------------------------------
@@ -35,7 +32,7 @@ from app.schemas.patch import (
 
 class TestWindowsUpdateCreate:
     def test_basic_construction(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         u = WindowsUpdateCreate(
             kb_number="KB5034763",
             title="Security Update",
@@ -46,7 +43,7 @@ class TestWindowsUpdateCreate:
         assert u.description is None
 
     def test_all_severities(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         for sev in UpdateSeverity:
             u = WindowsUpdateCreate(
                 kb_number="KB0000001",
@@ -57,20 +54,20 @@ class TestWindowsUpdateCreate:
             assert u.severity == sev
 
     def test_kb_number_max_50(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         WindowsUpdateCreate(
             kb_number="K" * 50, title="T", severity=UpdateSeverity.low, release_date=now
         )
 
     def test_kb_number_over_50_raises(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         with pytest.raises(ValidationError):
             WindowsUpdateCreate(
                 kb_number="K" * 51, title="T", severity=UpdateSeverity.low, release_date=now
             )
 
     def test_with_description(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         u = WindowsUpdateCreate(
             kb_number="KB123",
             title="T",
@@ -104,7 +101,7 @@ class TestDevicePatchStatusCreate:
             assert s.status == st
 
     def test_with_timestamps(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         s = DevicePatchStatusCreate(
             device_id=uuid.uuid4(),
             update_id=uuid.uuid4(),
@@ -161,7 +158,7 @@ class TestMissingPatchEntry:
             kb_number="KB5034763",
             title="Critical Patch",
             severity=UpdateSeverity.critical,
-            release_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            release_date=datetime(2026, 1, 1, tzinfo=UTC),
             missing_device_count=15,
         )
         assert entry.missing_device_count == 15
@@ -180,14 +177,14 @@ class TestVulnerabilityCreate:
             title="Remote Code Execution",
             severity=VulnerabilitySeverity.critical,
             cvss_score=Decimal("9.8"),
-            published_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            published_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert v.cve_id == "CVE-2024-21338"
         assert v.affected_software is None
         assert v.remediation is None
 
     def test_all_vuln_severities(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         for sev in VulnerabilitySeverity:
             v = VulnerabilityCreate(
                 cve_id="CVE-0000-00000",
@@ -199,7 +196,7 @@ class TestVulnerabilityCreate:
             assert v.severity == sev
 
     def test_cvss_score_boundary(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         VulnerabilityCreate(
             cve_id="CVE-X",
             title="T",
@@ -216,7 +213,7 @@ class TestVulnerabilityCreate:
         )
 
     def test_cvss_score_out_of_range_raises(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         with pytest.raises(ValidationError):
             VulnerabilityCreate(
                 cve_id="CVE-X",
@@ -227,7 +224,7 @@ class TestVulnerabilityCreate:
             )
 
     def test_negative_cvss_raises(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         with pytest.raises(ValidationError):
             VulnerabilityCreate(
                 cve_id="CVE-X",
@@ -238,7 +235,7 @@ class TestVulnerabilityCreate:
             )
 
     def test_with_affected_software(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         v = VulnerabilityCreate(
             cve_id="CVE-2024-001",
             title="RCE",

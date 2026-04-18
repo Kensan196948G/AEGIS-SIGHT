@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -22,7 +22,6 @@ from app.schemas.notification_channel import (
     NotificationRuleCreate,
     NotificationRuleUpdate,
 )
-
 
 # ---------------------------------------------------------------------------
 # ExportFormat / ExportDataType
@@ -68,8 +67,8 @@ class TestExportParams:
         assert p.format == ExportFormat.json
 
     def test_with_date_range(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
-        p = ExportParams(date_from=now, date_to=datetime(2026, 12, 31, tzinfo=timezone.utc))
+        now = datetime(2026, 1, 1, tzinfo=UTC)
+        p = ExportParams(date_from=now, date_to=datetime(2026, 12, 31, tzinfo=UTC))
         assert p.date_from == now
 
 
@@ -85,7 +84,7 @@ class TestExportHistoryItem:
             data_type=ExportDataType.devices,
             format=ExportFormat.csv,
             row_count=100,
-            exported_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            exported_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert item.exported_by is None
 
@@ -95,13 +94,13 @@ class TestExportHistoryItem:
             data_type=ExportDataType.licenses,
             format=ExportFormat.json,
             row_count=50,
-            exported_at=datetime(2026, 2, 1, tzinfo=timezone.utc),
+            exported_at=datetime(2026, 2, 1, tzinfo=UTC),
             exported_by="admin@example.com",
         )
         assert item.exported_by == "admin@example.com"
 
     def test_all_data_types(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         for dt in ExportDataType:
             item = ExportHistoryItem(
                 id="e", data_type=dt, format=ExportFormat.csv, row_count=0, exported_at=now

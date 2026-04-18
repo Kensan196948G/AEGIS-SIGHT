@@ -42,7 +42,7 @@ class WebhookEventType(str, Enum):
 class WebhookDeliveryResult:
     """Result of a single webhook delivery attempt."""
 
-    __slots__ = ("url", "success", "status_code", "attempts", "error")
+    __slots__ = ("attempts", "error", "status_code", "success", "url")
 
     def __init__(
         self,

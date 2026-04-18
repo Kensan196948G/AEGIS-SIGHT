@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from app.core.session_manager import (
-    SessionInfo,
-    SessionManager,
     _SESSION_PREFIX,
     _USER_SESSIONS_PREFIX,
+    SessionInfo,
+    SessionManager,
 )
-
 
 # ---------------------------------------------------------------------------
 # Redis key prefix constants

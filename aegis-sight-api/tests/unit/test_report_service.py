@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from app.services.report_service import ReportService
 

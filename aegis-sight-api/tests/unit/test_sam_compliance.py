@@ -9,10 +9,7 @@ import asyncio
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-
 from app.services.sam_service import SAMService
-
 
 # ---------------------------------------------------------------------------
 # Helpers

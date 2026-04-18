@@ -332,7 +332,7 @@ async def create_snapshot(
     detector = ChangeDetector(db)
     snapshot_type = SnapshotType(body.snapshot_type)
 
-    snapshot, changes = await detector.detect_changes(
+    snapshot, _changes = await detector.detect_changes(
         device_id=str(body.device_id),
         new_data=body.data,
         snapshot_type=snapshot_type,

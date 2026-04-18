@@ -10,7 +10,6 @@ from app.models.policy import PolicyType
 from app.models.scheduled_task import TaskStatus, TaskType
 from app.models.user import UserRole
 
-
 # ---------------------------------------------------------------------------
 # ArticleCategory
 # ---------------------------------------------------------------------------

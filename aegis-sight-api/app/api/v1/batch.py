@@ -131,7 +131,7 @@ async def import_devices_csv(
 
     job_id = _record_job(
         BatchJobType.import_devices,
-        BatchJobStatus.completed if not errors else BatchJobStatus.completed,
+        BatchJobStatus.failed if errors else BatchJobStatus.completed,
         total_rows=len(rows),
         success_count=success_count,
         error_count=len(errors),

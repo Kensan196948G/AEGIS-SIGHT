@@ -1,6 +1,5 @@
 """Unit tests for app/services/retention_service.py — BATCH_SIZE constant."""
 
-import pytest
 
 from app.services.retention_service import BATCH_SIZE
 
