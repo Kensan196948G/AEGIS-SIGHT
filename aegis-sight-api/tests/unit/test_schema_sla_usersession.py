@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from app.models.sla import MeasurementPeriod, SLAMetricType, ViolationSeverity
+from app.models.sla import MeasurementPeriod, SLAMetricType
 from app.models.user_session import ActivityType, SessionType
 from app.schemas.sla import (
     SLADashboard,
@@ -224,7 +224,7 @@ class TestSLAReportRow:
             is_met=True,
             period_start=date(2026, 1, 1),
             period_end=date(2026, 1, 31),
-            measured_at=datetime.now(timezone.utc),
+            measured_at=datetime.now(UTC),
         )
         assert r.is_met is True
         assert r.unit == "%"
@@ -277,7 +277,7 @@ class TestSessionEnd:
         assert s.ended_at is None
 
     def test_with_end_time(self) -> None:
-        ts = datetime.now(timezone.utc)
+        ts = datetime.now(UTC)
         s = SessionEnd(ended_at=ts)
         assert s.ended_at == ts
 

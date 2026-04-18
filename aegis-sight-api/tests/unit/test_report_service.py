@@ -95,7 +95,7 @@ class TestGenerateSamReportCSV:
     def test_sam_report_empty_db_has_only_header(self) -> None:
         svc = ReportService(db=self._make_db([]))
         result = asyncio.run(svc.generate_sam_report())
-        lines = [l for l in result.splitlines() if l]
+        lines = [ln for ln in result.splitlines() if ln]
         assert len(lines) == 1
 
     def test_sam_report_header_column_count(self) -> None:
@@ -150,7 +150,7 @@ class TestGenerateAssetReportCSV:
     def test_asset_report_empty_db_has_only_header(self) -> None:
         svc = ReportService(db=self._make_db([]))
         result = asyncio.run(svc.generate_asset_report())
-        lines = [l for l in result.splitlines() if l]
+        lines = [ln for ln in result.splitlines() if ln]
         assert len(lines) == 1
 
     def test_asset_report_header_column_count(self) -> None:
@@ -210,7 +210,7 @@ class TestGenerateSecurityReportCSV:
     def test_security_report_empty_db_has_only_header(self) -> None:
         svc = ReportService(db=self._make_db([]))
         result = asyncio.run(svc.generate_security_report())
-        lines = [l for l in result.splitlines() if l]
+        lines = [ln for ln in result.splitlines() if ln]
         assert len(lines) == 1
 
     def test_security_report_header_column_count(self) -> None:

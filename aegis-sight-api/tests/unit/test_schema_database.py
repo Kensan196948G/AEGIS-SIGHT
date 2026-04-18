@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 from pydantic import ValidationError
@@ -32,7 +32,7 @@ class TestTableStats:
         assert s.oldest_record is None
 
     def test_with_oldest_record(self) -> None:
-        ts = datetime.now(timezone.utc)
+        ts = datetime.now(UTC)
         s = TableStats(table="audit_logs", row_count=500000, size="200 MB", oldest_record=ts)
         assert s.oldest_record == ts
 

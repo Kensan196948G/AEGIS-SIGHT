@@ -22,7 +22,7 @@ class PaginationParams:
         self.limit = limit
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse(BaseModel, Generic[T]):  # noqa: UP046
     """Generic paginated response wrapper."""
 
     items: list[T]
