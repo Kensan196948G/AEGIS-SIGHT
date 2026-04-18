@@ -188,7 +188,7 @@ class TestSendEmailSmtpFailure:
 
     async def test_returns_false_on_login_exception(self) -> None:
         smtp_cm, server = _make_smtp_mock()
-        server.login.side_effect = smtplib_auth_error = Exception("Auth failed")
+        server.login.side_effect = Exception("Auth failed")
         with patch("app.services.notification_service.settings") as mock_settings:
             mock_settings.SMTP_HOST = "smtp.example.com"
             mock_settings.SMTP_PORT = 587

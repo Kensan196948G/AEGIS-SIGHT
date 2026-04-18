@@ -11,12 +11,12 @@ from pydantic import ValidationError
 from app.models.print_management import PrintJobStatus
 from app.models.remote_work import VPNProtocol
 from app.schemas.print_management import (
+    PrinterCreate,
     PrintEvaluateRequest,
     PrintEvaluateResponse,
     PrintJobCreate,
     PrintPolicyCreate,
     PrintPolicyViolation,
-    PrinterCreate,
 )
 from app.schemas.remote_work import (
     RemoteAccessPolicyCreate,
@@ -24,7 +24,6 @@ from app.schemas.remote_work import (
     VPNConnectionCreate,
     VPNDisconnectRequest,
 )
-
 
 # ---------------------------------------------------------------------------
 # PrinterCreate

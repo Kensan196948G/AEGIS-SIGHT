@@ -1,7 +1,12 @@
 """Unit tests for WebhookDispatcher — register/sign/to_dict pure logic, no I/O."""
 
+import asyncio
 import hashlib
 import hmac
+import json
+from unittest.mock import patch
+
+import httpx
 
 from app.services.webhook_dispatcher import (
     WebhookDeliveryResult,
@@ -210,11 +215,6 @@ class TestSignPayload:
 # ---------------------------------------------------------------------------
 # dispatch_event — httpx.MockTransport integration
 # ---------------------------------------------------------------------------
-import asyncio
-import json
-from unittest.mock import patch
-
-import httpx
 
 
 def _make_transport(status_code: int) -> httpx.MockTransport:
@@ -360,7 +360,7 @@ class TestDispatchEvent:
     def test_dispatch_event_matches_string_event_type(self) -> None:
         d = WebhookDispatcher(secret="s")
         d.register("https://example.com/hook", ["device.created"])
-        transport = _make_transport(200)
+        _transport = _make_transport(200)
 
         with patch("httpx.AsyncClient") as _:
             pass  # just ensure no error with string event type registration
