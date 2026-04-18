@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # _send_procurement_notifications
 # ---------------------------------------------------------------------------
