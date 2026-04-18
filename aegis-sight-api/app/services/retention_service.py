@@ -28,7 +28,7 @@ BATCH_SIZE = 1000
 class RetentionService:
     """Implements data retention policies with batch processing."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
     # ------------------------------------------------------------------

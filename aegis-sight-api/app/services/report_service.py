@@ -20,7 +20,7 @@ from app.models.security_status import SecurityStatus
 
 
 class ReportService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
     # ------------------------------------------------------------------

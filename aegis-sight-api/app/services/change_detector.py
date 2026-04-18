@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class ChangeDetector:
     """Detects configuration changes between snapshots."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
     # ------------------------------------------------------------------
