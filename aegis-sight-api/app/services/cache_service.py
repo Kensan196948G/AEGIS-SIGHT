@@ -164,13 +164,19 @@ def cached(ttl: int = 300, key_prefix: str = "") -> Callable:
             cache_key = _build_cache_key(prefix, args, kwargs)
 
             # Try cache first
-            hit = await _cache.get(cache_key)
-            if hit is not None:
-                return hit
+            try:
+                hit = await _cache.get(cache_key)
+                if hit is not None:
+                    return hit
+            except Exception:
+                logger.warning("cache get failed for key=%s", cache_key, exc_info=True)
 
             # Execute and cache
             result = await func(*args, **kwargs)
-            await _cache.set(cache_key, result, ttl=ttl)
+            try:
+                await _cache.set(cache_key, result, ttl=ttl)
+            except Exception:
+                logger.warning("cache set failed for key=%s", cache_key, exc_info=True)
             return result
 
         # Expose helper to invalidate this function's cache
