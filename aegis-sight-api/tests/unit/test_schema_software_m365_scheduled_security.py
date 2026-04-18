@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, UTC
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -27,8 +27,10 @@ from app.schemas.security import (
     PatchSummary,
     SecurityOverview,
 )
-from app.schemas.software_inventory import SoftwareAggregation, SoftwareInventoryResponse
-
+from app.schemas.software_inventory import (
+    SoftwareAggregation,
+    SoftwareInventoryResponse,
+)
 
 # ---------------------------------------------------------------------------
 # SoftwareInventoryResponse

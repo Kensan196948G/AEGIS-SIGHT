@@ -15,27 +15,27 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class DLPRuleType(str, enum.Enum):
+class DLPRuleType(enum.StrEnum):
     file_extension = "file_extension"
     path_pattern = "path_pattern"
     content_keyword = "content_keyword"
     size_limit = "size_limit"
 
 
-class DLPAction(str, enum.Enum):
+class DLPAction(enum.StrEnum):
     alert = "alert"
     block = "block"
     log = "log"
 
 
-class DLPSeverity(str, enum.Enum):
+class DLPSeverity(enum.StrEnum):
     critical = "critical"
     high = "high"
     medium = "medium"
     low = "low"
 
 
-class DLPActionTaken(str, enum.Enum):
+class DLPActionTaken(enum.StrEnum):
     alerted = "alerted"
     blocked = "blocked"
     logged = "logged"

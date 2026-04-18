@@ -13,7 +13,6 @@ from app.schemas.custom_view import (
 )
 from app.schemas.log_event import LogSummaryResponse
 
-
 # ---------------------------------------------------------------------------
 # CustomViewCreate
 # ---------------------------------------------------------------------------

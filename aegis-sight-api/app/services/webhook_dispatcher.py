@@ -23,7 +23,7 @@ import json
 import logging
 import uuid
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import httpx
@@ -31,7 +31,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-class WebhookEventType(str, Enum):
+class WebhookEventType(StrEnum):
     device_created = "device.created"
     device_updated = "device.updated"
     alert_created = "alert.created"

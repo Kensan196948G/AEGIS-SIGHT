@@ -5,14 +5,14 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class BatchJobStatus(str, enum.Enum):
+class BatchJobStatus(enum.StrEnum):
     pending = "pending"
     processing = "processing"
     completed = "completed"
     failed = "failed"
 
 
-class BatchJobType(str, enum.Enum):
+class BatchJobType(enum.StrEnum):
     import_devices = "import_devices"
     import_licenses = "import_licenses"
     export_devices = "export_devices"

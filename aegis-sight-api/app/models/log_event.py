@@ -10,12 +10,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class UsbAction(str, enum.Enum):
+class UsbAction(enum.StrEnum):
     connected = "connected"
     disconnected = "disconnected"
 
 
-class FileAction(str, enum.Enum):
+class FileAction(enum.StrEnum):
     create = "create"
     modify = "modify"
     delete = "delete"

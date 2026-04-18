@@ -10,14 +10,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class ProcurementCategory(str, enum.Enum):
+class ProcurementCategory(enum.StrEnum):
     hardware = "hardware"
     software = "software"
     service = "service"
     consumable = "consumable"
 
 
-class ProcurementStatus(str, enum.Enum):
+class ProcurementStatus(enum.StrEnum):
     draft = "draft"
     submitted = "submitted"
     approved = "approved"

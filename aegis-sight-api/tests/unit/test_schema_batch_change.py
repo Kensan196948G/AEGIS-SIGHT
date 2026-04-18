@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -23,7 +23,6 @@ from app.schemas.change_tracking import (
     SnapshotTypeSummary,
     TimelineEntry,
 )
-
 
 # ---------------------------------------------------------------------------
 # BatchJobStatus / BatchJobType

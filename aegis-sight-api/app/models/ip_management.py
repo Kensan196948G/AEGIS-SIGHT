@@ -9,13 +9,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class AssignmentType(str, enum.Enum):
+class AssignmentType(enum.StrEnum):
     static = "static"
     dhcp = "dhcp"
     reserved = "reserved"
 
 
-class AssignmentStatus(str, enum.Enum):
+class AssignmentStatus(enum.StrEnum):
     active = "active"
     inactive = "inactive"
     reserved = "reserved"

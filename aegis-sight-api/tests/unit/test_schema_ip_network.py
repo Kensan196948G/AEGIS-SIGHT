@@ -19,11 +19,12 @@ from app.schemas.ip_management import (
 )
 from app.schemas.network_device import (
     NetworkDeviceLinkRequest,
-    NetworkScanEntry as NetworkDeviceScanEntry,
     NetworkScanRequest,
     NetworkScanResponse,
 )
-
+from app.schemas.network_device import (
+    NetworkScanEntry as NetworkDeviceScanEntry,
+)
 
 # ---------------------------------------------------------------------------
 # IPRangeCreate

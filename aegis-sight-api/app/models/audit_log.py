@@ -21,7 +21,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class AuditAction(str, enum.Enum):
+class AuditAction(enum.StrEnum):
     create = "create"
     update = "update"
     delete = "delete"

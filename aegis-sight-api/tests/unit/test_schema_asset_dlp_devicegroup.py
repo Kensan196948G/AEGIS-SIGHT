@@ -13,8 +13,8 @@ from app.models.dlp import DLPAction, DLPRuleType, DLPSeverity
 from app.schemas.asset_lifecycle import (
     DisposalCompletePayload,
     DisposalRequestCreate,
-    LifecycleSummary,
     LifecycleEventCreate,
+    LifecycleSummary,
 )
 from app.schemas.device_group import (
     DeviceGroupCreate,
@@ -28,7 +28,6 @@ from app.schemas.dlp import (
     DLPRuleCreate,
     DLPRuleUpdate,
 )
-
 
 # ---------------------------------------------------------------------------
 # LifecycleEventCreate

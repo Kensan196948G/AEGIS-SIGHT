@@ -13,20 +13,20 @@ from app.core.database import Base
 # ---------------------------------------------------------------------------
 # SLA enums
 # ---------------------------------------------------------------------------
-class SLAMetricType(str, enum.Enum):
+class SLAMetricType(enum.StrEnum):
     availability = "availability"
     response_time = "response_time"
     resolution_time = "resolution_time"
     patch_compliance = "patch_compliance"
 
 
-class MeasurementPeriod(str, enum.Enum):
+class MeasurementPeriod(enum.StrEnum):
     daily = "daily"
     weekly = "weekly"
     monthly = "monthly"
 
 
-class ViolationSeverity(str, enum.Enum):
+class ViolationSeverity(enum.StrEnum):
     warning = "warning"
     breach = "breach"
 

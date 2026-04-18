@@ -24,7 +24,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class VPNProtocol(str, enum.Enum):
+class VPNProtocol(enum.StrEnum):
     ipsec = "ipsec"
     ssl = "ssl"
     wireguard = "wireguard"

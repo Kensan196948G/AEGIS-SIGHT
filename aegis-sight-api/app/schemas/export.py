@@ -1,17 +1,17 @@
 """Schemas for data export endpoints."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class ExportFormat(str, Enum):
+class ExportFormat(StrEnum):
     csv = "csv"
     json = "json"
 
 
-class ExportDataType(str, Enum):
+class ExportDataType(StrEnum):
     devices = "devices"
     licenses = "licenses"
     alerts = "alerts"

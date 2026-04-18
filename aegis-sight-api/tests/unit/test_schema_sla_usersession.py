@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, UTC
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -26,7 +26,6 @@ from app.schemas.user_session import (
     SessionEnd,
     UserBehaviorProfile,
 )
-
 
 # ---------------------------------------------------------------------------
 # SLADefinitionCreate

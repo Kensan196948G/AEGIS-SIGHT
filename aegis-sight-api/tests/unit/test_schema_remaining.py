@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -30,7 +30,11 @@ from app.schemas.custom_view import (
     ShareToggleRequest,
 )
 from app.schemas.export import ExportDataType, ExportFormat, ExportParams
-from app.schemas.ip_management import IPAssignmentCreate, IPRangeCreate, IPRangeUtilization
+from app.schemas.ip_management import (
+    IPAssignmentCreate,
+    IPRangeCreate,
+    IPRangeUtilization,
+)
 from app.schemas.knowledge_base import (
     HelpfulResponse,
     KBArticleCreate,
@@ -38,7 +42,6 @@ from app.schemas.knowledge_base import (
     KBCategoryCreate,
 )
 from app.schemas.log_event import LogSummaryResponse
-
 
 # ---------------------------------------------------------------------------
 # BatchJobStatus / BatchJobType enums

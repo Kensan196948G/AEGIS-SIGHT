@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class LifecycleEventType(str, enum.Enum):
+class LifecycleEventType(enum.StrEnum):
     procured = "procured"
     deployed = "deployed"
     reassigned = "reassigned"
@@ -19,14 +19,14 @@ class LifecycleEventType(str, enum.Enum):
     disposed = "disposed"
 
 
-class DisposalMethod(str, enum.Enum):
+class DisposalMethod(enum.StrEnum):
     recycle = "recycle"
     destroy = "destroy"
     donate = "donate"
     return_to_vendor = "return_to_vendor"
 
 
-class DisposalStatus(str, enum.Enum):
+class DisposalStatus(enum.StrEnum):
     pending = "pending"
     approved = "approved"
     rejected = "rejected"
