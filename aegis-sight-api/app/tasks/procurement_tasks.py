@@ -80,6 +80,37 @@ async def _collect_status_summary() -> dict:
     return {"status_summary": status_counts}
 
 
+async def _send_procurement_notifications(data: dict) -> None:
+    """Send email and/or webhook notifications for pending procurement approvals."""
+    from app.services.notification_service import NotificationService
+
+    total = data["total_pending"]
+    by_dept = data.get("awaiting_approval_by_department", {})
+
+    dept_lines = "\n".join(f"  {dept}: {cnt}件" for dept, cnt in by_dept.items()) or "  （データなし）"
+    body = (
+        f"【調達承認待ち通知】\n\n"
+        f"承認待ち件数: {total} 件\n\n"
+        f"部署別内訳:\n{dept_lines}\n\n"
+        f"管理画面にログインして対応をお願いします。"
+    )
+
+    email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None)
+    if email:
+        await NotificationService.send_email(email, f"調達承認待ち通知: {total}件", body)
+
+    webhook_url = getattr(settings, "ALERT_WEBHOOK_URL", None)
+    if webhook_url:
+        await NotificationService.send_webhook(
+            webhook_url,
+            {
+                "type": "procurement_pending",
+                "total_pending": total,
+                "awaiting_approval_by_department": by_dept,
+            },
+        )
+
+
 @celery_app.task(
     name="app.tasks.procurement_tasks.notify_pending_approvals",
     bind=True,
@@ -91,19 +122,21 @@ def notify_pending_approvals(self) -> dict:
     Notify stakeholders about pending procurement approvals.
     Runs on weekdays at 09:00 JST.
 
-    In production, this would send emails or Slack/Teams notifications.
-    Currently collects and returns the summary data.
+    Sends email (ADMIN_NOTIFICATION_EMAIL) and/or webhook (ALERT_WEBHOOK_URL)
+    when there are pending requests.  Both channels are optional — missing
+    config is silently skipped so the task never fails due to notification issues.
     """
     import asyncio
 
     logger.info("Starting procurement pending approval notification")
     try:
         result = asyncio.run(_collect_pending_approvals())
-        logger.info(
-            "Procurement notification: %d total pending requests",
-            result["total_pending"],
-        )
-        # TODO: Integrate with email/Slack/Teams notification service
+        total = result["total_pending"]
+        logger.info("Procurement notification: %d total pending requests", total)
+
+        if total > 0:
+            asyncio.run(_send_procurement_notifications(result))
+
         return result
     except Exception as exc:
         logger.error("Procurement notification failed: %s", exc)
