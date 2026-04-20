@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class PrintJobStatus(str, enum.Enum):
+class PrintJobStatus(enum.StrEnum):
     completed = "completed"
     failed = "failed"
     cancelled = "cancelled"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -12,7 +11,6 @@ from app.models.ip_management import AssignmentStatus, AssignmentType
 from app.models.network_device import NetworkDeviceType
 from app.schemas.ip_management import (
     IPAssignmentCreate,
-    IPConflict,
     IPRangeCreate,
     IPRangeUtilization,
     TopologyEdge,
@@ -21,11 +19,12 @@ from app.schemas.ip_management import (
 )
 from app.schemas.network_device import (
     NetworkDeviceLinkRequest,
-    NetworkScanEntry as NetworkDeviceScanEntry,
     NetworkScanRequest,
     NetworkScanResponse,
 )
-
+from app.schemas.network_device import (
+    NetworkScanEntry as NetworkDeviceScanEntry,
+)
 
 # ---------------------------------------------------------------------------
 # IPRangeCreate

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class LicenseType(str, enum.Enum):
+class LicenseType(enum.StrEnum):
     perpetual = "perpetual"
     subscription = "subscription"
     oem = "oem"

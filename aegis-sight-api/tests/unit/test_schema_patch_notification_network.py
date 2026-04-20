@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -27,12 +27,10 @@ from app.schemas.notification_channel import (
 )
 from app.schemas.patch import (
     DevicePatchStatusCreate,
-    MissingPatchEntry,
     PatchComplianceSummary,
     VulnerabilityCreate,
     WindowsUpdateCreate,
 )
-
 
 # ---------------------------------------------------------------------------
 # WindowsUpdateCreate
@@ -45,7 +43,7 @@ class TestWindowsUpdateCreate:
             kb_number="KB5034763",
             title="Security Update",
             severity=UpdateSeverity.critical,
-            release_date=datetime.now(timezone.utc),
+            release_date=datetime.now(UTC),
         )
         assert w.kb_number == "KB5034763"
         assert w.description is None
@@ -56,7 +54,7 @@ class TestWindowsUpdateCreate:
                 kb_number="KB0000001",
                 title="T",
                 severity=sev,
-                release_date=datetime.now(timezone.utc),
+                release_date=datetime.now(UTC),
             )
             assert w.severity == sev
 
@@ -65,7 +63,7 @@ class TestWindowsUpdateCreate:
             kb_number="K" * 50,
             title="T",
             severity=UpdateSeverity.low,
-            release_date=datetime.now(timezone.utc),
+            release_date=datetime.now(UTC),
         )
 
     def test_kb_number_over_50_raises(self) -> None:
@@ -74,7 +72,7 @@ class TestWindowsUpdateCreate:
                 kb_number="K" * 51,
                 title="T",
                 severity=UpdateSeverity.low,
-                release_date=datetime.now(timezone.utc),
+                release_date=datetime.now(UTC),
             )
 
     def test_title_max_500(self) -> None:
@@ -82,7 +80,7 @@ class TestWindowsUpdateCreate:
             kb_number="KB1",
             title="T" * 500,
             severity=UpdateSeverity.important,
-            release_date=datetime.now(timezone.utc),
+            release_date=datetime.now(UTC),
         )
 
     def test_title_over_500_raises(self) -> None:
@@ -91,7 +89,7 @@ class TestWindowsUpdateCreate:
                 kb_number="KB1",
                 title="T" * 501,
                 severity=UpdateSeverity.moderate,
-                release_date=datetime.now(timezone.utc),
+                release_date=datetime.now(UTC),
             )
 
     def test_with_description(self) -> None:
@@ -99,7 +97,7 @@ class TestWindowsUpdateCreate:
             kb_number="KB1234567",
             title="Patch",
             severity=UpdateSeverity.important,
-            release_date=datetime.now(timezone.utc),
+            release_date=datetime.now(UTC),
             description="Fixes a remote code execution vulnerability.",
         )
         assert "remote code execution" in w.description
@@ -130,7 +128,7 @@ class TestDevicePatchStatusCreate:
             assert p.status == st
 
     def test_with_installed_at(self) -> None:
-        ts = datetime.now(timezone.utc)
+        ts = datetime.now(UTC)
         p = DevicePatchStatusCreate(
             device_id=uuid.uuid4(),
             update_id=uuid.uuid4(),
@@ -177,7 +175,7 @@ class TestVulnerabilityCreate:
             title="Remote Code Execution",
             severity=VulnerabilitySeverity.critical,
             cvss_score=Decimal("9.8"),
-            published_at=datetime.now(timezone.utc),
+            published_at=datetime.now(UTC),
         )
         assert v.cve_id == "CVE-2024-21338"
         assert v.affected_software is None
@@ -189,7 +187,7 @@ class TestVulnerabilityCreate:
                 title="T",
                 severity=sev,
                 cvss_score=Decimal("5.0"),
-                published_at=datetime.now(timezone.utc),
+                published_at=datetime.now(UTC),
             )
             assert v.severity == sev
 
@@ -199,7 +197,7 @@ class TestVulnerabilityCreate:
             title="T",
             severity=VulnerabilitySeverity.low,
             cvss_score=Decimal("0.0"),
-            published_at=datetime.now(timezone.utc),
+            published_at=datetime.now(UTC),
         )
         assert v.cvss_score == Decimal("0.0")
 
@@ -209,7 +207,7 @@ class TestVulnerabilityCreate:
             title="T",
             severity=VulnerabilitySeverity.critical,
             cvss_score=Decimal("10.0"),
-            published_at=datetime.now(timezone.utc),
+            published_at=datetime.now(UTC),
         )
         assert v.cvss_score == Decimal("10.0")
 
@@ -220,7 +218,7 @@ class TestVulnerabilityCreate:
                 title="T",
                 severity=VulnerabilitySeverity.critical,
                 cvss_score=Decimal("10.1"),
-                published_at=datetime.now(timezone.utc),
+                published_at=datetime.now(UTC),
             )
 
     def test_cvss_score_negative_raises(self) -> None:
@@ -230,7 +228,7 @@ class TestVulnerabilityCreate:
                 title="T",
                 severity=VulnerabilitySeverity.low,
                 cvss_score=Decimal("-0.1"),
-                published_at=datetime.now(timezone.utc),
+                published_at=datetime.now(UTC),
             )
 
     def test_cve_id_max_50(self) -> None:
@@ -239,7 +237,7 @@ class TestVulnerabilityCreate:
             title="T",
             severity=VulnerabilitySeverity.high,
             cvss_score=Decimal("7.5"),
-            published_at=datetime.now(timezone.utc),
+            published_at=datetime.now(UTC),
         )
 
     def test_cve_id_over_50_raises(self) -> None:
@@ -249,7 +247,7 @@ class TestVulnerabilityCreate:
                 title="T",
                 severity=VulnerabilitySeverity.high,
                 cvss_score=Decimal("7.5"),
-                published_at=datetime.now(timezone.utc),
+                published_at=datetime.now(UTC),
             )
 
 

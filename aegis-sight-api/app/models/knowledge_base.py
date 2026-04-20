@@ -12,7 +12,7 @@ from app.core.database import Base
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
-class ArticleCategory(str, enum.Enum):
+class ArticleCategory(enum.StrEnum):
     how_to = "how_to"
     troubleshooting = "troubleshooting"
     policy = "policy"
@@ -20,7 +20,7 @@ class ArticleCategory(str, enum.Enum):
     best_practice = "best_practice"
 
 
-class ArticleStatus(str, enum.Enum):
+class ArticleStatus(enum.StrEnum):
     draft = "draft"
     published = "published"
     archived = "archived"

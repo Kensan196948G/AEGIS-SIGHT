@@ -11,14 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class SnapshotType(str, enum.Enum):
+class SnapshotType(enum.StrEnum):
     hardware = "hardware"
     software = "software"
     security = "security"
     network = "network"
 
 
-class ChangeType(str, enum.Enum):
+class ChangeType(enum.StrEnum):
     added = "added"
     modified = "modified"
     removed = "removed"

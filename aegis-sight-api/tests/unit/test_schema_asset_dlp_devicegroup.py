@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
 
-from app.models.asset_lifecycle import DisposalMethod, DisposalStatus, LifecycleEventType
-from app.models.dlp import DLPAction, DLPActionTaken, DLPRuleType, DLPSeverity
+from app.models.asset_lifecycle import DisposalMethod, LifecycleEventType
+from app.models.dlp import DLPAction, DLPRuleType, DLPSeverity
 from app.schemas.asset_lifecycle import (
     DisposalCompletePayload,
     DisposalRequestCreate,
-    LifecycleSummary,
     LifecycleEventCreate,
+    LifecycleSummary,
 )
 from app.schemas.device_group import (
     DeviceGroupCreate,
@@ -28,7 +28,6 @@ from app.schemas.dlp import (
     DLPRuleCreate,
     DLPRuleUpdate,
 )
-
 
 # ---------------------------------------------------------------------------
 # LifecycleEventCreate

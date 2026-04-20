@@ -11,7 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class TaskType(str, enum.Enum):
+class TaskType(enum.StrEnum):
     sam_check = "sam_check"
     m365_sync = "m365_sync"
     report_generation = "report_generation"
@@ -19,7 +19,7 @@ class TaskType(str, enum.Enum):
     cleanup = "cleanup"
 
 
-class TaskStatus(str, enum.Enum):
+class TaskStatus(enum.StrEnum):
     success = "success"
     failed = "failed"
     running = "running"
