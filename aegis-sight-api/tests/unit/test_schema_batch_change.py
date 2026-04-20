@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -103,13 +103,13 @@ class TestBatchJobResponse:
             total_rows=500,
             success_count=0,
             error_count=0,
-            created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert r.completed_at is None
         assert r.created_by is None
 
     def test_with_completed_at(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         r = BatchJobResponse(
             job_id=uuid.uuid4(),
             job_type=BatchJobType.export_licenses,
@@ -202,7 +202,7 @@ class TestTimelineEntry:
             id=uuid.uuid4(),
             change_type="added",
             field_path="software.office",
-            detected_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            detected_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert e.snapshot_type is None
         assert e.old_value is None
@@ -215,7 +215,7 @@ class TestTimelineEntry:
             snapshot_type="hardware",
             old_value="i5",
             new_value="i7",
-            detected_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            detected_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         assert e.new_value == "i7"
 
@@ -266,7 +266,7 @@ class TestChangeSummaryResponse:
         assert r.period_end is None
 
     def test_with_period(self) -> None:
-        now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        now = datetime(2026, 1, 1, tzinfo=UTC)
         r = ChangeSummaryResponse(
             total_changes=0,
             by_change_type=ChangeTypeSummary(),

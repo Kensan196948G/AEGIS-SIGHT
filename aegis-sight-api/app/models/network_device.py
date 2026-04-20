@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class NetworkDeviceType(str, enum.Enum):
+class NetworkDeviceType(enum.StrEnum):
     pc = "pc"
     server = "server"
     printer = "printer"

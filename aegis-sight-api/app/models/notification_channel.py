@@ -9,14 +9,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class ChannelType(str, enum.Enum):
+class ChannelType(enum.StrEnum):
     email = "email"
     webhook = "webhook"
     slack = "slack"
     teams = "teams"
 
 
-class NotificationEventType(str, enum.Enum):
+class NotificationEventType(enum.StrEnum):
     alert_critical = "alert_critical"
     alert_warning = "alert_warning"
     license_violation = "license_violation"

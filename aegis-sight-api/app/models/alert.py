@@ -9,13 +9,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class AlertSeverity(str, enum.Enum):
+class AlertSeverity(enum.StrEnum):
     critical = "critical"
     warning = "warning"
     info = "info"
 
 
-class AlertCategory(str, enum.Enum):
+class AlertCategory(enum.StrEnum):
     security = "security"
     license = "license"
     hardware = "hardware"

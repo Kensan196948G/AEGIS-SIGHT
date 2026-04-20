@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class PolicyType(str, enum.Enum):
+class PolicyType(enum.StrEnum):
     usb_control = "usb_control"
     software_restriction = "software_restriction"
     patch_requirement = "patch_requirement"

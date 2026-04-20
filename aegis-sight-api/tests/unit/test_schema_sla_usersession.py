@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -223,7 +223,7 @@ class TestSLAReportRow:
             is_met=True,
             period_start=date(2026, 1, 1),
             period_end=date(2026, 1, 31),
-            measured_at=datetime.now(timezone.utc),
+            measured_at=datetime.now(UTC),
         )
         assert r.is_met is True
         assert r.unit == "%"
@@ -276,7 +276,7 @@ class TestSessionEnd:
         assert s.ended_at is None
 
     def test_with_end_time(self) -> None:
-        ts = datetime.now(timezone.utc)
+        ts = datetime.now(UTC)
         s = SessionEnd(ended_at=ts)
         assert s.ended_at == ts
 

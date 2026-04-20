@@ -12,14 +12,14 @@ from app.core.database import Base
 # ---------------------------------------------------------------------------
 # Incident enums
 # ---------------------------------------------------------------------------
-class IncidentSeverity(str, enum.Enum):
+class IncidentSeverity(enum.StrEnum):
     P1_critical = "P1_critical"
     P2_high = "P2_high"
     P3_medium = "P3_medium"
     P4_low = "P4_low"
 
 
-class IncidentStatus(str, enum.Enum):
+class IncidentStatus(enum.StrEnum):
     detected = "detected"
     investigating = "investigating"
     containing = "containing"
@@ -29,7 +29,7 @@ class IncidentStatus(str, enum.Enum):
     post_mortem = "post_mortem"
 
 
-class IncidentCategory(str, enum.Enum):
+class IncidentCategory(enum.StrEnum):
     malware = "malware"
     unauthorized_access = "unauthorized_access"
     data_breach = "data_breach"
@@ -41,7 +41,7 @@ class IncidentCategory(str, enum.Enum):
 # ---------------------------------------------------------------------------
 # Threat indicator enums
 # ---------------------------------------------------------------------------
-class IndicatorType(str, enum.Enum):
+class IndicatorType(enum.StrEnum):
     ip_address = "ip_address"
     domain = "domain"
     file_hash = "file_hash"
@@ -49,7 +49,7 @@ class IndicatorType(str, enum.Enum):
     email = "email"
 
 
-class ThreatLevel(str, enum.Enum):
+class ThreatLevel(enum.StrEnum):
     critical = "critical"
     high = "high"
     medium = "medium"

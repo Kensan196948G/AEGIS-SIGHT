@@ -10,14 +10,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class UpdateSeverity(str, enum.Enum):
+class UpdateSeverity(enum.StrEnum):
     critical = "critical"
     important = "important"
     moderate = "moderate"
     low = "low"
 
 
-class PatchStatus(str, enum.Enum):
+class PatchStatus(enum.StrEnum):
     not_installed = "not_installed"
     downloading = "downloading"
     installed = "installed"
@@ -25,7 +25,7 @@ class PatchStatus(str, enum.Enum):
     not_applicable = "not_applicable"
 
 
-class VulnerabilitySeverity(str, enum.Enum):
+class VulnerabilitySeverity(enum.StrEnum):
     critical = "critical"
     high = "high"
     medium = "medium"

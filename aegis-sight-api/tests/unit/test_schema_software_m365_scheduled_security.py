@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -43,7 +43,7 @@ class TestSoftwareInventoryResponse:
             id=1,
             device_id=uuid.uuid4(),
             software_name="Microsoft Office",
-            detected_at=datetime.now(timezone.utc),
+            detected_at=datetime.now(UTC),
         )
         assert r.version is None
         assert r.publisher is None
@@ -57,7 +57,7 @@ class TestSoftwareInventoryResponse:
             version="1.87.0",
             publisher="Microsoft",
             install_date=date(2026, 1, 15),
-            detected_at=datetime.now(timezone.utc),
+            detected_at=datetime.now(UTC),
         )
         assert r.version == "1.87.0"
         assert r.publisher == "Microsoft"
@@ -343,7 +343,7 @@ class TestDeviceSecurityDetail:
             bitlocker_on=True,
             pattern_date="2026-04-18",
             pending_patches=3,
-            last_checked_at=datetime.now(timezone.utc),
+            last_checked_at=datetime.now(UTC),
         )
         assert d.defender_on is True
         assert d.bitlocker_on is True

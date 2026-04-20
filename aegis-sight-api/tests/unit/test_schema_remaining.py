@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -111,7 +111,7 @@ class TestBatchJobResponse:
             total_rows=100,
             success_count=98,
             error_count=2,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         assert r.status == BatchJobStatus.completed
         assert r.completed_at is None
@@ -126,7 +126,7 @@ class TestBatchJobResponse:
                 total_rows=0,
                 success_count=0,
                 error_count=0,
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
             assert r.job_type == jt
 
@@ -308,7 +308,7 @@ class TestExportParams:
             assert dt.value in ("devices", "licenses", "alerts", "audit-logs")
 
     def test_with_date_range(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         p = ExportParams(date_from=now, date_to=now)
         assert p.date_from == now
 

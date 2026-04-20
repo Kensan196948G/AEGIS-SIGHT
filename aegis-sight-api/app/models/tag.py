@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class TagCategory(str, enum.Enum):
+class TagCategory(enum.StrEnum):
     device = "device"
     license = "license"
     procurement = "procurement"

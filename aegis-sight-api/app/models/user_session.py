@@ -16,14 +16,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class SessionType(str, enum.Enum):
+class SessionType(enum.StrEnum):
     local = "local"
     rdp = "rdp"
     vpn = "vpn"
     citrix = "citrix"
 
 
-class ActivityType(str, enum.Enum):
+class ActivityType(enum.StrEnum):
     app_launch = "app_launch"
     web_access = "web_access"
     file_access = "file_access"
