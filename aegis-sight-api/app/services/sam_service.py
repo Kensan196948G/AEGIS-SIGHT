@@ -42,17 +42,27 @@ class SAMService:
         Sync M365 license assignment counts from Microsoft Graph API.
 
         Fetches subscribedSkus and matches each SKU to SoftwareLicense rows by
-        software_name (case-insensitive, partial match against skuPartNumber).
-        Updates m365_assigned with consumedUnits for each matched license.
+        software_name (case-insensitive, bidirectional substring match against
+        skuPartNumber).  Updates m365_assigned with consumedUnits for each
+        matched license.
 
-        Returns a summary with counts of synced, skipped, and failed records.
+        Returns:
+            dict with keys ``status`` (``"ok"`` / ``"error"``),
+            ``synced``, ``skipped``, ``total_skus``.
+            The error variant also carries a ``message`` key.
         """
         try:
             graph = GraphService()
             skus = await graph.get_m365_licenses()
         except Exception:
             logger.exception("Failed to fetch M365 licenses from Graph API")
-            return {"status": "error", "message": "Graph API call failed", "synced": 0}
+            return {
+                "status": "error",
+                "message": "Graph API call failed",
+                "synced": 0,
+                "skipped": 0,
+                "total_skus": 0,
+            }
 
         # Build a lookup: normalised SKU part number → consumedUnits
         sku_map: dict[str, int] = {
@@ -67,7 +77,11 @@ class SAMService:
         synced = skipped = 0
         for lic in licenses:
             name_lower = lic.software_name.lower()
-            # Match by substring: e.g. "Microsoft 365 E3" → "e3" substring of "enterprisepack"
+            # Bidirectional substring match: software_name and skuPartNumber
+            # rarely share a canonical form, so we accept either direction.
+            # NOTE: friendly names like "Microsoft 365 E3" do not overlap with
+            # SKU part numbers like "ENTERPRISEPACK" — an explicit alias table
+            # will be added in a follow-up issue.
             matched_units: int | None = None
             for sku_key, units in sku_map.items():
                 if sku_key in name_lower or name_lower in sku_key:

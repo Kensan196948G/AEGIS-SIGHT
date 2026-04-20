@@ -30,7 +30,11 @@ class TestSendProcurementNotifications:
     async def test_email_subject_contains_count(self) -> None:
         from app.tasks.procurement_tasks import _send_procurement_notifications
 
-        data = {"total_pending": 7, "awaiting_approval_by_department": {}}
+        # Subject uses approval_pending (sum of by_department), not total_pending.
+        data = {
+            "total_pending": 10,
+            "awaiting_approval_by_department": {"Engineering": 4, "HR": 3},
+        }
         with patch("app.tasks.procurement_tasks.settings") as mock_settings:
             mock_settings.ADMIN_NOTIFICATION_EMAIL = "admin@example.com"
             mock_settings.ALERT_WEBHOOK_URL = None

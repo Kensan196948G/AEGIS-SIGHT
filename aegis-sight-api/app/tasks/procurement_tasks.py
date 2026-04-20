@@ -81,23 +81,30 @@ async def _collect_status_summary() -> dict:
 
 
 async def _send_procurement_notifications(data: dict) -> None:
-    """Send email and/or webhook notifications for pending procurement approvals."""
+    """Send email and/or webhook notifications for pending procurement approvals.
+
+    Uses the per-department count sum (submitted only) as the headline number,
+    not total_pending which also includes approved/ordered records.
+    """
     from app.services.notification_service import NotificationService
 
     total = data["total_pending"]
     by_dept = data.get("awaiting_approval_by_department", {})
+    approval_pending = sum(by_dept.values())
 
     dept_lines = "\n".join(f"  {dept}: {cnt}件" for dept, cnt in by_dept.items()) or "  （データなし）"
     body = (
         f"【調達承認待ち通知】\n\n"
-        f"承認待ち件数: {total} 件\n\n"
+        f"承認待ち件数: {approval_pending} 件\n\n"
         f"部署別内訳:\n{dept_lines}\n\n"
         f"管理画面にログインして対応をお願いします。"
     )
 
     email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None)
     if email:
-        await NotificationService.send_email(email, f"調達承認待ち通知: {total}件", body)
+        await NotificationService.send_email(
+            email, f"調達承認待ち通知: {approval_pending}件", body
+        )
 
     webhook_url = getattr(settings, "ALERT_WEBHOOK_URL", None)
     if webhook_url:
@@ -105,6 +112,7 @@ async def _send_procurement_notifications(data: dict) -> None:
             webhook_url,
             {
                 "type": "procurement_pending",
+                "approval_pending": approval_pending,
                 "total_pending": total,
                 "awaiting_approval_by_department": by_dept,
             },
@@ -132,9 +140,14 @@ def notify_pending_approvals(self) -> dict:
     try:
         result = asyncio.run(_collect_pending_approvals())
         total = result["total_pending"]
-        logger.info("Procurement notification: %d total pending requests", total)
+        approval_pending = sum(result.get("awaiting_approval_by_department", {}).values())
+        logger.info(
+            "Procurement notification: %d awaiting approval (submitted), %d total pending",
+            approval_pending,
+            total,
+        )
 
-        if total > 0:
+        if approval_pending > 0:
             asyncio.run(_send_procurement_notifications(result))
 
         return result
