@@ -6,17 +6,22 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_active_user
-from app.core.exceptions import NotFoundError
+from app.core.deps import get_current_active_user, require_role
+from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginatedResponse, create_paginated_response
 from app.models.license import SoftwareLicense
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.license import (
     ComplianceCheckResponse,
     ExpiringLicenseResponse,
     LicenseCreate,
     LicenseResponse,
     LicenseUpdate,
+)
+from app.schemas.sku_alias import (
+    SkuAliasCreate,
+    SkuAliasResponse,
+    SkuAliasUpdate,
 )
 from app.services.sam_service import SAMService
 
@@ -210,3 +215,102 @@ async def run_compliance_check(
     """Trigger a fresh compliance check across all licenses."""
     service = SAMService(db)
     return await service.run_compliance_check()
+
+
+# ---------------------------------------------------------------------------
+# SKU alias management (Issue #479)
+#
+# Explicit ``sku_part_number -> SoftwareLicense`` mapping used by
+# ``SAMService.sync_m365_licenses`` in its alias-first matching pass.
+# Admin / operator only — regular users must not be able to alter the
+# mapping that drives production license-assignment counts.
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/licenses/{license_id}/aliases",
+    response_model=list[SkuAliasResponse],
+    summary="List SKU aliases for a license",
+    description=(
+        "Return all ``software_sku_aliases`` rows bound to the given "
+        "license, sorted by SKU part number. 404 if the license itself "
+        "does not exist."
+    ),
+    responses={404: {"description": "License not found"}},
+)
+async def list_sku_aliases(
+    license_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_role(UserRole.admin, UserRole.operator)),
+):
+    service = SAMService(db)
+    return await service.list_aliases_for_license(license_id)
+
+
+@router.post(
+    "/licenses/{license_id}/aliases",
+    response_model=SkuAliasResponse,
+    status_code=201,
+    summary="Create SKU alias for a license",
+    description=(
+        "Create a new ``software_sku_aliases`` row binding a SKU part "
+        "number to the given license. Returns 404 when the license does "
+        "not exist and 409 when the SKU is already mapped."
+    ),
+    responses={
+        404: {"description": "License not found"},
+        409: {"description": "SKU already mapped to another license"},
+    },
+)
+async def create_sku_alias(
+    license_id: uuid.UUID,
+    data: SkuAliasCreate,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_role(UserRole.admin, UserRole.operator)),
+):
+    service = SAMService(db)
+    return await service.create_alias(license_id, data.sku_part_number)
+
+
+@router.patch(
+    "/sku-aliases/{alias_id}",
+    response_model=SkuAliasResponse,
+    summary="Update a SKU alias",
+    description=(
+        "Update the ``sku_part_number`` of an existing alias. The owning "
+        "license binding is immutable; to re-point a SKU delete and "
+        "re-create. Returns 404 when the alias is missing and 409 when "
+        "the new SKU value would collide with another row."
+    ),
+    responses={
+        404: {"description": "Alias not found"},
+        409: {"description": "SKU already mapped to another license"},
+    },
+)
+async def update_sku_alias(
+    alias_id: uuid.UUID,
+    data: SkuAliasUpdate,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_role(UserRole.admin, UserRole.operator)),
+):
+    if data.sku_part_number is None:
+        raise BadRequestError(detail="Update payload must include 'sku_part_number'")
+    service = SAMService(db)
+    return await service.update_alias(alias_id, data.sku_part_number)
+
+
+@router.delete(
+    "/sku-aliases/{alias_id}",
+    status_code=204,
+    summary="Delete a SKU alias",
+    description="Delete a SKU alias row. 404 if it does not exist.",
+    responses={404: {"description": "Alias not found"}},
+)
+async def delete_sku_alias(
+    alias_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _user: User = Depends(require_role(UserRole.admin, UserRole.operator)),
+):
+    service = SAMService(db)
+    await service.delete_alias(alias_id)
+    return None
