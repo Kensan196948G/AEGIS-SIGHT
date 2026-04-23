@@ -24,38 +24,75 @@ class TestSAMServiceStructure:
 
 
 class TestSyncM365Licenses:
-    """sync_m365_licenses is a placeholder that returns a static dict without DB access."""
+    """sync_m365_licenses integrates with Graph API and returns a summary dict."""
 
     async def test_returns_dict(self) -> None:
-        service = SAMService(db=MagicMock())
-        result = await service.sync_m365_licenses()
+        from unittest.mock import AsyncMock, patch
+
+        db = MagicMock()
+        result_mock = MagicMock()
+        result_mock.scalars.return_value.all.return_value = []
+        db.execute = AsyncMock(return_value=result_mock)
+        db.commit = AsyncMock()
+        service = SAMService(db=db)
+        with patch("app.services.sam_service.GraphService") as mock_gs:
+            mock_gs.return_value.get_m365_licenses = AsyncMock(return_value=[])
+            result = await service.sync_m365_licenses()
         assert isinstance(result, dict)
 
-    async def test_status_is_not_implemented(self) -> None:
-        service = SAMService(db=MagicMock())
-        result = await service.sync_m365_licenses()
-        assert result["status"] == "not_implemented"
+    async def test_status_ok_on_success(self) -> None:
+        from unittest.mock import AsyncMock, patch
 
-    async def test_message_key_present(self) -> None:
-        service = SAMService(db=MagicMock())
-        result = await service.sync_m365_licenses()
-        assert "message" in result
+        db = MagicMock()
+        result_mock = MagicMock()
+        result_mock.scalars.return_value.all.return_value = []
+        db.execute = AsyncMock(return_value=result_mock)
+        db.commit = AsyncMock()
+        service = SAMService(db=db)
+        with patch("app.services.sam_service.GraphService") as mock_gs:
+            mock_gs.return_value.get_m365_licenses = AsyncMock(return_value=[])
+            result = await service.sync_m365_licenses()
+        assert result["status"] == "ok"
 
-    async def test_message_mentions_m365(self) -> None:
-        service = SAMService(db=MagicMock())
-        result = await service.sync_m365_licenses()
-        assert "M365" in result["message"] or "365" in result["message"]
+    async def test_status_error_on_graph_failure(self) -> None:
+        from unittest.mock import AsyncMock, patch
 
-    async def test_result_has_exactly_two_keys(self) -> None:
         service = SAMService(db=MagicMock())
-        result = await service.sync_m365_licenses()
-        assert set(result.keys()) == {"status", "message"}
+        with patch("app.services.sam_service.GraphService") as mock_gs:
+            mock_gs.return_value.get_m365_licenses = AsyncMock(
+                side_effect=RuntimeError("fail")
+            )
+            result = await service.sync_m365_licenses()
+        assert result["status"] == "error"
+
+    async def test_synced_key_present(self) -> None:
+        from unittest.mock import AsyncMock, patch
+
+        db = MagicMock()
+        result_mock = MagicMock()
+        result_mock.scalars.return_value.all.return_value = []
+        db.execute = AsyncMock(return_value=result_mock)
+        db.commit = AsyncMock()
+        service = SAMService(db=db)
+        with patch("app.services.sam_service.GraphService") as mock_gs:
+            mock_gs.return_value.get_m365_licenses = AsyncMock(return_value=[])
+            result = await service.sync_m365_licenses()
+        assert "synced" in result
 
     async def test_idempotent_multiple_calls(self) -> None:
-        service = SAMService(db=MagicMock())
-        first = await service.sync_m365_licenses()
-        second = await service.sync_m365_licenses()
-        assert first == second
+        from unittest.mock import AsyncMock, patch
+
+        db = MagicMock()
+        result_mock = MagicMock()
+        result_mock.scalars.return_value.all.return_value = []
+        db.execute = AsyncMock(return_value=result_mock)
+        db.commit = AsyncMock()
+        service = SAMService(db=db)
+        with patch("app.services.sam_service.GraphService") as mock_gs:
+            mock_gs.return_value.get_m365_licenses = AsyncMock(return_value=[])
+            first = await service.sync_m365_licenses()
+            second = await service.sync_m365_licenses()
+        assert first["status"] == second["status"]
 
 
 class TestComplianceCalculationLogic:

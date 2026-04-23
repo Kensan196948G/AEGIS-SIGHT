@@ -1,8 +1,13 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.license import SoftwareLicense
 from app.schemas.license import ComplianceCheckResponse
+from app.services.graph_service import GraphService
+
+logger = logging.getLogger(__name__)
 
 
 class SAMService:
@@ -34,12 +39,61 @@ class SAMService:
 
     async def sync_m365_licenses(self) -> dict:
         """
-        Sync license assignments from Microsoft 365 Graph API.
-        TODO: Implement actual Graph API integration.
+        Sync M365 license assignment counts from Microsoft Graph API.
+
+        Fetches subscribedSkus and matches each SKU to SoftwareLicense rows by
+        software_name (case-insensitive, bidirectional substring match against
+        skuPartNumber).  Updates m365_assigned with consumedUnits for each
+        matched license.
+
+        Returns:
+            dict with keys ``status`` (``"ok"`` / ``"error"``),
+            ``synced``, ``skipped``, ``total_skus``.
+            The error variant also carries a ``message`` key.
         """
-        # Placeholder: In production, call MS Graph API to fetch license assignments
-        # and update the m365_assigned field for each matching SoftwareLicense.
-        return {
-            "status": "not_implemented",
-            "message": "M365 license sync requires Graph API configuration.",
+        try:
+            graph = GraphService()
+            skus = await graph.get_m365_licenses()
+        except Exception:
+            logger.exception("Failed to fetch M365 licenses from Graph API")
+            return {
+                "status": "error",
+                "message": "Graph API call failed",
+                "synced": 0,
+                "skipped": 0,
+                "total_skus": 0,
+            }
+
+        # Build a lookup: normalised SKU part number → consumedUnits
+        sku_map: dict[str, int] = {
+            sku.get("skuPartNumber", "").lower(): sku.get("consumedUnits", 0)
+            for sku in skus
+            if sku.get("skuPartNumber")
         }
+
+        result_rows = await self.db.execute(select(SoftwareLicense))
+        licenses = result_rows.scalars().all()
+
+        synced = skipped = 0
+        for lic in licenses:
+            name_lower = lic.software_name.lower()
+            # Bidirectional substring match: software_name and skuPartNumber
+            # rarely share a canonical form, so we accept either direction.
+            # NOTE: friendly names like "Microsoft 365 E3" do not overlap with
+            # SKU part numbers like "ENTERPRISEPACK" — an explicit alias table
+            # will be added in a follow-up issue.
+            matched_units: int | None = None
+            for sku_key, units in sku_map.items():
+                if sku_key in name_lower or name_lower in sku_key:
+                    matched_units = units
+                    break
+
+            if matched_units is not None:
+                lic.m365_assigned = matched_units
+                synced += 1
+            else:
+                skipped += 1
+
+        await self.db.commit()
+        logger.info("M365 sync complete: %d synced, %d skipped", synced, skipped)
+        return {"status": "ok", "synced": synced, "skipped": skipped, "total_skus": len(skus)}
