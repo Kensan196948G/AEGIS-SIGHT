@@ -1,6 +1,8 @@
 # 📂 development-phases — 開発フェーズドキュメント
 
-AEGIS-SIGHT の6ヶ月開発計画（2026-03-22〜2026-09-22）の詳細ドキュメント集。
+AEGIS-SIGHT の6ヶ月開発計画（**2026-03-25〜2026-09-25**）の詳細ドキュメント集。
+
+> 🛡️ 本番リリース日 `release_deadline = 2026-09-25` は絶対厳守（[CLAUDE.md §1.5](../../CLAUDE.md) / GitHub milestone `v1.0 Production Release`）。残日数による自動縮退ルールは [`.github/workflows/release-deadline-watch.yml`](../../.github/workflows/release-deadline-watch.yml) が日次で評価する。
 
 | フォルダ | フェーズ | 状態 |
 |---------|---------|------|

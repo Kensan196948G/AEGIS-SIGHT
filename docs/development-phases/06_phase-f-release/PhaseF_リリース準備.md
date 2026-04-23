@@ -4,10 +4,12 @@
 |------|------|
 | **フェーズ** | Phase F |
 | **名称** | 🚀 リリース準備 |
-| **期間** | 2026-08-15 〜 2026-09-22（約5週間） |
+| **期間** | 2026-08-15 〜 2026-09-25（約 6 週間・締切 09-25 絶対厳守） |
 | **状態** | ⏳ 未開始 |
 | **担当** | CTO / DevOps / QA / 全チーム |
-| **リリース種別** | 社内環境公開（Internal Release） |
+| **リリース種別** | 社内環境公開（Internal Release）+ 本番リリース（v1.0）|
+
+> 🛡️ Phase F の終了は `release_deadline = 2026-09-25` と一致する絶対期限。残日数による自動縮退は [CLAUDE.md §1.5](../../../CLAUDE.md) / [`release-deadline-watch.yml`](../../../.github/workflows/release-deadline-watch.yml) を参照。
 
 ---
 

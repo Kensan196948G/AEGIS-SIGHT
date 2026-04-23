@@ -768,7 +768,9 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 全52ファイル以上の詳細ドキュメントは [docs/](./docs/) フォルダに配置:
 
-### 🗺️ 6ヶ月開発フェーズ計画（2026-03-22〜2026-09-22）
+### 🗺️ 6ヶ月開発フェーズ計画（2026-03-25〜2026-09-25・本番リリース絶対厳守）
+
+> 🛡️ 本番リリース日 `release_deadline` は **2026-09-25** が最上位制約（[CLAUDE.md §1.5](./CLAUDE.md)）。各 Phase の終了日はこの絶対期限を超えないこと。
 
 | フェーズ | 名称 | 期間 | 状態 |
 |---------|------|------|------|
@@ -777,7 +779,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 | **Phase C** | 🔄 IAMS選択移植 | 〜2026-06-30 | ✅ 完了 (1,798件 pytest 移植完結) |
 | **Phase D** | 📊 監視・チャート統合 | 〜2026-07-31 | ✅ 完了 (D-1〜D-27 全チャート実装) |
 | **Phase E** | 🛡️ QA・セキュリティ・品質強化 | 〜2026-08-31 | 🔄 進行中 (Coverage 90%+達成) |
-| **Phase F** | 🚀 リリース準備 | 〜2026-09-22 | ⏳ 未開始 |
+| **Phase F** | 🚀 リリース準備 | 〜2026-09-25 | ⏳ 未開始 |
 
 > 📋 詳細: [docs/development-phases/](./docs/development-phases/)
 

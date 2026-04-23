@@ -1,5 +1,22 @@
 # AEGIS-SIGHT Project Status
 
+## ⏰ プロジェクト期間・リリース制約（最優先・絶対厳守）
+
+| 項目 | 値 |
+|:---|:---|
+| 📅 プロジェクト期間 | **6 ヶ月**（登録日から半年）|
+| 🚦 登録日 (`registered_at`) | **2026-03-25** |
+| 🎯 本番リリース (`release_deadline`) | **2026-09-25（絶対厳守・動かさない）** |
+| ⏱️ 実行方式 | **Linux Cron**（月〜土・プロジェクト別スケジュール）|
+| 🕔 1 セッション最大時間 | **5 時間（300 分）厳守** |
+| 🔄 開発フェーズ配分 | 進捗に応じて **CTO 判断で自由変更可** |
+| 🤖 監視ワークフロー | [`release-deadline-watch.yml`](.github/workflows/release-deadline-watch.yml) が日次で残日数評価 |
+| 🏁 GitHub milestone | [`v1.0 Production Release`](https://github.com/Kensan196948G/AEGIS-SIGHT/milestone/1) (`due_on=2026-09-25`) |
+
+> 🛡️ 本ファイルおよび全ドキュメントの「リリース」表記は、絶対期限 `2026-09-25` と必ず一致させること。詳細は [CLAUDE.md §1.5](./CLAUDE.md) を参照。
+
+---
+
 ## 開発セッションサマリ (2026-04-08)
 
 - **バージョン**: v0.66.0
