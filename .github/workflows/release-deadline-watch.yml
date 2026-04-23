@@ -1,0 +1,120 @@
+name: Release Deadline Watch
+
+# Enforces the "6-month project period, release deadline absolute" policy
+# declared in CLAUDE.md section 1.5 / state.json project.release_deadline.
+#
+# Security note: this workflow does NOT consume any github.event.* inputs
+# (issue titles, PR bodies, commit messages, head_ref, etc). All inputs are
+# either hardcoded constants (REGISTERED_AT / RELEASE_DEADLINE), values
+# computed by us and exported via GITHUB_OUTPUT, or the trusted
+# $GITHUB_REPOSITORY context variable. No untrusted string is ever
+# interpolated into a run: step.
+
+on:
+  schedule:
+    # 00:15 UTC = 09:15 JST. Runs once a day, ahead of the project's
+    # morning Cron tick so state is fresh before autonomous work starts.
+    - cron: "15 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: release-deadline-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Keep these two values in sync with:
+      #   CLAUDE.md section 1.5
+      #   .claude/state.json project.registered_at / project.release_deadline
+      #   GitHub milestone "v1.0 Production Release"
+      REGISTERED_AT: "2026-03-25"
+      RELEASE_DEADLINE: "2026-09-25"
+    steps:
+      - name: Compute days until release
+        id: compute
+        env:
+          REGISTERED_AT_ENV: ${{ env.REGISTERED_AT }}
+          RELEASE_DEADLINE_ENV: ${{ env.RELEASE_DEADLINE }}
+        run: |
+          set -euo pipefail
+          today="$(date -u +%Y-%m-%d)"
+          deadline="$RELEASE_DEADLINE_ENV"
+          registered="$REGISTERED_AT_ENV"
+          days_left=$(( ( $(date -u -d "$deadline" +%s) - $(date -u -d "$today" +%s) ) / 86400 ))
+          if   [ "$days_left" -le 0 ];  then level="OVERDUE"
+          elif [ "$days_left" -le 7 ];  then level="T-7_RELEASE_ONLY"
+          elif [ "$days_left" -le 14 ]; then level="T-14_NO_NEW_FEATURES"
+          elif [ "$days_left" -le 30 ]; then level="T-30_VERIFY_FIRST"
+          else level="ON_TRACK"
+          fi
+          {
+            echo "today=$today"
+            echo "deadline=$deadline"
+            echo "registered=$registered"
+            echo "days_left=$days_left"
+            echo "level=$level"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## Release deadline watch"
+            echo ""
+            echo "| Key | Value |"
+            echo "| --- | --- |"
+            echo "| today         | $today |"
+            echo "| registered_at | $registered |"
+            echo "| deadline      | $deadline |"
+            echo "| days_left     | $days_left |"
+            echo "| level         | **$level** |"
+            echo ""
+            case "$level" in
+              ON_TRACK)
+                echo "- No shrinkage required. Continue normal Monitor -> Build -> Verify -> Improve loop." ;;
+              T-30_VERIFY_FIRST)
+                echo "- **T-30**: Improvement phase is now in shrinkage mode. Prefer Verify and release prep." ;;
+              T-14_NO_NEW_FEATURES)
+                echo "- **T-14**: New feature development is frozen. Bug fixes and stabilisation only." ;;
+              T-7_RELEASE_ONLY)
+                echo "- **T-7**: Release preparation only (CHANGELOG, README, tag, deploy runbook)." ;;
+              OVERDUE)
+                echo "- **OVERDUE**: Release deadline passed. Escalate to human review immediately." ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ensure tracking issue reflects current level
+        if: steps.compute.outputs.level != 'ON_TRACK'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DAYS_LEFT: ${{ steps.compute.outputs.days_left }}
+          LEVEL: ${{ steps.compute.outputs.level }}
+          DEADLINE: ${{ steps.compute.outputs.deadline }}
+          TODAY: ${{ steps.compute.outputs.today }}
+        run: |
+          set -euo pipefail
+          title="[release-deadline] ${LEVEL} - ${DAYS_LEFT} days left to ${DEADLINE}"
+          body=$(printf '%s\n' \
+            "Automated release-deadline watch (see CLAUDE.md section 1.5)." \
+            "" \
+            "- today: ${TODAY}" \
+            "- deadline: ${DEADLINE}" \
+            "- days_left: **${DAYS_LEFT}**" \
+            "- level: **${LEVEL}**" \
+            "" \
+            "Enforce the documented shrinkage rule on the next Cron Monitor tick.")
+          # Reuse an open tracker issue instead of spamming new issues per run.
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+                       --state open \
+                       --search "in:title [release-deadline]" \
+                       --json number \
+                       --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" \
+              --title "$title" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "$title" --body "$body"
+          fi

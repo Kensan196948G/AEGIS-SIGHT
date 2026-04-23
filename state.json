@@ -1,4 +1,14 @@
 {
+  "project": {
+    "name": "AEGIS-SIGHT",
+    "registered_at": "2026-03-25",
+    "release_deadline": "2026-09-25",
+    "release_deadline_absolute": true,
+    "period_months": 6,
+    "session_max_duration_minutes": 300,
+    "phase_allocation_flexible": true,
+    "notes": "6ヶ月プロジェクト。登録から半年後の本番リリースは絶対厳守。開発フェーズ配分は CTO 判断で自由。Cron 実行・1 セッション 5 時間。"
+  },
   "goal": {
     "title": "AEGIS-SIGHT 品質安定化・テストカバレッジ向上",
     "description": "React 19移行完了後の残課題解消、テストカバレッジ向上、CI安定化"
@@ -16,7 +26,10 @@
     "remaining_minutes": 300,
     "phase": "Improvement",
     "auto_stop_threshold": 5,
-    "graceful_shutdown": true
+    "graceful_shutdown": true,
+    "current_session_start_at": "2026-04-23T21:39:30+09:00",
+    "last_trigger": "cron",
+    "last_cron_session_id": "20260423-213930-AEGIS-SIGHT"
   },
   "token": {
     "total_budget": 100,
@@ -68,10 +81,38 @@
     "id": "2026-04-09-002",
     "started_at": "2026-04-09T20:20:00+09:00",
     "loop_count": 4,
-    "phase_history": ["Monitor", "Build", "Verify", "Improve", "Build", "Verify", "Build", "Verify", "Monitor", "Verify", "Improve"],
-    "merged_prs": [306, 308, 310, 312, 314, 315],
-    "open_prs": [317],
-    "closed_issues": [273, 305, 307, 309, 311, 313],
+    "phase_history": [
+      "Monitor",
+      "Build",
+      "Verify",
+      "Improve",
+      "Build",
+      "Verify",
+      "Build",
+      "Verify",
+      "Monitor",
+      "Verify",
+      "Improve"
+    ],
+    "merged_prs": [
+      306,
+      308,
+      310,
+      312,
+      314,
+      315
+    ],
+    "open_prs": [
+      317
+    ],
+    "closed_issues": [
+      273,
+      305,
+      307,
+      309,
+      311,
+      313
+    ],
     "last_updated": "2026-04-09T21:20:00+09:00",
     "notes": "STABLE判定達成。7PR merged, 6 Issues closed. Coverage 97%/90%/95%/96%. 型安全性修正、CI最適化、docs更新完了。PR#317(Boolean .is_()リファクタ)がCI待ち。"
   },
