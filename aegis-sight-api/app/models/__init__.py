@@ -47,7 +47,7 @@ from app.models.knowledge_base import (
     KBArticle,
     KBCategory,
 )
-from app.models.license import LicenseType, SoftwareLicense
+from app.models.license import LicenseType, SoftwareLicense, SoftwareSkuAlias
 from app.models.log_event import FileAction, FileEvent, LogonEvent, UsbAction, UsbEvent
 from app.models.network_device import NetworkDevice, NetworkDeviceType
 from app.models.notification_channel import (
@@ -168,6 +168,7 @@ __all__ = [
     "SnapshotType",
     "SoftwareInventory",
     "SoftwareLicense",
+    "SoftwareSkuAlias",
     "SystemConfig",
     "Tag",
     "TagAssignment",

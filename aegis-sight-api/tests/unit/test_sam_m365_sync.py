@@ -20,11 +20,19 @@ def _make_license(name: str, m365_assigned: int = 0):
     return lic
 
 
-def _make_db(licenses: list) -> AsyncMock:
+def _make_db(licenses: list, aliases: list | None = None) -> AsyncMock:
+    """Mock AsyncSession that returns licenses on the 1st execute() call
+    and aliases on the 2nd. Mirrors the query order in SAMService."""
     db = AsyncMock()
-    result = MagicMock()
-    result.scalars.return_value.all.return_value = licenses
-    db.execute = AsyncMock(return_value=result)
+    aliases = aliases or []
+
+    license_result = MagicMock()
+    license_result.scalars.return_value.all.return_value = licenses
+
+    alias_result = MagicMock()
+    alias_result.scalars.return_value.all.return_value = aliases
+
+    db.execute = AsyncMock(side_effect=[license_result, alias_result])
     db.commit = AsyncMock()
     return db
 
