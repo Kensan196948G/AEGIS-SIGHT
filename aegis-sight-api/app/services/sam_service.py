@@ -2,8 +2,10 @@ import logging
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ConflictError, NotFoundError
 from app.models.license import SoftwareLicense, SoftwareSkuAlias
 from app.schemas.license import ComplianceCheckResponse
 from app.services.graph_service import GraphService
@@ -136,3 +138,95 @@ class SAMService:
             "skipped": skipped,
             "total_skus": total_skus,
         }
+
+    # ------------------------------------------------------------------
+    # SKU alias management (Issue #479 / PR #478 follow-up)
+    # ------------------------------------------------------------------
+
+    async def list_aliases_for_license(
+        self, license_id: uuid.UUID
+    ) -> list[SoftwareSkuAlias]:
+        """List all SKU aliases bound to a specific license.
+
+        Raises ``NotFoundError`` when the license itself does not exist so
+        callers can distinguish "no aliases" from "license missing".
+        """
+        lic_exists = await self.db.execute(
+            select(SoftwareLicense.id).where(SoftwareLicense.id == license_id)
+        )
+        if lic_exists.scalar_one_or_none() is None:
+            raise NotFoundError("License", str(license_id))
+
+        rows = await self.db.execute(
+            select(SoftwareSkuAlias)
+            .where(SoftwareSkuAlias.software_license_id == license_id)
+            .order_by(SoftwareSkuAlias.sku_part_number)
+        )
+        return list(rows.scalars().all())
+
+    async def create_alias(
+        self, license_id: uuid.UUID, sku_part_number: str
+    ) -> SoftwareSkuAlias:
+        """Create a new SKU → license alias.
+
+        Raises ``NotFoundError`` if the target license does not exist, and
+        ``ConflictError`` when the SKU is already bound (UNIQUE violation on
+        ``sku_part_number``).
+        """
+        lic_exists = await self.db.execute(
+            select(SoftwareLicense.id).where(SoftwareLicense.id == license_id)
+        )
+        if lic_exists.scalar_one_or_none() is None:
+            raise NotFoundError("License", str(license_id))
+
+        alias = SoftwareSkuAlias(
+            software_license_id=license_id,
+            sku_part_number=sku_part_number,
+        )
+        self.db.add(alias)
+        try:
+            await self.db.flush()
+        except IntegrityError as exc:
+            await self.db.rollback()
+            raise ConflictError(
+                detail=f"SKU '{sku_part_number}' is already mapped to another license"
+            ) from exc
+        await self.db.refresh(alias)
+        return alias
+
+    async def update_alias(
+        self, alias_id: uuid.UUID, sku_part_number: str
+    ) -> SoftwareSkuAlias:
+        """Update an alias's SKU part number.
+
+        The owning license binding is immutable — callers that need to
+        re-point a SKU must delete and re-create.
+        """
+        rows = await self.db.execute(
+            select(SoftwareSkuAlias).where(SoftwareSkuAlias.id == alias_id)
+        )
+        alias = rows.scalar_one_or_none()
+        if alias is None:
+            raise NotFoundError("SkuAlias", str(alias_id))
+
+        alias.sku_part_number = sku_part_number
+        try:
+            await self.db.flush()
+        except IntegrityError as exc:
+            await self.db.rollback()
+            raise ConflictError(
+                detail=f"SKU '{sku_part_number}' is already mapped to another license"
+            ) from exc
+        await self.db.refresh(alias)
+        return alias
+
+    async def delete_alias(self, alias_id: uuid.UUID) -> None:
+        """Delete an alias; 404 when it does not exist."""
+        rows = await self.db.execute(
+            select(SoftwareSkuAlias).where(SoftwareSkuAlias.id == alias_id)
+        )
+        alias = rows.scalar_one_or_none()
+        if alias is None:
+            raise NotFoundError("SkuAlias", str(alias_id))
+        await self.db.delete(alias)
+        await self.db.flush()
