@@ -56,7 +56,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v8 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・IAMS pytest 1,798件移植完結・フロントエンド強化継続中 |
+| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,636件** / vitest 1,942件・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了 |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -89,8 +89,8 @@
 |:---|:---|:---:|
 | 📈 Prometheus/Grafana | インフラ可観測性・監視ダッシュボード | ✅ Done |
 | 📱 PWA対応 | オフラインUI（建設現場対応） | ✅ Done |
-| 🛒 調達管理 | 調達承認ワークフロー・ライフサイクルステッパー（Phase D-2） | ✅ Done |
-| 📦 SAMライセンス管理 | 期限追跡・月額コスト分析・Badge統一（Phase D-1） | ✅ Done |
+| 🛒 調達管理 | 調達承認ワークフロー・ライフサイクルステッパー・**承認通知配信（email/Slack/Teams, PR#474）** | ✅ Done |
+| 📦 SAMライセンス管理 | 期限追跡・月額コスト分析・**M365 Graph API 実統合（alias-first SKU matching, PR#474/#478）** | ✅ Done |
 | 🧪 テスト資産変換 | **1,798件** Jest → pytest 変換 (Phase101-112完結) | ✅ Done |
 | 🌐 国際化基盤 (i18n) | 日英メッセージカタログ + useTranslation hook | ✅ Done |
 | 📝 Backendメッセージ | エラー/ドメインメッセージ日本語化 | ✅ Done |
@@ -141,7 +141,7 @@ flowchart LR
     end
 
     subgraph TEST["🧪 テスト (DB付き)"]
-        PYTEST["🐍 pytest\n1,798件 + coverage"]
+        PYTEST["🐍 pytest\n4,636件 + coverage"]
         VITEST["⚛️ vitest\n1,942件 + coverage v8"]
         REPORT["📊 PR Summary\nコメント自動投稿"]
     end
@@ -230,6 +230,56 @@ graph TB
     style EXTERNAL fill:#E3F2FD,stroke:#1565C0
 ```
 
+### 🔗 SAM M365 ライセンス同期フロー (PR #474 / #478)
+
+```mermaid
+flowchart LR
+    CRON["⏰ Celery Beat\nsync_m365_licenses"] --> GS["🌐 GraphService\nClientCredentials"]
+    GS -->|HTTPS| MS["☁️ Microsoft Graph\n/subscribedSkus"]
+    MS -->|SKUs JSON| SAM["🧮 SAMService\nTwo-Pass Matcher"]
+
+    subgraph MATCH["🎯 SKU → License マッチング"]
+        direction TB
+        P1["① Alias-first\nsoftware_sku_aliases"] -->|hit| CLAIM["✅ claimed"]
+        P1 -->|miss| P2["② Bidirectional\nsubstring fallback"]
+        P2 -->|hit| CLAIM
+        P2 -->|miss| SKIP["⏭️ skipped"]
+    end
+
+    SAM --> MATCH
+    CLAIM --> DB[("🐘 software_licenses\n.m365_assigned")]
+    SAM --> LOG["📝 structured log\nsynced/skipped/total"]
+
+    style CRON fill:#FFF3E0,stroke:#FFA000
+    style GS fill:#E8F4FD,stroke:#2E6DA4
+    style MS fill:#E3F2FD,stroke:#1565C0
+    style SAM fill:#E8F5E9,stroke:#2E7D32
+    style MATCH fill:#F3E5F5,stroke:#7B1FA2
+    style CLAIM fill:#C8E6C9,stroke:#1B5E20,stroke-width:2px
+    style SKIP fill:#FFEBEE,stroke:#C62828
+    style DB fill:#F3E5F5,stroke:#7B1FA2
+```
+
+### 📣 調達承認通知フロー (PR #474)
+
+```mermaid
+flowchart LR
+    SUB["📝 調達申請\n(status=submitted)"] --> TASK["⏰ Celery Task\nsend_procurement_notification"]
+    TASK --> ROUTER{"🔀 NotificationChannel\nROUTER"}
+    ROUTER -->|email| EMAIL["📧 SMTP / Graph Mail"]
+    ROUTER -->|slack| SLACK["💬 Slack Webhook"]
+    ROUTER -->|teams| TEAMS["👥 Teams Webhook"]
+    EMAIL & SLACK & TEAMS --> AUDIT["📜 notification_audit_log"]
+
+    style SUB fill:#E8F5E9,stroke:#2E7D32
+    style TASK fill:#FFF3E0,stroke:#FFA000
+    style ROUTER fill:#F3E5F5,stroke:#7B1FA2
+    style EMAIL fill:#E3F2FD,stroke:#1565C0
+    style SLACK fill:#E8F4FD,stroke:#2E6DA4
+    style TEAMS fill:#E1F5FE,stroke:#0277BD
+    style AUDIT fill:#FCE4EC,stroke:#C62828
+```
+
 ---
 
 ## 🔧 技術スタック
@@ -263,13 +313,13 @@ graph TB
 │   │   ├── logs.py               #   ログ管理
 │   │   ├── software.py           #   SWインベントリ
 │   │   └── metrics.py            #   Prometheus メトリクス
-│   ├── app/models/               # SQLAlchemy モデル (10テーブル)
-│   ├── app/services/             # ビジネスロジック (SAM/調達)
-│   ├── app/tasks/                # Celery 非同期タスク (SAM日次照合)
+│   ├── app/models/               # SQLAlchemy モデル (30+ テーブル, SKU alias 含む)
+│   ├── app/services/             # ビジネスロジック (SAM M365 Graph API / 調達通知)
+│   ├── app/tasks/                # Celery 非同期タスク (SAM日次照合 / 調達通知配信)
 │   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
-│   ├── alembic/                  # DBマイグレーション (2版)
+│   ├── alembic/                  # DBマイグレーション (24版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (100+ファイル, 850+テスト)
+│   └── tests/                    # pytest (181ファイル, 4,636テスト)
 │
 ├── ⚛️ aegis-sight-web/           # Next.js 16 フロントエンド (~220ファイル)
 │   ├── app/dashboard/            # ダッシュボード (45+ページ)
@@ -396,7 +446,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (3,740+ケース) | ✅ Done | pytest 1,798件 + Vitest 1,942件 + Playwright E2E |
+| 🧪 テスト (6,578+ケース) | ✅ Done | pytest **4,636件** + Vitest 1,942件 + Playwright E2E |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|
@@ -443,6 +493,8 @@ gantt
 | 🔤 **Ruff UP017 datetime.UTC 統一 (116件)** | 🔄 **CI中** | `datetime.timezone.utc` → `datetime.UTC` 54ファイル (PR#334) |
 | 🔤 **Ruff 残存 auto-fix 13件** | 🔄 **CI中** | RUF100/RUF005/UP038/B007 一括修正 (PR#336) |
 | ⏳ **ESLint 10 移行** | 🚫 **Blocked** | eslint-plugin-react upstream 非互換・upstream 対応待ち (Issue#325) |
+| 🔗 **SAM M365 Graph API 実統合** | ✅ **Done** | `SAMService.sync_m365_licenses` + procurement 通知サービス統合 (PR #474, 2026-04-23 merged) |
+| 🎯 **SKU → License alias mapping** | ✅ **Done** | `software_sku_aliases` テーブル + 2-pass matcher (alias-first → substring fallback) (PR #478, 2026-04-23 merged) |
 
 ### GitHub Issues トラッカー
 
@@ -477,6 +529,9 @@ gantt
 | #300 | coverage設定・StatCardテスト | Done |
 | #302 | ブランチカバレッジ87→90%テスト | Done |
 | #305 | ブランチカバレッジ90%達成 | Done |
+| #425 | procurement 通知サービス統合 (email/Slack/Teams) | Done (PR#474) |
+| #426 | SAMサービス M365 Graph API 実統合 | Done (PR#474) |
+| #477 | SAM SKU → SoftwareLicense alias mapping | Done (PR#478) |
 
 </details>
 
@@ -574,6 +629,19 @@ graph LR
 </details>
 
 <details>
+<summary>📅 Session 2026-04-23 — SAM M365 Graph API 実統合 + 調達通知 + SKU alias</summary>
+
+| 内容 | 詳細 | PR |
+|:---|:---|:---:|
+| SAM M365 Graph API 実統合 | `SAMService.sync_m365_licenses` (subscribedSkus→consumedUnits 同期) / 単体テスト 14件 | [#474](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/474) ✅ |
+| 調達承認通知サービス統合 | email / Slack / Teams チャネル経由の `send_procurement_notification` / 単体テスト 10件 | [#474](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/474) ✅ |
+| SKU → License alias mapping | `software_sku_aliases` テーブル + 2-pass matcher (alias-first → substring fallback) + claim exclusivity / 単体テスト 10件 | [#478](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/478) ✅ |
+| Issue 整理 | #425 / #426 / #477 を close、残 Open は upstream 待ちの #325 のみ | — |
+| テスト数 | pytest `collected 4,636 tests` 達成 (前回比 +2,838) | — |
+
+</details>
+
+<details>
 <summary>📅 Session 14 (2026-04-09) — ブランチカバレッジ90%達成・閾値ラチェット</summary>
 
 | 内容 | 詳細 | PR |
@@ -598,7 +666,8 @@ graph LR
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| テスト | 全テスト通過 | ✅ 81 ファイル / 1,942件 |
+| Backend テスト | 全テスト通過 | ✅ **181 ファイル / 4,636件** pytest |
+| Frontend テスト | 全テスト通過 | ✅ 81 ファイル / 1,942件 vitest |
 | フロントカバレッジ | Lines ≥ 90% | ✅ **96.26%** |
 | ブランチカバレッジ | Branches ≥ 85% | ✅ **90.21%** |
 | CI | GitHub Actions 成功 | ✅ |
@@ -607,7 +676,7 @@ graph LR
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：✅ STABLE — Session 14 全チェック通過 (PR#306 merged, Branch coverage 90.21%)
+> **N = 3** (通常変更)：✅ STABLE — Session 2026-04-23 全チェック通過 (PR#474 / #478 merged, pytest 4,636 / vitest 1,942)
 
 ### Agent Teams
 
