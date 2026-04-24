@@ -218,4 +218,83 @@ describe('Convenience functions', () => {
       expect.anything()
     );
   });
+
+  it('fetchProcurementRequests calls /api/v1/procurement', async () => {
+    fetchMock.mockReturnValue(okResponse({ data: [] }));
+    const { fetchProcurementRequests } = await import('@/lib/api');
+    await fetchProcurementRequests();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/procurement'),
+      expect.anything()
+    );
+  });
+});
+
+describe('SAM API functions', () => {
+  it('fetchSamLicenses calls /api/v1/sam/licenses with skip and limit', async () => {
+    fetchMock.mockReturnValue(okResponse({ items: [], total: 0, skip: 0, limit: 50 }));
+    const { fetchSamLicenses } = await import('@/lib/api');
+    await fetchSamLicenses();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/sam/licenses'),
+      expect.anything()
+    );
+  });
+
+  it('fetchSamLicenses includes vendor param when provided', async () => {
+    fetchMock.mockReturnValue(okResponse({ items: [], total: 0, skip: 0, limit: 50 }));
+    const { fetchSamLicenses } = await import('@/lib/api');
+    await fetchSamLicenses(0, 50, 'Microsoft');
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('vendor=Microsoft');
+  });
+
+  it('fetchSamLicense calls /api/v1/sam/licenses/:id', async () => {
+    fetchMock.mockReturnValue(okResponse({ id: '1', software_name: 'Test' }));
+    const { fetchSamLicense } = await import('@/lib/api');
+    await fetchSamLicense('1');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/sam/licenses/1'),
+      expect.anything()
+    );
+  });
+
+  it('fetchSamLicenseAliases calls /api/v1/sam/licenses/:id/aliases', async () => {
+    fetchMock.mockReturnValue(okResponse([]));
+    const { fetchSamLicenseAliases } = await import('@/lib/api');
+    await fetchSamLicenseAliases('1');
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/sam/licenses/1/aliases'),
+      expect.anything()
+    );
+  });
+
+  it('createSamAlias POSTs to /api/v1/sam/licenses/:id/aliases', async () => {
+    fetchMock.mockReturnValue(okResponse({ id: 'a1', sku_part_number: 'PACK' }));
+    const { createSamAlias } = await import('@/lib/api');
+    await createSamAlias('1', 'PACK');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/api/v1/sam/licenses/1/aliases');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ sku_part_number: 'PACK' });
+  });
+
+  it('updateSamAlias PATCHes /api/v1/sam/sku-aliases/:id', async () => {
+    fetchMock.mockReturnValue(okResponse({ id: 'a1', sku_part_number: 'NEW' }));
+    const { updateSamAlias } = await import('@/lib/api');
+    await updateSamAlias('a1', 'NEW');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/api/v1/sam/sku-aliases/a1');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ sku_part_number: 'NEW' });
+  });
+
+  it('deleteSamAlias DELETEs /api/v1/sam/sku-aliases/:id', async () => {
+    fetchMock.mockReturnValue(okResponse(null));
+    const { deleteSamAlias } = await import('@/lib/api');
+    await deleteSamAlias('a1');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/api/v1/sam/sku-aliases/a1');
+    expect(init.method).toBe('DELETE');
+  });
 });
