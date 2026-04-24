@@ -109,6 +109,9 @@ const mockEvents: DLPEvent[] = [
   { id: 'e4', rule_id: '4', rule_name: 'USB パス検出', device_id: 'd4', user_name: 'sato.yuki', file_path: 'F:\\Documents\\quarterly_report.docx', file_name: 'quarterly_report.docx', file_size: 1048576, action_taken: 'alerted', matched_pattern: 'F:\\*', severity: 'high', detected_at: '2026-03-25T10:30:00Z' },
   { id: 'e5', rule_id: '2', rule_name: '個人情報キーワード検出', device_id: 'd5', user_name: 'kobayashi.mei', file_path: 'C:\\Users\\kobayashi\\Documents\\給与明細_2026Q1.pdf', file_name: '給与明細_2026Q1.pdf', file_size: 512000, action_taken: 'blocked', matched_pattern: '給与明細', severity: 'critical', detected_at: '2026-03-24T09:12:00Z' },
   { id: 'e6', rule_id: '1', rule_name: '実行ファイル検出', device_id: 'd6', user_name: 'watanabe.ken', file_path: 'G:\\tools\\setup.msi', file_name: 'setup.msi', file_size: 15728640, action_taken: 'alerted', matched_pattern: '.msi', severity: 'high', detected_at: '2026-03-23T14:00:00Z' },
+  { id: 'e7', rule_id: '3', rule_name: '大容量ファイル転送検出', device_id: 'd7', user_name: 'nakamura.yosuke', file_path: 'H:\\archive\\full_backup.tar', file_name: 'full_backup.tar', file_size: 2147483648, action_taken: 'blocked', matched_pattern: '104857600', severity: 'critical', detected_at: '2026-03-22T08:00:00Z' },
+  { id: 'e8', rule_id: '2', rule_name: '個人情報キーワード検出', device_id: 'd8', user_name: 'inoue.akiko', file_path: 'C:\\temp\\note.txt', file_name: 'note.txt', file_size: 512, action_taken: 'logged', matched_pattern: '個人情報', severity: 'low', detected_at: '2026-03-21T15:30:00Z' },
+  { id: 'e9', rule_id: '4', rule_name: 'USB パス検出', device_id: 'd9', user_name: 'kato.hiroshi', file_path: 'F:\\unknown', file_name: 'unknown', file_size: null, action_taken: 'alerted', matched_pattern: 'F:\\*', severity: 'medium', detected_at: '2026-03-20T12:00:00Z' },
 ];
 
 const mockSummary = {
