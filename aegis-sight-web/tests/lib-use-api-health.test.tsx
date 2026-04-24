@@ -72,6 +72,13 @@ describe('useApiHealth', () => {
     expect(result.current.error).toBe('Network error');
   });
 
+  it('sets "Unknown error" for non-Error rejection', async () => {
+    fetchMock.mockRejectedValue('string rejection');
+    const { result } = renderHook(() => useApiHealth());
+    await act(async () => { await Promise.resolve(); });
+    expect(result.current.error).toBe('Unknown error');
+  });
+
   it('polls every 30 seconds', async () => {
     renderHook(() => useApiHealth());
     await act(async () => { await Promise.resolve(); });
