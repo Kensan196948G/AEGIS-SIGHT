@@ -6,10 +6,12 @@
 | 対象組織 | みらい建設工業（従業員550名、管理対象端末500台） |
 | 統合先リポジトリ | Kensan196948G/AEGIS-SIGHT |
 | 移植元リポジトリ | Kensan196948G/IntegratedITAssetServiceManagement |
-| 総期間 | **6ヶ月（2026-03-22〜2026-09-22）** |
-| 開発開始日 | 2026-03-22 |
-| リリース目標日 | **2026-09-22（社内環境公開）** |
+| 総期間 | **6ヶ月（2026-03-25〜2026-09-25）** |
+| 開発開始日 | 2026-03-25（プロジェクト登録日 = `state.json.project.registered_at`）|
+| リリース目標日 | **2026-09-25（本番リリース・絶対厳守 / `release_deadline`）** |
 | 技術スタック | Python FastAPI / Next.js 14 / PostgreSQL 16 / Docker / PowerShell Agent |
+
+> 🛡️ **最上位制約**: 本番リリース日 `2026-09-25` は `state.json` / GitHub milestone `v1.0 Production Release` / [CLAUDE.md §1.5](../../CLAUDE.md) と一致し、絶対に動かさない。残日数 30 日以内で Improvement 縮退、14 日以内で新機能凍結、7 日以内でリリース準備のみ（[`.github/workflows/release-deadline-watch.yml`](../../.github/workflows/release-deadline-watch.yml) が日次で監視）。
 
 ---
 
@@ -29,7 +31,7 @@ Mar      Apr-May           Apr-Jun           Jun-Jul      Jul-Aug      Aug-Sep
 | **Phase C** | 🔄 IAMS選択移植 | 2026-04-01〜06-30 | 🔄 進行中 | IAMS pytest変換・SAM・調達・M365移植 |
 | **Phase D** | 📊 監視・PWA統合 | 2026-06-01〜07-31 | ⏳ 未開始 | Prometheus/Grafana・PWA・オフライン同期 |
 | **Phase E** | 🛡️ QA・セキュリティ強化 | 2026-07-01〜08-31 | ⏳ 未開始 | テストカバレッジ80%+・セキュリティ監査 |
-| **Phase F** | 🚀 リリース準備 | 2026-08-15〜09-22 | ⏳ 未開始 | UAT・本番構築・社内公開 |
+| **Phase F** | 🚀 リリース準備 | 2026-08-15〜09-25 | ⏳ 未開始 | UAT・本番構築・社内公開（締切 09-25 厳守）|
 
 > 📚 詳細: [docs/development-phases/](../development-phases/)
 

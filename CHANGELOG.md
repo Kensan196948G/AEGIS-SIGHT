@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Changed
+- docs: `release_deadline` を `2026-09-25` に統一（README / `docs/02_ロードマップ/` / `docs/development-phases/` の旧 `2026-09-22` 表記を一掃し、CLAUDE.md §1.5 / `state.json` / GitHub milestone `v1.0 Production Release` と整合）
+- docs: `PROJECT_STATUS.md` 冒頭に「⏰ プロジェクト期間・リリース制約」セクションを追加し、6 ヶ月期間 / Cron 実行 / 5 時間セッション / フェーズ自由配分 / 監視ワークフローを明記
+- docs: `AGENTS.md`（Codex 運用）にも同等のリリース期限制約を追加し、Claude / Codex の制約を一致させた
+
 ---
 
 ## [0.48.0] - 2026-03-27
