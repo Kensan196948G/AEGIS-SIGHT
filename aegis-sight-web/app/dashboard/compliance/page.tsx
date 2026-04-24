@@ -43,6 +43,7 @@ const complianceIssues = [
   { id: 'CI-003', framework: 'NIST CSF', severity: 'high', title: 'インシデント対応計画の更新遅延', status: 'in_progress', dueDate: '2026-04-10' },
   { id: 'CI-004', framework: 'ISO 27001', severity: 'critical', title: 'A.14 開発環境と本番環境の分離不十分', status: 'open', dueDate: '2026-04-05' },
   { id: 'CI-005', framework: 'J-SOX', severity: 'low', title: '変更管理チケットの承認記録不備', status: 'open', dueDate: '2026-05-01' },
+  { id: 'CI-006', framework: 'ISO 27001', severity: 'medium', title: 'A.9 アクセス制御: 特権アカウント棚卸し完了', status: 'resolved', dueDate: '2026-03-31' },
 ];
 
 const auditEvents = [
