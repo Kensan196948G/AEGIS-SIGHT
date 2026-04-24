@@ -90,22 +90,25 @@
     ],
     "merged_prs": [
       483,
-      484
-    ],
-    "open_prs": [
+      484,
       485
     ],
-    "closed_issues": [],
-    "last_updated": "2026-04-24T11:00:00+09:00",
+    "open_prs": [
+      486
+    ],
+    "closed_issues": [
+      479
+    ],
+    "last_updated": "2026-04-24T12:00:00+09:00",
     "days_left": 154,
-    "notes": "SAM API接続 (PR#485): types/api/hooks/pages/tests 追加。vitest 2637件 (+695件)。branch coverage 90.08% (目標90%達成)。lib/hooks/lib/utils/lib/date-utils/api.ts 全て100%カバレッジ。PR#485 CI pytest 待ち。"
+    "notes": "PR#485 (SAM API接続) MERGED。vitest 2643件 / branch coverage 90.29%。PR#486 (coverage-v8 4.1.5) CI待ち。Issue#479 close済み。次: compliance/dlp ページカバレッジ向上、バックエンドテスト追加。"
   },
   "kpi_status": {
-    "frontend_coverage_statements": 96.21,
-    "frontend_coverage_branches": 90.08,
+    "frontend_coverage_statements": 96.28,
+    "frontend_coverage_branches": 90.29,
     "frontend_coverage_functions": 94.63,
-    "frontend_coverage_lines": 97.15,
-    "frontend_test_count": 2637,
+    "frontend_coverage_lines": 97.22,
+    "frontend_test_count": 2643,
     "frontend_test_files": 92,
     "frontend_all_passing": true,
     "coverage_artifact_generated": true,
