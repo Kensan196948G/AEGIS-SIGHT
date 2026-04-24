@@ -24,6 +24,13 @@ describe('SearchInput', () => {
     expect(screen.getByRole('textbox')).toHaveValue('b');
   });
 
+  it('handles controlled value changing to undefined (line 33 false branch)', () => {
+    const { rerender } = render(<SearchInput value="hello" onChange={vi.fn()} />);
+    // Remove value prop → controlledValue becomes undefined → false branch of if (controlledValue !== undefined)
+    rerender(<SearchInput onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox').tagName).toBe('INPUT');
+  });
+
   it('calls onChange with debounce', async () => {
     vi.useFakeTimers();
     const onChange = vi.fn();
@@ -31,6 +38,22 @@ describe('SearchInput', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'test' } });
     expect(onChange).not.toHaveBeenCalled();
     await act(async () => { vi.advanceTimersByTime(300); });
+    expect(onChange).toHaveBeenCalledWith('test');
+    vi.useRealTimers();
+  });
+
+  it('debounce cancels previous timer on rapid typing (line 41 clearTimeout branch)', async () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    render(<SearchInput onChange={onChange} debounceMs={300} />);
+    const input = screen.getByRole('textbox');
+    // First keystroke
+    fireEvent.change(input, { target: { value: 'te' } });
+    // Second keystroke within debounce window → clearTimeout is called (timerRef.current truthy)
+    fireEvent.change(input, { target: { value: 'test' } });
+    // Only one onChange call after waiting full debounce period
+    await act(async () => { vi.advanceTimersByTime(300); });
+    expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('test');
     vi.useRealTimers();
   });
