@@ -72,7 +72,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v8 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,636件** / vitest 1,942件・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了 |
+| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,636件** / vitest **2,642件**・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了・**SAM Frontend API 実接続完了 (PR#484/#485)** ・**branch coverage 90.25% 達成** |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -158,7 +158,7 @@ flowchart LR
 
     subgraph TEST["🧪 テスト (DB付き)"]
         PYTEST["🐍 pytest\n4,636件 + coverage"]
-        VITEST["⚛️ vitest\n1,942件 + coverage v8"]
+        VITEST["⚛️ vitest\n2,642件 + coverage v8"]
         REPORT["📊 PR Summary\nコメント自動投稿"]
     end
 
@@ -462,7 +462,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (6,578+ケース) | ✅ Done | pytest **4,636件** + Vitest 1,942件 + Playwright E2E |
+| 🧪 テスト (7,278+ケース) | ✅ Done | pytest **4,636件** + Vitest **2,642件** + Playwright E2E ・branch coverage **90.25%** |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|

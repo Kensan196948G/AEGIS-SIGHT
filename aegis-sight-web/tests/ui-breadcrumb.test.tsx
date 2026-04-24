@@ -57,6 +57,17 @@ describe('Breadcrumb', () => {
     expect(screen.getByText('Unknown')).toBeInTheDocument();
   });
 
+  it('auto-generates capitalized label for unknown pathname segment (line 38 fallback branch)', async () => {
+    // Re-mock with a path that has an unknown segment not in pathLabelMap
+    vi.doMock('next/navigation', () => ({ usePathname: () => '/dashboard/custom-unknown' }));
+    vi.resetModules();
+    const { Breadcrumb: BreadcrumbReloaded } = await import('@/components/ui/breadcrumb');
+    render(<BreadcrumbReloaded />);
+    // 'custom-unknown' is not in pathLabelMap → fallback capitalizes it → 'Custom-unknown'
+    expect(document.body.textContent).toContain('Custom-unknown');
+    vi.resetModules();
+  });
+
   it('accepts extra className', () => {
     render(<Breadcrumb items={[{ label: 'X', href: '/x' }]} className="my-class" />);
     expect(screen.getByRole('navigation')).toHaveClass('my-class');

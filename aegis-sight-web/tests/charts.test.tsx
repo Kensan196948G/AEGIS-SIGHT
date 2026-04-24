@@ -63,6 +63,11 @@ describe('PieChart', () => {
     expect(container.querySelector('svg')).toBeTruthy();
   });
 
+  it('renders full-circle donut (single item + innerRadius > 0) — covers lines 87-92', () => {
+    const { container } = render(<PieChart data={[{ label: 'Only', value: 100 }]} innerRadius={40} />);
+    expect(container.querySelectorAll('path').length).toBeGreaterThan(0);
+  });
+
   it('renders donut when innerRadius > 0', () => {
     const { container } = render(<PieChart data={data} innerRadius={40} />);
     expect(container.querySelectorAll('path').length).toBeGreaterThan(0);

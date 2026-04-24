@@ -3,45 +3,84 @@
 import Link from 'next/link';
 import { DonutChart, BarChart } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
+import { useSamLicenses } from '@/lib/hooks/use-sam-licenses';
+import { computeStatus, getSamDonutColor } from '@/lib/utils/sam';
+import type { SamLicense } from '@/lib/types';
 
-// ライセンスデータ集計（sam/licenses/page.tsxのデータと整合）
-const licenses = [
-  { vendor: 'Microsoft', total: 500, used: 487, status: 'compliant',        costPerLicense: 2750 },
-  { vendor: 'Adobe',     total:  50, used:  58, status: 'over-deployed',    costPerLicense: 6578 },
-  { vendor: 'Salesforce',total: 600, used: 412, status: 'under-utilized',   costPerLicense:  998 },
-  { vendor: 'Autodesk',  total:  30, used:  28, status: 'compliant',        costPerLicense: 5500 },
-  { vendor: 'Microsoft', total:  20, used:  18, status: 'compliant',        costPerLicense: 8250 },
-  { vendor: 'Atlassian', total: 200, used: 195, status: 'expiring-soon',    costPerLicense:  750 },
-  { vendor: 'Microsoft', total:  15, used:  14, status: 'compliant',        costPerLicense: 45000 },
-  { vendor: 'Gen Digital',total: 600, used: 320, status: 'under-utilized',  costPerLicense:  420 },
-];
+export { getSamDonutColor };
 
-// 集計
-const totalItems = licenses.length;
-const compliantCount  = licenses.filter(l => l.status === 'compliant').length;
-const overDeployed    = licenses.filter(l => l.status === 'over-deployed').length;
-const underUtilized   = licenses.filter(l => l.status === 'under-utilized').length;
-const expiringSoon    = licenses.filter(l => l.status === 'expiring-soon').length;
-const complianceRate  = Math.round((compliantCount / totalItems) * 100);
-const totalMonthlyCost = licenses.reduce((sum, l) => sum + l.costPerLicense * l.total, 0);
-
-// ベンダー別月額コスト集計
-const vendorCosts = Object.entries(
-  licenses.reduce<Record<string, number>>((acc, l) => {
-    acc[l.vendor] = (acc[l.vendor] ?? 0) + l.costPerLicense * l.total;
-    return acc;
-  }, {})
-)
-  .map(([vendor, cost]) => ({ label: vendor, value: Math.round(cost / 10000) }))
-  .sort((a, b) => b.value - a.value);
-
-export function getSamDonutColor(rate: number): string {
-  return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
+function buildStats(licenses: SamLicense[]) {
+  const totalItems      = licenses.length;
+  const compliantCount  = licenses.filter(l => computeStatus(l) === 'compliant').length;
+  const overDeployed    = licenses.filter(l => computeStatus(l) === 'over-deployed').length;
+  const underUtilized   = licenses.filter(l => computeStatus(l) === 'under-utilized').length;
+  const expiringSoon    = licenses.filter(l => computeStatus(l) === 'expiring-soon').length;
+  const complianceRate  = totalItems > 0 ? Math.round((compliantCount / totalItems) * 100) : 0;
+  const totalMonthlyCost = licenses.reduce((sum, l) => sum + (l.cost_per_unit ?? 0) * l.purchased_count, 0);
+  const vendorCosts = Object.entries(
+    licenses.reduce<Record<string, number>>((acc, l) => {
+      acc[l.vendor] = (acc[l.vendor] ?? 0) + (l.cost_per_unit ?? 0) * l.purchased_count;
+      return acc;
+    }, {})
+  )
+    .map(([vendor, cost]) => ({ label: vendor, value: Math.round(cost / 10000) }))
+    .sort((a, b) => b.value - a.value);
+  return { totalItems, compliantCount, overDeployed, underUtilized, expiringSoon, complianceRate, totalMonthlyCost, vendorCosts };
 }
 
-const donutColor = getSamDonutColor(complianceRate);
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse aegis-card flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+      <div className="h-36 w-36 rounded-full bg-gray-200 dark:bg-gray-700" />
+      <div className="flex-1 space-y-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SAMPage() {
+  const { licenses, loading, error, refetch } = useSamLicenses();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SAM - ソフトウェア資産管理</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">ライセンスコンプライアンスと最適化</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SkeletonCard />
+          <div className="animate-pulse aegis-card h-64 bg-gray-100 dark:bg-gray-800" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SAM - ソフトウェア資産管理</h1>
+        </div>
+        <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+          <button
+            onClick={refetch}
+            className="mt-2 text-sm font-medium text-red-600 underline dark:text-red-400"
+          >
+            再試行
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { totalItems, compliantCount, overDeployed, underUtilized, expiringSoon, complianceRate, totalMonthlyCost, vendorCosts } = buildStats(licenses);
+  const donutColor = getSamDonutColor(complianceRate);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -102,16 +141,20 @@ export default function SAMPage() {
           <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
             ベンダー別月額コスト（万円）
           </h2>
-          <BarChart
-            data={vendorCosts.map((v) => ({
-              label: v.label,
-              value: v.value,
-              color: 'bg-primary-500',
-            }))}
-            maxValue={Math.max(...vendorCosts.map(v => v.value)) + 10}
-            showValues
-            className="h-48"
-          />
+          {vendorCosts.length > 0 ? (
+            <BarChart
+              data={vendorCosts.map((v) => ({
+                label: v.label,
+                value: v.value,
+                color: 'bg-primary-500',
+              }))}
+              maxValue={Math.max(...vendorCosts.map(v => v.value)) + 10}
+              showValues
+              className="h-48"
+            />
+          ) : (
+            <p className="text-sm text-gray-400 dark:text-gray-500">データなし</p>
+          )}
         </div>
       </div>
 

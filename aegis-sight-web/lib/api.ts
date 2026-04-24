@@ -118,3 +118,49 @@ export async function fetchAlerts(page = 1, perPage = 20) {
     `/api/v1/alerts?page=${page}&per_page=${perPage}`
   );
 }
+
+// ── SAM: Software Asset Management ──────────────────────────────────────────
+
+type SamLicense    = import('./types').SamLicense;
+type SamSkuAlias   = import('./types').SamSkuAlias;
+type Paginated<T>  = import('./types').PaginatedResponse<T>;
+
+export async function fetchSamLicenses(
+  skip = 0,
+  limit = 50,
+  vendor?: string,
+): Promise<Paginated<SamLicense>> {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  if (vendor) params.set('vendor', vendor);
+  return api.get<Paginated<SamLicense>>(`/api/v1/sam/licenses?${params}`);
+}
+
+export async function fetchSamLicense(licenseId: string): Promise<SamLicense> {
+  return api.get<SamLicense>(`/api/v1/sam/licenses/${licenseId}`);
+}
+
+export async function fetchSamLicenseAliases(licenseId: string): Promise<SamSkuAlias[]> {
+  return api.get<SamSkuAlias[]>(`/api/v1/sam/licenses/${licenseId}/aliases`);
+}
+
+export async function createSamAlias(
+  licenseId: string,
+  skuPartNumber: string,
+): Promise<SamSkuAlias> {
+  return api.post<SamSkuAlias>(`/api/v1/sam/licenses/${licenseId}/aliases`, {
+    sku_part_number: skuPartNumber,
+  });
+}
+
+export async function updateSamAlias(
+  aliasId: string,
+  skuPartNumber: string,
+): Promise<SamSkuAlias> {
+  return api.patch<SamSkuAlias>(`/api/v1/sam/sku-aliases/${aliasId}`, {
+    sku_part_number: skuPartNumber,
+  });
+}
+
+export async function deleteSamAlias(aliasId: string): Promise<void> {
+  return api.delete<void>(`/api/v1/sam/sku-aliases/${aliasId}`);
+}

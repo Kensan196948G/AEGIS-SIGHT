@@ -127,4 +127,32 @@ describe('FormField - textarea', () => {
     render(<FormField label="説明" name="desc" type="textarea" rows={5} />);
     expect(screen.getByRole('textbox')).toHaveAttribute('rows', '5');
   });
+
+  it('textarea with error applies error styles (line 112 true branch)', () => {
+    render(<FormField label="説明" name="desc" type="textarea" error="必須です" />);
+    const ta = screen.getByRole('textbox');
+    expect(ta.className).toMatch(/border-red/);
+  });
+
+  it('textarea with disabled applies opacity styles (line 113 true branch)', () => {
+    render(<FormField label="説明" name="desc" type="textarea" disabled />);
+    const ta = screen.getByRole('textbox');
+    expect(ta.className).toContain('cursor-not-allowed');
+  });
+});
+
+describe('FormField - select error/disabled (line 84 branches)', () => {
+  const options = [{ value: 'a', label: 'Option A' }];
+
+  it('select with error applies error styles (line 84 error branch)', () => {
+    render(<FormField label="選択" name="sel" type="select" options={options} error="必須です" />);
+    const sel = screen.getByRole('combobox');
+    expect(sel.className).toMatch(/border-red/);
+  });
+
+  it('select with disabled applies opacity styles (line 84 disabled branch)', () => {
+    render(<FormField label="選択" name="sel" type="select" options={options} disabled />);
+    const sel = screen.getByRole('combobox');
+    expect(sel.className).toContain('cursor-not-allowed');
+  });
 });

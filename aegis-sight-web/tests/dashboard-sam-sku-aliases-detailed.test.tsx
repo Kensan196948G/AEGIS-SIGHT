@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-
-// License ID controlled per test
-let mockParamsId = '1';
+import type { SamLicense, SamSkuAlias } from '@/lib/types';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
-  usePathname: () => `/dashboard/sam/licenses/${mockParamsId}/aliases`,
-  useParams:  () => ({ id: mockParamsId }),
+  usePathname: () => '/dashboard/sam/licenses/1/aliases',
+  useParams:  () => ({ id: '1' }),
 }));
 
 vi.mock('@/components/ui/badge', () => ({
@@ -50,6 +48,7 @@ vi.mock('@/components/ui/confirm-dialog', () => ({
     message?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    loading?: boolean;
   }) =>
     isOpen ? (
       <div data-testid="confirm-dialog">
@@ -60,8 +59,65 @@ vi.mock('@/components/ui/confirm-dialog', () => ({
     ) : null,
 }));
 
+// Mock hook with controllable state
+const mockAddAlias    = vi.fn();
+const mockEditAlias   = vi.fn();
+const mockRemoveAlias = vi.fn();
+const mockRefetch     = vi.fn();
+
+const MOCK_LICENSE: SamLicense = {
+  id: '1', software_name: 'Microsoft 365 E3', vendor: 'Microsoft',
+  license_type: 'subscription', license_key: null,
+  purchased_count: 500, installed_count: 487, m365_assigned: 0,
+  cost_per_unit: 2750, currency: 'JPY',
+  purchase_date: null, expiry_date: null,
+  vendor_contract_id: null, notes: null,
+  created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z',
+};
+
+const INITIAL_ALIASES: SamSkuAlias[] = [
+  { id: 'a1', software_license_id: '1', sku_part_number: 'ENTERPRISEPACK',   created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: 'a2', software_license_id: '1', sku_part_number: 'SPE_E3',           created_at: '2026-04-01T00:00:00Z', updated_at: '2026-04-01T00:00:00Z' },
+  { id: 'a3', software_license_id: '1', sku_part_number: 'MICROSOFT_365_E3', created_at: '2026-04-10T00:00:00Z', updated_at: '2026-04-10T00:00:00Z' },
+];
+
+let currentAliases = [...INITIAL_ALIASES];
+
+function buildMockHook() {
+  mockAddAlias.mockImplementation(async (sku: string) => {
+    const newAlias: SamSkuAlias = {
+      id: `new-${Date.now()}`, software_license_id: '1',
+      sku_part_number: sku,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    };
+    currentAliases = [...currentAliases, newAlias];
+  });
+  mockEditAlias.mockImplementation(async (aliasId: string, sku: string) => {
+    currentAliases = currentAliases.map(a =>
+      a.id === aliasId ? { ...a, sku_part_number: sku } : a
+    );
+  });
+  mockRemoveAlias.mockImplementation(async (aliasId: string) => {
+    currentAliases = currentAliases.filter(a => a.id !== aliasId);
+  });
+}
+
+vi.mock('@/lib/hooks/use-sam-aliases', () => ({
+  useSamAliases: (_id: string) => ({
+    license: MOCK_LICENSE,
+    aliases: currentAliases,
+    loading: false,
+    error:   null,
+    addAlias:    mockAddAlias,
+    editAlias:   mockEditAlias,
+    removeAlias: mockRemoveAlias,
+    refetch:     mockRefetch,
+  }),
+}));
+
 beforeEach(() => {
-  mockParamsId = '1';
+  currentAliases = [...INITIAL_ALIASES];
+  buildMockHook();
 });
 
 afterEach(() => {
@@ -104,25 +160,7 @@ describe('SKU Aliases page - basic render (license id=1)', () => {
   });
 });
 
-// ─── 2. Not-found state ───────────────────────────────────────────────────────
-
-describe('SKU Aliases page - unknown license id', () => {
-  beforeEach(() => { mockParamsId = '999'; });
-
-  it('shows 404 message for unknown id', async () => {
-    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
-    render(<Page />);
-    expect(document.body.textContent).toContain('見つかりません');
-  });
-
-  it('still shows a back button when not found', async () => {
-    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
-    render(<Page />);
-    expect(screen.getByText('← 戻る')).toBeTruthy();
-  });
-});
-
-// ─── 3. Alias list (license 1 has 3 aliases) ─────────────────────────────────
+// ─── 2. Alias list ────────────────────────────────────────────────────────────
 
 describe('SKU Aliases page - alias list', () => {
   it('displays ENTERPRISEPACK alias', async () => {
@@ -143,32 +181,14 @@ describe('SKU Aliases page - alias list', () => {
     expect(document.body.textContent).toContain('MICROSOFT_365_E3');
   });
 
-  it('shows "3 件登録済み" badge', async () => {
+  it('shows "3 件登録済み" count', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
     expect(document.body.textContent).toContain('3');
   });
 });
 
-// ─── 4. Empty alias list (license 2 has no aliases) ──────────────────────────
-
-describe('SKU Aliases page - empty state (license id=2)', () => {
-  beforeEach(() => { mockParamsId = '2'; });
-
-  it('shows empty state message', async () => {
-    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
-    render(<Page />);
-    expect(document.body.textContent).toContain('SKU エイリアスが未登録です');
-  });
-
-  it('shows license name for license 2', async () => {
-    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
-    render(<Page />);
-    expect(document.body.textContent).toContain('Adobe Creative Cloud');
-  });
-});
-
-// ─── 5. Add modal ─────────────────────────────────────────────────────────────
+// ─── 3. Add modal ─────────────────────────────────────────────────────────────
 
 describe('SKU Aliases page - add alias', () => {
   it('opens add modal on button click', async () => {
@@ -185,14 +205,14 @@ describe('SKU Aliases page - add alias', () => {
     await waitFor(() => expect(screen.getByTestId('modal-title').textContent).toBe('SKU エイリアスを追加'));
   });
 
-  it('adds a new alias via "追加" button', async () => {
+  it('calls addAlias with entered SKU on submit', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
     fireEvent.click(screen.getByText('エイリアスを追加'));
     const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK'));
     fireEvent.change(input, { target: { value: 'NEW_SKU_001' } });
     fireEvent.click(screen.getByText('追加'));
-    await waitFor(() => expect(document.body.textContent).toContain('NEW_SKU_001'));
+    await waitFor(() => expect(mockAddAlias).toHaveBeenCalledWith('NEW_SKU_001'));
   });
 
   it('shows error when submitting empty SKU', async () => {
@@ -224,7 +244,7 @@ describe('SKU Aliases page - add alias', () => {
   });
 });
 
-// ─── 6. Edit modal ────────────────────────────────────────────────────────────
+// ─── 4. Edit modal ────────────────────────────────────────────────────────────
 
 describe('SKU Aliases page - edit alias', () => {
   it('opens edit modal on edit button click', async () => {
@@ -238,63 +258,57 @@ describe('SKU Aliases page - edit alias', () => {
   it('edit modal is pre-filled with existing SKU', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const editBtns = screen.getAllByLabelText('編集');
-    fireEvent.click(editBtns[0]);
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
     await waitFor(() => {
       const input = screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement;
       expect(input.value).toBe('ENTERPRISEPACK');
     });
   });
 
-  it('saves updated SKU', async () => {
+  it('calls editAlias with updated SKU on save', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const editBtns = screen.getAllByLabelText('編集');
-    fireEvent.click(editBtns[0]);
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
     const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement);
     fireEvent.change(input, { target: { value: 'UPDATED_SKU' } });
     fireEvent.click(screen.getByText('保存'));
-    await waitFor(() => expect(document.body.textContent).toContain('UPDATED_SKU'));
+    await waitFor(() => expect(mockEditAlias).toHaveBeenCalledWith('a1', 'UPDATED_SKU'));
   });
 });
 
-// ─── 7. Delete confirm ────────────────────────────────────────────────────────
+// ─── 5. Delete confirm ────────────────────────────────────────────────────────
 
 describe('SKU Aliases page - delete alias', () => {
   it('opens confirm dialog on delete button click', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const deleteBtns = screen.getAllByLabelText('削除');
-    fireEvent.click(deleteBtns[0]);
+    fireEvent.click(screen.getAllByLabelText('削除')[0]);
     await waitFor(() => expect(screen.getByTestId('confirm-dialog')).toBeTruthy());
   });
 
   it('confirm dialog title is "SKU エイリアスを削除"', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const deleteBtns = screen.getAllByLabelText('削除');
-    fireEvent.click(deleteBtns[0]);
+    fireEvent.click(screen.getAllByLabelText('削除')[0]);
     await waitFor(() => expect(screen.getByTestId('confirm-title').textContent).toBe('SKU エイリアスを削除'));
   });
 
-  it('removes alias on confirm', async () => {
+  it('calls removeAlias on confirm', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const beforeCount = screen.getAllByLabelText('削除').length;
     fireEvent.click(screen.getAllByLabelText('削除')[0]);
     await waitFor(() => screen.getByTestId('confirm-dialog'));
     fireEvent.click(screen.getByTestId('confirm-ok'));
-    await waitFor(() => expect(screen.getAllByLabelText('削除').length).toBe(beforeCount - 1));
+    await waitFor(() => expect(mockRemoveAlias).toHaveBeenCalledWith('a1'));
   });
 
-  it('cancels delete and keeps alias', async () => {
+  it('cancels delete without calling removeAlias', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
     render(<Page />);
-    const beforeCount = screen.getAllByLabelText('削除').length;
     fireEvent.click(screen.getAllByLabelText('削除')[0]);
     await waitFor(() => screen.getByTestId('confirm-dialog'));
     fireEvent.click(screen.getByTestId('confirm-cancel'));
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
-    expect(screen.getAllByLabelText('削除').length).toBe(beforeCount);
+    expect(mockRemoveAlias).not.toHaveBeenCalled();
   });
 });

@@ -162,6 +162,25 @@ describe('AuthProvider', () => {
     expect(mockRouterPush).toHaveBeenCalledWith('/dashboard');
   });
 
+  it('API が !ok かつ非デモ認証情報のとき line 98 throw をカバーする', async () => {
+    // response.ok=false + bad credentials → throw "メールアドレスまたはパスワードが正しくありません" (line 98)
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+    render(<AuthConsumer />, { wrapper: Wrapper });
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading').textContent).toBe('false')
+    );
+
+    await act(async () => {
+      screen.getByText('Bad Login').click(); // bad@example.com / wrong
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error').textContent).not.toBe('null');
+    });
+    expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
+  });
+
   it('不正な認証情報でのログインが error を設定する', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
