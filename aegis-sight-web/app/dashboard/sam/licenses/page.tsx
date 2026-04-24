@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
 type LicenseStatus = 'compliant' | 'over-deployed' | 'under-utilized' | 'expiring-soon' | 'expired';
@@ -180,12 +181,13 @@ export default function LicensesPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">月額コスト</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">有効期限</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ステータス</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">SKU alias</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={9} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                     条件に一致するライセンスが見つかりません
                   </td>
                 </tr>
@@ -238,6 +240,14 @@ export default function LicensesPage() {
                         <Badge variant={statusConfig[lic.status].variant} dot size="sm">
                           {statusConfig[lic.status].label}
                         </Badge>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <Link
+                          href={`/dashboard/sam/licenses/${lic.id}/aliases`}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors"
+                        >
+                          SKU alias →
+                        </Link>
                       </td>
                     </tr>
                   );
