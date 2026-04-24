@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { getSamDonutColor } from '@/app/dashboard/sam/page';
+import type { SamLicense } from '@/lib/types';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -20,6 +21,31 @@ vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children, variant, dot, size }: {
     children: React.ReactNode; variant?: string; dot?: boolean; size?: string;
   }) => <span data-variant={variant} data-dot={dot} data-size={size}>{children}</span>,
+}));
+
+// 8 licenses producing: compliant=4, over-deployed=1, under-utilized=2, expiring-soon=1
+// complianceRate = round(4/8*100) = 50, donutColor = red (#ef4444)
+const MOCK_LICENSES: SamLicense[] = [
+  { id: '1', software_name: 'Microsoft 365 E3',       vendor: 'Microsoft',  license_type: 'subscription', license_key: null, purchased_count: 500, installed_count: 487, m365_assigned:   0, cost_per_unit: 2750,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '2', software_name: 'Adobe Creative Cloud',   vendor: 'Adobe',      license_type: 'subscription', license_key: null, purchased_count:  50, installed_count:  58, m365_assigned:   0, cost_per_unit: 6578,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '3', software_name: 'Salesforce CRM',         vendor: 'Salesforce', license_type: 'subscription', license_key: null, purchased_count: 600, installed_count: 240, m365_assigned:   0, cost_per_unit:  998,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '4', software_name: 'AutoCAD LT 2024',        vendor: 'Autodesk',   license_type: 'perpetual',    license_key: null, purchased_count:  30, installed_count:  28, m365_assigned:   0, cost_per_unit: 5500,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '5', software_name: 'Visio Professional',     vendor: 'Microsoft',  license_type: 'perpetual',    license_key: null, purchased_count:  20, installed_count:  18, m365_assigned:   0, cost_per_unit: 8250,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '6', software_name: 'Atlassian Jira',         vendor: 'Atlassian',  license_type: 'subscription', license_key: null, purchased_count: 200, installed_count: 195, m365_assigned:   0, cost_per_unit:  750,  currency: 'JPY', purchase_date: null, expiry_date: '2026-05-15', vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '7', software_name: 'Microsoft Project',      vendor: 'Microsoft',  license_type: 'perpetual',    license_key: null, purchased_count:  15, installed_count:  14, m365_assigned:   0, cost_per_unit: 45000, currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+  { id: '8', software_name: 'Norton 360',             vendor: 'Gen Digital', license_type: 'subscription', license_key: null, purchased_count: 600, installed_count: 240, m365_assigned:   0, cost_per_unit:  420,  currency: 'JPY', purchase_date: null, expiry_date: null,          vendor_contract_id: null, notes: null, created_at: '2026-03-25T00:00:00Z', updated_at: '2026-03-25T00:00:00Z' },
+];
+
+const mockRefetch = vi.fn();
+
+vi.mock('@/lib/hooks/use-sam-licenses', () => ({
+  useSamLicenses: () => ({
+    licenses: MOCK_LICENSES,
+    total: MOCK_LICENSES.length,
+    loading: false,
+    error: null,
+    refetch: mockRefetch,
+  }),
 }));
 
 afterEach(() => {
@@ -62,7 +88,7 @@ describe('SAM page - compliance rate display (complianceRate=50, red branch)', (
   it('shows compliance rate percentage in donut label', async () => {
     const { default: Page } = await import('@/app/dashboard/sam/page');
     render(<Page />);
-    // complianceRate = Math.round(4/8*100) = 50
+    // compliant=4 (items 1,4,5,7), totalItems=8 → complianceRate=50
     expect(document.body.textContent).toContain('50%');
   });
 

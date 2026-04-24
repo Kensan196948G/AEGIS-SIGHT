@@ -4,47 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useSamLicenses } from '@/lib/hooks/use-sam-licenses';
-import type { SamLicense } from '@/lib/types';
-
-type LicenseStatus = 'compliant' | 'over-deployed' | 'under-utilized' | 'expiring-soon' | 'expired';
-
-const licenseTypeLabels: Record<string, string> = {
-  perpetual:    '永続',
-  subscription: 'サブスクリプション',
-  oem:          'OEM',
-  volume:       'ボリューム',
-  site:         'サイト',
-};
-
-const statusConfig: Record<LicenseStatus, { variant: 'success' | 'danger' | 'warning' | 'info'; label: string }> = {
-  compliant:        { variant: 'success', label: '準拠' },
-  'over-deployed':  { variant: 'danger',  label: '超過' },
-  'under-utilized': { variant: 'warning', label: '低利用' },
-  'expiring-soon':  { variant: 'warning', label: '期限間近' },
-  expired:          { variant: 'danger',  label: '期限切れ' },
-};
-
-function computeStatus(lic: SamLicense): LicenseStatus {
-  const used  = lic.installed_count + lic.m365_assigned;
-  const total = lic.purchased_count;
-  if (!lic.expiry_date) {
-    if (used > total) return 'over-deployed';
-    if (total > 0 && used / total < 0.5) return 'under-utilized';
-    return 'compliant';
-  }
-  const days = getDaysUntilExpiry(lic.expiry_date);
-  if (days < 0)  return 'expired';
-  if (days <= 90) return 'expiring-soon';
-  if (used > total) return 'over-deployed';
-  if (total > 0 && used / total < 0.5) return 'under-utilized';
-  return 'compliant';
-}
-
-function getDaysUntilExpiry(dateStr: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.ceil((new Date(dateStr).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
+import { computeStatus, getDaysUntilExpiry, statusConfig, licenseTypeLabels } from '@/lib/utils/sam';
+import type { LicenseStatus } from '@/lib/utils/sam';
 
 function formatExpiry(dateStr: string | null): { text: string; urgent: boolean } {
   if (!dateStr) return { text: '—', urgent: false };
