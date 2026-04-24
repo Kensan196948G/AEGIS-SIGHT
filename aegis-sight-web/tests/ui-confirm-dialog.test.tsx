@@ -58,6 +58,33 @@ describe('ConfirmDialog', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('non-Escape key does not call onCancel (line 100 false branch)', () => {
+    const onCancel = vi.fn();
+    renderDialog({ onCancel });
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('clicking overlay div calls onCancel (line 117 true branch)', () => {
+    const onCancel = vi.fn();
+    const { container } = renderDialog({ onCancel });
+    const overlay = container.firstChild as HTMLElement;
+    if (overlay) {
+      // Simulate click directly on the overlay (e.target === overlayRef.current)
+      fireEvent.click(overlay, { target: overlay });
+    }
+    expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('clicking inside dialog does NOT call onCancel (line 117 false branch)', () => {
+    const onCancel = vi.fn();
+    renderDialog({ onCancel });
+    // Click confirm button (inside dialog box, not on overlay)
+    fireEvent.click(screen.getByText('確認'));
+    // onConfirm is called but not onCancel via overlay
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
   it('shows loading state with spinner text', () => {
     renderDialog({ loading: true });
     expect(screen.getByText('処理中...')).toBeInTheDocument();
