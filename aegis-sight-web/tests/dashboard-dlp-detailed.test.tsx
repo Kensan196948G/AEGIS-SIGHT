@@ -230,10 +230,10 @@ describe('DLP page - events table branches', () => {
     expect(screen.getByText('quarterly_report.docx')).toBeDefined();
   });
 
-  it('renders actionBadge for actionTaken: blocked (2x) and alerted (4x)', async () => {
+  it('renders actionBadge for actionTaken: blocked (3x) and alerted (5x)', async () => {
     await switchToEvents();
-    expect(screen.getAllByText('ブロック済').length).toBe(2);
-    expect(screen.getAllByText('アラート済').length).toBe(4);
+    expect(screen.getAllByText('ブロック済').length).toBe(3); // e1, e5, e7
+    expect(screen.getAllByText('アラート済').length).toBe(5); // e2, e3, e4, e6, e9
   });
 
   it('renders severity badges in events: critical (2), high (3), medium (1)', async () => {
@@ -255,6 +255,25 @@ describe('DLP page - events table branches', () => {
     expect(screen.getByText('15.0 MB')).toBeDefined();
   });
 
+  it('renders formatFileSize GB branch (e7: 2147483648 bytes = 2.0 GB)', async () => {
+    await switchToEvents();
+    // 2147483648 = 2GB → '2.0 GB' (line 206 GB branch)
+    expect(screen.getByText('2.0 GB')).toBeDefined();
+  });
+
+  it('renders formatFileSize null branch (e9: file_size=null → "-")', async () => {
+    await switchToEvents();
+    // null file_size → '-' (line 202 null branch)
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders formatFileSize bytes branch (e8: 512 bytes = "512 B")', async () => {
+    await switchToEvents();
+    // 512 bytes < 1024 → '512 B' (line 203 bytes branch)
+    expect(screen.getByText('512 B')).toBeDefined();
+  });
+
   it('renders formatted dates via formatDate helper (ja-JP locale)', async () => {
     await switchToEvents();
     const tableBody = document.querySelector('tbody');
@@ -265,8 +284,8 @@ describe('DLP page - events table branches', () => {
     await switchToEvents();
     expect(screen.getAllByText('個人情報キーワード検出').length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText('実行ファイル検出').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText('大容量ファイル転送検出')).toBeDefined();
-    expect(screen.getByText('USB パス検出')).toBeDefined();
+    expect(screen.getAllByText('大容量ファイル転送検出').length).toBeGreaterThanOrEqual(2); // e3, e7
+    expect(screen.getAllByText('USB パス検出').length).toBeGreaterThanOrEqual(2); // e4, e9
   });
 
   it('renders events table headers', async () => {
