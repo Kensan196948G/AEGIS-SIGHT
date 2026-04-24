@@ -94,21 +94,21 @@
       485
     ],
     "open_prs": [
-      486
+      488
     ],
     "closed_issues": [
       479
     ],
-    "last_updated": "2026-04-24T12:00:00+09:00",
+    "last_updated": "2026-04-24T12:20:00+09:00",
     "days_left": 154,
-    "notes": "PR#485 (SAM API接続) MERGED。vitest 2643件 / branch coverage 90.29%。PR#486 (coverage-v8 4.1.5) CI待ち。Issue#479 close済み。次: compliance/dlp ページカバレッジ向上、バックエンドテスト追加。"
+    "notes": "PR#485/486/487 MERGED。vitest 2646件 / branch coverage 90.42%。PR#488(dlp GB+null+B) CI待ち。"
   },
   "kpi_status": {
-    "frontend_coverage_statements": 96.28,
-    "frontend_coverage_branches": 90.29,
-    "frontend_coverage_functions": 94.63,
-    "frontend_coverage_lines": 97.22,
-    "frontend_test_count": 2643,
+    "frontend_coverage_statements": 96.34,
+    "frontend_coverage_branches": 90.42,
+    "frontend_coverage_functions": 94.54,
+    "frontend_coverage_lines": 97.26,
+    "frontend_test_count": 2646,
     "frontend_test_files": 92,
     "frontend_all_passing": true,
     "coverage_artifact_generated": true,
