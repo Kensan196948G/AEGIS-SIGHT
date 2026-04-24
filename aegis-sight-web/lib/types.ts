@@ -87,6 +87,46 @@ export interface ApiResponse<T> {
   };
 }
 
+/** Backend paginated list wrapper (matches PaginatedResponse[T] in FastAPI) */
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+/** SAM ライセンス種別 (matches LicenseType enum in backend) */
+export type SamLicenseType = 'perpetual' | 'subscription' | 'oem' | 'volume' | 'site';
+
+/** SAM ライセンス (matches LicenseResponse in backend) */
+export interface SamLicense {
+  id: string;                     // UUID
+  software_name: string;
+  vendor: string;
+  license_type: SamLicenseType;
+  license_key: string | null;
+  purchased_count: number;
+  installed_count: number;
+  m365_assigned: number;
+  cost_per_unit: number | null;   // Decimal serialized as string/number
+  currency: string;
+  purchase_date: string | null;   // ISO date string
+  expiry_date: string | null;     // ISO date string
+  vendor_contract_id: string | null;
+  notes: string | null;
+  created_at: string;             // ISO datetime
+  updated_at: string;             // ISO datetime
+}
+
+/** SAM SKU エイリアス (matches SkuAliasResponse in backend) */
+export interface SamSkuAlias {
+  id: string;                     // UUID
+  software_license_id: string;    // UUID
+  sku_part_number: string;
+  created_at: string;             // ISO datetime
+  updated_at: string;             // ISO datetime
+}
+
 /** ダッシュボード統計 */
 export interface DashboardStats {
   totalDevices: number;

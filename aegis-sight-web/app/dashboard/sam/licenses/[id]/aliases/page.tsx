@@ -5,43 +5,24 @@ import { useParams, useRouter } from 'next/navigation';
 import { Modal } from '@/components/ui/modal';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
-
-interface SkuAlias {
-  id: string;
-  skuPartNumber: string;
-  createdAt: string;
-}
-
-interface LicenseData {
-  licenseName: string;
-  vendor: string;
-  aliases: SkuAlias[];
-}
-
-// Mock data — mirrors backend `software_sku_aliases` table.
-// Replace with `api.get('/api/v1/sam/licenses/{id}/aliases')` when integrating.
-const MOCK_LICENSE_DATA: Record<string, LicenseData> = {
-  '1': {
-    licenseName: 'Microsoft 365 E3',
-    vendor: 'Microsoft',
-    aliases: [
-      { id: 'a1', skuPartNumber: 'ENTERPRISEPACK',   createdAt: '2026-03-25' },
-      { id: 'a2', skuPartNumber: 'SPE_E3',           createdAt: '2026-04-01' },
-      { id: 'a3', skuPartNumber: 'MICROSOFT_365_E3', createdAt: '2026-04-10' },
-    ],
-  },
-  '2': { licenseName: 'Adobe Creative Cloud',    vendor: 'Adobe',      aliases: [] },
-  '3': { licenseName: 'Slack Business+',         vendor: 'Salesforce', aliases: [] },
-  '4': { licenseName: 'AutoCAD LT',              vendor: 'Autodesk',   aliases: [] },
-  '5': { licenseName: 'Visual Studio Enterprise',vendor: 'Microsoft',  aliases: [] },
-  '6': { licenseName: 'Jira Software Cloud',     vendor: 'Atlassian',  aliases: [] },
-  '7': { licenseName: 'Windows Server 2022',     vendor: 'Microsoft',  aliases: [] },
-  '8': { licenseName: 'Norton 360',              vendor: 'Gen Digital', aliases: [] },
-};
+import { useSamAliases } from '@/lib/hooks/use-sam-aliases';
+import type { SamSkuAlias } from '@/lib/types';
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      {[...Array(3)].map((_, i) => (
+        <td key={i} className="px-6 py-4">
+          <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+        </td>
+      ))}
+    </tr>
+  );
 }
 
 export default function SkuAliasesPage() {
@@ -49,71 +30,70 @@ export default function SkuAliasesPage() {
   const router  = useRouter();
   const id      = params.id as string;
 
-  const base    = MOCK_LICENSE_DATA[id];
-  const notFound = !base;
+  const { license, aliases, loading, error, addAlias, editAlias, removeAlias } = useSamAliases(id);
 
-  const [aliases,          setAliases]          = useState<SkuAlias[]>(base?.aliases ?? []);
-  const [showAdd,          setShowAdd]          = useState(false);
-  const [showEdit,         setShowEdit]         = useState(false);
-  const [showDelete,       setShowDelete]       = useState(false);
-  const [selected,         setSelected]         = useState<SkuAlias | null>(null);
-  const [inputSku,         setInputSku]         = useState('');
-  const [formError,        setFormError]        = useState('');
-
-  function isDuplicate(sku: string, excludeId?: string): boolean {
-    return aliases.some(a => a.skuPartNumber === sku.trim() && a.id !== excludeId);
-  }
+  const [showAdd,    setShowAdd]    = useState(false);
+  const [showEdit,   setShowEdit]   = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [selected,   setSelected]   = useState<SamSkuAlias | null>(null);
+  const [inputSku,   setInputSku]   = useState('');
+  const [formError,  setFormError]  = useState('');
+  const [saving,     setSaving]     = useState(false);
 
   function openAdd()  { setInputSku(''); setFormError(''); setShowAdd(true); }
   function closeAdd() { setShowAdd(false); }
-
-  function handleAdd() {
-    const sku = inputSku.trim();
-    if (!sku) { setFormError('SKU Part Number を入力してください'); return; }
-    if (isDuplicate(sku)) { setFormError('この SKU は既に登録されています（重複）'); return; }
-    setAliases(prev => [
-      ...prev,
-      { id: `tmp-${Date.now()}`, skuPartNumber: sku, createdAt: new Date().toISOString().slice(0, 10) },
-    ]);
-    setShowAdd(false);
-  }
-
-  function openEdit(alias: SkuAlias) {
-    setSelected(alias); setInputSku(alias.skuPartNumber); setFormError(''); setShowEdit(true);
+  function openEdit(alias: SamSkuAlias) {
+    setSelected(alias); setInputSku(alias.sku_part_number); setFormError(''); setShowEdit(true);
   }
   function closeEdit() { setShowEdit(false); }
+  function openDelete(alias: SamSkuAlias) { setSelected(alias); setShowDelete(true); }
 
-  function handleEdit() {
+  async function handleAdd() {
+    const sku = inputSku.trim();
+    if (!sku) { setFormError('SKU Part Number を入力してください'); return; }
+    if (aliases.some(a => a.sku_part_number === sku)) {
+      setFormError('この SKU は既に登録されています（重複）'); return;
+    }
+    setSaving(true);
+    try {
+      await addAlias(sku);
+      setShowAdd(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : '追加に失敗しました');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleEdit() {
     if (!selected) return;
     const sku = inputSku.trim();
     if (!sku) { setFormError('SKU Part Number を入力してください'); return; }
-    if (isDuplicate(sku, selected.id)) { setFormError('この SKU は既に登録されています（重複）'); return; }
-    setAliases(prev => prev.map(a => a.id === selected.id ? { ...a, skuPartNumber: sku } : a));
-    setShowEdit(false);
+    if (aliases.some(a => a.sku_part_number === sku && a.id !== selected.id)) {
+      setFormError('この SKU は既に登録されています（重複）'); return;
+    }
+    setSaving(true);
+    try {
+      await editAlias(selected.id, sku);
+      setShowEdit(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : '更新に失敗しました');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function openDelete(alias: SkuAlias) { setSelected(alias); setShowDelete(true); }
-
-  function handleDelete() {
+  async function handleDelete() {
     if (!selected) return;
-    setAliases(prev => prev.filter(a => a.id !== selected.id));
-    setShowDelete(false);
-  }
-
-  if (notFound) {
-    return (
-      <div className="space-y-4">
-        <button
-          onClick={() => router.back()}
-          className="aegis-btn-secondary text-sm"
-        >
-          ← 戻る
-        </button>
-        <div className="aegis-card text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">ライセンス ID <code>{id}</code> が見つかりません</p>
-        </div>
-      </div>
-    );
+    setSaving(true);
+    try {
+      await removeAlias(selected.id);
+      setShowDelete(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : '削除に失敗しました');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -132,12 +112,17 @@ export default function SkuAliasesPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SKU エイリアス管理</h1>
-            <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-              {base.licenseName} — {base.vendor}
-            </p>
+            {license && (
+              <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                {license.software_name} — {license.vendor}
+              </p>
+            )}
+            {loading && !license && (
+              <div className="mt-0.5 h-4 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            )}
           </div>
         </div>
-        <button onClick={openAdd} className="aegis-btn-primary">
+        <button onClick={openAdd} className="aegis-btn-primary" disabled={loading}>
           <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
@@ -145,20 +130,33 @@ export default function SkuAliasesPage() {
         </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="aegis-card border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">
+            データの取得に失敗しました: {error}
+          </p>
+        </div>
+      )}
+
       {/* Info card */}
-      <div className="aegis-card bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          SKU エイリアスは M365 Graph API から返される <code>skuPartNumber</code> をライセンス名にマッピングするための対応表です。
-          追加した SKU は次回の M365 sync 実行時から即座に有効になります。
-        </p>
-      </div>
+      {!error && (
+        <div className="aegis-card bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            SKU エイリアスは M365 Graph API から返される <code>skuPartNumber</code> をライセンス名にマッピングするための対応表です。
+            追加した SKU は次回の M365 sync 実行時から即座に有効になります。
+          </p>
+        </div>
+      )}
 
       {/* Summary */}
-      <div className="flex items-center gap-2">
-        <Badge variant={aliases.length > 0 ? 'success' : 'warning'} size="sm">
-          {aliases.length} 件登録済み
-        </Badge>
-      </div>
+      {!loading && (
+        <div className="flex items-center gap-2">
+          <Badge variant={aliases.length > 0 ? 'success' : 'warning'} size="sm">
+            {aliases.length} 件登録済み
+          </Badge>
+        </div>
+      )}
 
       {/* Alias table */}
       <div className="aegis-card overflow-hidden p-0">
@@ -178,7 +176,9 @@ export default function SkuAliasesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {aliases.length === 0 ? (
+              {loading ? (
+                [...Array(3)].map((_, i) => <SkeletonRow key={i} />)
+              ) : aliases.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     SKU エイリアスが未登録です。「エイリアスを追加」ボタンで追加してください。
@@ -188,10 +188,10 @@ export default function SkuAliasesPage() {
                 aliases.map(alias => (
                   <tr key={alias.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-gray-900 dark:text-white">
-                      {alias.skuPartNumber}
+                      {alias.sku_part_number}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(alias.createdAt)}
+                      {formatDate(alias.created_at)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -223,7 +223,7 @@ export default function SkuAliasesPage() {
         </div>
         <div className="border-t border-gray-200 px-6 py-3 dark:border-aegis-border">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {aliases.length} 件登録済み
+            {loading ? '読み込み中...' : `${aliases.length} 件登録済み`}
           </p>
         </div>
       </div>
@@ -243,6 +243,7 @@ export default function SkuAliasesPage() {
               placeholder="例: ENTERPRISEPACK"
               className="aegis-input font-mono"
               autoFocus
+              disabled={saving}
             />
             {formError && (
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formError}</p>
@@ -252,8 +253,10 @@ export default function SkuAliasesPage() {
             </p>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={closeAdd} className="aegis-btn-secondary">キャンセル</button>
-            <button onClick={handleAdd} className="aegis-btn-primary">追加</button>
+            <button onClick={closeAdd} className="aegis-btn-secondary" disabled={saving}>キャンセル</button>
+            <button onClick={handleAdd} className="aegis-btn-primary" disabled={saving}>
+              {saving ? '追加中...' : '追加'}
+            </button>
           </div>
         </div>
       </Modal>
@@ -273,14 +276,17 @@ export default function SkuAliasesPage() {
               placeholder="例: ENTERPRISEPACK"
               className="aegis-input font-mono"
               autoFocus
+              disabled={saving}
             />
             {formError && (
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formError}</p>
             )}
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={closeEdit} className="aegis-btn-secondary">キャンセル</button>
-            <button onClick={handleEdit} className="aegis-btn-primary">保存</button>
+            <button onClick={closeEdit} className="aegis-btn-secondary" disabled={saving}>キャンセル</button>
+            <button onClick={handleEdit} className="aegis-btn-primary" disabled={saving}>
+              {saving ? '保存中...' : '保存'}
+            </button>
           </div>
         </div>
       </Modal>
@@ -291,10 +297,11 @@ export default function SkuAliasesPage() {
         onConfirm={handleDelete}
         onCancel={() => setShowDelete(false)}
         title="SKU エイリアスを削除"
-        message={`「${selected?.skuPartNumber}」を削除します。次回の M365 sync からこのマッピングが無効になります。`}
+        message={`「${selected?.sku_part_number}」を削除します。次回の M365 sync からこのマッピングが無効になります。`}
         severity="danger"
-        confirmLabel="削除する"
+        confirmLabel={saving ? '削除中...' : '削除する'}
         cancelLabel="キャンセル"
+        loading={saving}
       />
     </div>
   );

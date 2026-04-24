@@ -3,20 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useSamLicenses } from '@/lib/hooks/use-sam-licenses';
+import type { SamLicense } from '@/lib/types';
 
 type LicenseStatus = 'compliant' | 'over-deployed' | 'under-utilized' | 'expiring-soon' | 'expired';
 
-interface License {
-  id: string;
-  name: string;
-  vendor: string;
-  type: string;
-  total: number;
-  used: number;
-  status: LicenseStatus;
-  expiryDate: string;
-  costPerLicense: number; // 円/ライセンス/月
-}
+const licenseTypeLabels: Record<string, string> = {
+  perpetual:    '永続',
+  subscription: 'サブスクリプション',
+  oem:          'OEM',
+  volume:       'ボリューム',
+  site:         'サイト',
+};
 
 const statusConfig: Record<LicenseStatus, { variant: 'success' | 'danger' | 'warning' | 'info'; label: string }> = {
   compliant:        { variant: 'success', label: '準拠' },
@@ -26,55 +24,83 @@ const statusConfig: Record<LicenseStatus, { variant: 'success' | 'danger' | 'war
   expired:          { variant: 'danger',  label: '期限切れ' },
 };
 
-const licenses: License[] = [
-  { id: '1', name: 'Microsoft 365 E3',       vendor: 'Microsoft', type: 'サブスクリプション', total: 500, used: 487, status: 'compliant',        expiryDate: '2025-03-31', costPerLicense: 2750 },
-  { id: '2', name: 'Adobe Creative Cloud',   vendor: 'Adobe',     type: 'サブスクリプション', total:  50, used:  58, status: 'over-deployed',    expiryDate: '2025-06-30', costPerLicense: 6578 },
-  { id: '3', name: 'Slack Business+',        vendor: 'Salesforce',type: 'サブスクリプション', total: 600, used: 412, status: 'under-utilized',   expiryDate: '2025-09-30', costPerLicense:  998 },
-  { id: '4', name: 'AutoCAD LT',             vendor: 'Autodesk',  type: 'サブスクリプション', total:  30, used:  28, status: 'compliant',        expiryDate: '2025-02-28', costPerLicense: 5500 },
-  { id: '5', name: 'Visual Studio Enterprise',vendor: 'Microsoft',type: 'サブスクリプション', total:  20, used:  18, status: 'compliant',        expiryDate: '2025-05-31', costPerLicense: 8250 },
-  { id: '6', name: 'Jira Software Cloud',    vendor: 'Atlassian', type: 'サブスクリプション', total: 200, used: 195, status: 'expiring-soon',    expiryDate: '2025-01-15', costPerLicense:  750 },
-  { id: '7', name: 'Windows Server 2022',    vendor: 'Microsoft', type: 'ボリューム',         total:  15, used:  14, status: 'compliant',        expiryDate: '2027-10-14', costPerLicense: 45000 },
-  { id: '8', name: 'Norton 360',             vendor: 'Gen Digital',type: 'サブスクリプション',total: 600, used: 320, status: 'under-utilized',   expiryDate: '2025-04-30', costPerLicense:  420 },
-];
+function computeStatus(lic: SamLicense): LicenseStatus {
+  const used  = lic.installed_count + lic.m365_assigned;
+  const total = lic.purchased_count;
+  if (!lic.expiry_date) {
+    if (used > total) return 'over-deployed';
+    if (total > 0 && used / total < 0.5) return 'under-utilized';
+    return 'compliant';
+  }
+  const days = getDaysUntilExpiry(lic.expiry_date);
+  if (days < 0)  return 'expired';
+  if (days <= 90) return 'expiring-soon';
+  if (used > total) return 'over-deployed';
+  if (total > 0 && used / total < 0.5) return 'under-utilized';
+  return 'compliant';
+}
 
 function getDaysUntilExpiry(dateStr: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const expiry = new Date(dateStr);
-  return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.ceil((new Date(dateStr).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function formatExpiry(dateStr: string): { text: string; urgent: boolean } {
+function formatExpiry(dateStr: string | null): { text: string; urgent: boolean } {
+  if (!dateStr) return { text: '—', urgent: false };
   const days = getDaysUntilExpiry(dateStr);
   if (days < 0)   return { text: `${Math.abs(days)}日超過`, urgent: true };
   if (days === 0) return { text: '本日期限', urgent: true };
   if (days <= 30) return { text: `残${days}日`, urgent: true };
   if (days <= 90) return { text: `残${days}日`, urgent: false };
   const d = new Date(dateStr);
-  return { text: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`, urgent: false };
+  return {
+    text: `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`,
+    urgent: false,
+  };
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      {[...Array(9)].map((_, i) => (
+        <td key={i} className="px-6 py-4">
+          <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+        </td>
+      ))}
+    </tr>
+  );
 }
 
 export default function LicensesPage() {
   const [filterStatus, setFilterStatus] = useState('');
-  const [filterVendor, setFilterVendor]  = useState('');
-  const [search, setSearch]              = useState('');
+  const [filterVendor, setFilterVendor] = useState('');
+  const [search,       setSearch]       = useState('');
 
-  const totalMonthlyCost = licenses.reduce((sum, l) => sum + l.costPerLicense * l.total, 0);
-  const overDeployed     = licenses.filter(l => l.status === 'over-deployed').length;
-  const expiringSoon     = licenses.filter(l => {
-    const d = getDaysUntilExpiry(l.expiryDate);
-    return d >= 0 && d <= 90;
-  }).length;
-  const underUtilized    = licenses.filter(l => l.status === 'under-utilized').length;
+  const { licenses, loading, error, refetch } = useSamLicenses();
 
   const vendors = [...new Set(licenses.map(l => l.vendor))].sort();
 
   const filtered = licenses.filter(l => {
-    if (filterStatus && l.status !== filterStatus) return false;
-    if (filterVendor && l.vendor !== filterVendor)  return false;
-    if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.vendor.toLowerCase().includes(search.toLowerCase())) return false;
+    const used   = l.installed_count + l.m365_assigned;
+    const status = computeStatus(l);
+    if (filterStatus && status !== filterStatus) return false;
+    if (filterVendor && l.vendor !== filterVendor) return false;
+    if (search && !l.software_name.toLowerCase().includes(search.toLowerCase()) &&
+        !l.vendor.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const totalMonthlyCost = licenses.reduce(
+    (sum, l) => sum + (l.cost_per_unit ?? 0) * l.purchased_count, 0
+  );
+  const overDeployed  = licenses.filter(l => computeStatus(l) === 'over-deployed').length;
+  const expiringSoon  = licenses.filter(l => {
+    if (!l.expiry_date) return false;
+    const d = getDaysUntilExpiry(l.expiry_date);
+    return d >= 0 && d <= 90;
+  }).length;
+  const underUtilized = licenses.filter(l => computeStatus(l) === 'under-utilized').length;
 
   return (
     <div className="space-y-6">
@@ -94,30 +120,48 @@ export default function LicensesPage() {
         </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="aegis-card border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+          <div className="flex items-center gap-3">
+            <svg className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                ライセンスデータの取得に失敗しました
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{error}</p>
+            </div>
+            <button onClick={refetch} className="aegis-btn-secondary text-xs">再試行</button>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="aegis-card text-center">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">月額総コスト</p>
           <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
-            ¥{totalMonthlyCost.toLocaleString()}
+            ¥{loading ? '—' : totalMonthlyCost.toLocaleString()}
           </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">超過ライセンス</p>
           <p className={`mt-1 text-xl font-bold ${overDeployed > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-            {overDeployed} 件
+            {loading ? '—' : `${overDeployed} 件`}
           </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">期限間近 (90日以内)</p>
           <p className={`mt-1 text-xl font-bold ${expiringSoon > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
-            {expiringSoon} 件
+            {loading ? '—' : `${expiringSoon} 件`}
           </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">低利用 (削減候補)</p>
           <p className={`mt-1 text-xl font-bold ${underUtilized > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
-            {underUtilized} 件
+            {loading ? '—' : `${underUtilized} 件`}
           </p>
         </div>
       </div>
@@ -152,9 +196,7 @@ export default function LicensesPage() {
             className="aegis-input w-auto"
           >
             <option value="">すべてのベンダー</option>
-            {vendors.map(v => (
-              <option key={v} value={v}>{v}</option>
-            ))}
+            {vendors.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
           {(filterStatus || filterVendor || search) && (
             <button
@@ -185,33 +227,42 @@ export default function LicensesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {filtered.length === 0 ? (
+              {loading ? (
+                [...Array(5)].map((_, i) => <SkeletonRow key={i} />)
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                    条件に一致するライセンスが見つかりません
+                    {licenses.length === 0
+                      ? 'ライセンスデータがありません'
+                      : '条件に一致するライセンスが見つかりません'}
                   </td>
                 </tr>
               ) : (
-                filtered.map((lic) => {
-                  const usageRate = Math.round((lic.used / lic.total) * 100);
-                  const monthlyCost = lic.costPerLicense * lic.total;
-                  const expiry = formatExpiry(lic.expiryDate);
+                filtered.map(lic => {
+                  const used        = lic.installed_count + lic.m365_assigned;
+                  const usageRate   = lic.purchased_count > 0
+                    ? Math.round((used / lic.purchased_count) * 100)
+                    : 0;
+                  const monthlyCost = (lic.cost_per_unit ?? 0) * lic.purchased_count;
+                  const expiry      = formatExpiry(lic.expiry_date);
+                  const status      = computeStatus(lic);
+
                   return (
                     <tr key={lic.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {lic.name}
+                        {lic.software_name}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {lic.vendor}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        {lic.type}
+                        {licenseTypeLabels[lic.license_type] ?? lic.license_type}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        <span className={lic.used > lic.total ? 'font-semibold text-red-600 dark:text-red-400' : ''}>
-                          {lic.used}
+                        <span className={used > lic.purchased_count ? 'font-semibold text-red-600 dark:text-red-400' : ''}>
+                          {used}
                         </span>
-                        <span className="text-gray-400"> / {lic.total}</span>
+                        <span className="text-gray-400"> / {lic.purchased_count}</span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -237,8 +288,8 @@ export default function LicensesPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <Badge variant={statusConfig[lic.status].variant} dot size="sm">
-                          {statusConfig[lic.status].label}
+                        <Badge variant={statusConfig[status].variant} dot size="sm">
+                          {statusConfig[status].label}
                         </Badge>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -258,7 +309,7 @@ export default function LicensesPage() {
         </div>
         <div className="border-t border-gray-200 px-6 py-3 dark:border-aegis-border">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {filtered.length} 件表示 / 全 {licenses.length} 件
+            {loading ? '読み込み中...' : `${filtered.length} 件表示 / 全 ${licenses.length} 件`}
           </p>
         </div>
       </div>
