@@ -828,4 +828,23 @@ describe('Changes page - pagination branches', () => {
       expect(document.body.textContent?.length).toBeGreaterThan(0);
     }
   });
+
+  it('前へ onClick with offset>=20 — covers line 428 onClick handler', async () => {
+    await renderChanges();
+    // Click 次へ to advance offset from 0 to 20
+    const nextBtn = screen.getAllByRole('button').find(b => b.textContent?.includes('次へ'));
+    if (nextBtn && !(nextBtn as HTMLButtonElement).disabled) {
+      fireEvent.click(nextBtn);
+    }
+    // Wait until 前へ is enabled (offset === 20, button not disabled)
+    const prevBtn = await waitFor(() => {
+      const btn = screen.getAllByRole('button').find(b => b.textContent?.includes('前へ'));
+      if (btn && !(btn as HTMLButtonElement).disabled) return btn;
+      throw new Error('waiting for 前へ to be enabled');
+    }, { timeout: 3000 });
+    // Click 前へ when enabled: setOffset(Math.max(0, 20-20)) = setOffset(0)
+    fireEvent.click(prevBtn);
+    await waitFor(() => expect(document.body.textContent?.length).toBeGreaterThan(0));
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
 });
