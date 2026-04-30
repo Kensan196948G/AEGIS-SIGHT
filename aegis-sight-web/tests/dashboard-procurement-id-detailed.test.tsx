@@ -3,9 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 // useParams returns different IDs depending on test needs
 let mockParamsId = 'PR-2026-001';
+const mockBack = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: mockBack }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/dashboard/procurement/PR-2026-001',
   useParams: () => ({ id: mockParamsId }),
@@ -16,12 +17,13 @@ vi.mock('@/components/ui/badge', () => ({
 }));
 
 vi.mock('@/components/ui/modal', () => ({
-  Modal: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
-    open ? <div data-testid="modal">{children}</div> : null,
+  Modal: ({ children, isOpen, onClose }: { children: React.ReactNode; isOpen: boolean; onClose?: () => void }) =>
+    isOpen ? <div data-testid="modal" onClick={onClose}>{children}</div> : null,
 }));
 
 beforeEach(() => {
   mockParamsId = 'PR-2026-001';
+  mockBack.mockClear();
 });
 
 afterEach(() => {
@@ -216,5 +218,81 @@ describe('Procurement Detail page - various statuses', () => {
     const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
     render(<Page />);
     expect(document.body.textContent).toContain('VMware');
+  });
+});
+
+describe('Procurement Detail page - not-found back button (line 285)', () => {
+  beforeEach(() => {
+    mockParamsId = 'PR-9999-999';
+  });
+
+  it('calls router.back() when back button is clicked on not-found page', async () => {
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // The not-found page renders a single back button (SVG only, no text)
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.length).toBeGreaterThan(0);
+    fireEvent.click(buttons[0]);
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Procurement Detail page - confirmStatusChange (line 308)', () => {
+  it('clicking 変更を確定 updates status and closes modal', async () => {
+    mockParamsId = 'PR-2026-001';
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // PR-2026-001 is 'approved' → next status is 'ordered' → button label: '発注済にする'
+    const statusBtn = screen.getByText('発注済にする');
+    fireEvent.click(statusBtn);
+    // Modal should now be open
+    await waitFor(() => {
+      expect(screen.getByTestId('modal')).toBeTruthy();
+    });
+    // Click 変更を確定
+    const confirmBtn = screen.getByText('変更を確定');
+    fireEvent.click(confirmBtn);
+    // Modal should be closed
+    await waitFor(() => {
+      expect(screen.queryByTestId('modal')).toBeNull();
+    });
+    // Status should have changed to 発注済
+    expect(document.body.textContent).toContain('発注済');
+  });
+});
+
+describe('Procurement Detail page - normal page back button (line 324)', () => {
+  it('calls router.back() when back button is clicked on normal page', async () => {
+    mockParamsId = 'PR-2026-001';
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // The normal page header back button is the first button
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.length).toBeGreaterThan(0);
+    fireEvent.click(buttons[0]);
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Procurement Detail page - modal cancel button (line 587)', () => {
+  it('clicking キャンセル closes the modal without changing status', async () => {
+    mockParamsId = 'PR-2026-001';
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // Open modal
+    const statusBtn = screen.getByText('発注済にする');
+    fireEvent.click(statusBtn);
+    await waitFor(() => {
+      expect(screen.getByTestId('modal')).toBeTruthy();
+    });
+    // Click キャンセル
+    const cancelBtn = screen.getByText('キャンセル');
+    fireEvent.click(cancelBtn);
+    // Modal should be closed
+    await waitFor(() => {
+      expect(screen.queryByTestId('modal')).toBeNull();
+    });
+    // Status should remain 承認済 (not 発注済)
+    expect(document.body.textContent).toContain('承認済');
   });
 });

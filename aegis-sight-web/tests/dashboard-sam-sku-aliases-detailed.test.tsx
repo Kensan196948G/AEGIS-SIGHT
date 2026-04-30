@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import type { SamLicense, SamSkuAlias } from '@/lib/types';
 
+const mockRouterBack = vi.fn();
+
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: mockRouterBack }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/dashboard/sam/licenses/1/aliases',
   useParams:  () => ({ id: '1' }),
@@ -310,5 +312,120 @@ describe('SKU Aliases page - delete alias', () => {
     fireEvent.click(screen.getByTestId('confirm-cancel'));
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
     expect(mockRemoveAlias).not.toHaveBeenCalled();
+  });
+});
+
+// ─── 6. Back button ───────────────────────────────────────────────────────────
+
+describe('SKU Aliases page - back button', () => {
+  it('calls router.back() when back button is clicked', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    const backBtn = screen.getByLabelText('戻る');
+    fireEvent.click(backBtn);
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ─── 7. Edit modal cancel ─────────────────────────────────────────────────────
+
+describe('SKU Aliases page - edit modal cancel (closeEdit)', () => {
+  it('closes edit modal when キャンセル button is clicked', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    // Open edit modal
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
+    await waitFor(() => expect(screen.getByTestId('modal')).toBeTruthy());
+    // Click cancel button inside the modal
+    const cancelBtn = screen.getByText('キャンセル');
+    fireEvent.click(cancelBtn);
+    await waitFor(() => expect(screen.queryByTestId('modal')).toBeNull());
+  });
+});
+
+// ─── 8. Add input Enter key ───────────────────────────────────────────────────
+
+describe('SKU Aliases page - add input Enter key', () => {
+  it('calls addAlias when Enter key is pressed in add modal input', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    // Open add modal
+    fireEvent.click(screen.getByText('エイリアスを追加'));
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK'));
+    // Type a new SKU
+    fireEvent.change(input, { target: { value: 'ENTER_KEY_SKU' } });
+    // Press Enter
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    await waitFor(() => expect(mockAddAlias).toHaveBeenCalledWith('ENTER_KEY_SKU'));
+  });
+
+  it('shows validation error when Enter is pressed with empty input', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('エイリアスを追加'));
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK'));
+    // Press Enter without typing anything
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    await waitFor(() =>
+      expect(document.body.textContent).toContain('SKU Part Number を入力してください')
+    );
+  });
+});
+
+// ─── 9. Edit input Enter key ──────────────────────────────────────────────────
+
+describe('SKU Aliases page - edit input Enter key', () => {
+  it('calls editAlias when Enter key is pressed in edit modal input', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    // Open edit modal for first alias (ENTERPRISEPACK)
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
+    const input = await waitFor(
+      () => screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement
+    );
+    // Change the value
+    fireEvent.change(input, { target: { value: 'ENTER_UPDATED_SKU' } });
+    // Press Enter
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    await waitFor(() =>
+      expect(mockEditAlias).toHaveBeenCalledWith('a1', 'ENTER_UPDATED_SKU')
+    );
+  });
+});
+
+// ─── 10. SkeletonRow display ──────────────────────────────────────────────────
+
+describe('SKU Aliases page - SkeletonRow display (loading state)', () => {
+  beforeEach(() => {
+    vi.doMock('@/lib/hooks/use-sam-aliases', () => ({
+      useSamAliases: (_id: string) => ({
+        license: null,
+        aliases: [],
+        loading: true,
+        error: null,
+        addAlias: vi.fn(),
+        editAlias: vi.fn(),
+        removeAlias: vi.fn(),
+        refetch: vi.fn(),
+      }),
+    }));
+  });
+
+  afterEach(() => {
+    vi.doUnmock('@/lib/hooks/use-sam-aliases');
+  });
+
+  it('renders animate-pulse skeleton rows when loading is true', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    const { container } = render(<Page />);
+    // SkeletonRow renders <tr class="animate-pulse">
+    const skeletonRows = container.querySelectorAll('tr.animate-pulse');
+    expect(skeletonRows.length).toBeGreaterThan(0);
+  });
+
+  it('shows "読み込み中..." text when loading is true', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    expect(document.body.textContent).toContain('読み込み中...');
   });
 });
