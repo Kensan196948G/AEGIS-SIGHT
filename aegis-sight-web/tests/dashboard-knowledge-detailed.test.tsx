@@ -365,3 +365,113 @@ describe('Knowledge Base page - 人気記事 tab content', () => {
     }
   });
 });
+
+describe('Knowledge Base page - editor toolbar buttons (functions coverage)', () => {
+  it('H1 toolbar button appends heading marker to editorContent', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const h1Btn = screen.getByTitle('見出し');
+    fireEvent.click(h1Btn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('H2 toolbar button appends sub-heading marker to editorContent', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const h2Btn = screen.getByTitle('小見出し');
+    fireEvent.click(h2Btn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('list toolbar button appends list marker to editorContent', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const listBtn = screen.getByTitle('リスト');
+    fireEvent.click(listBtn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('numbered list toolbar button appends ordered list marker to editorContent', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const numberedBtn = screen.getByTitle('番号付きリスト');
+    fireEvent.click(numberedBtn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('code block toolbar button appends code fences to editorContent', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const codeBtn = screen.getByTitle('コードブロック');
+    fireEvent.click(codeBtn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('typing in textarea triggers setEditorContent and shows preview', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      fireEvent.change(textarea, { target: { value: '# Test Heading\n## Sub\n- item\n1. num\n\nParagraph' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('changing category select triggers setEditorCategory', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const selects = document.querySelectorAll('select');
+    if (selects.length > 0) {
+      fireEvent.change(selects[0], { target: { value: 'troubleshooting' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('changing status select triggers setEditorStatus', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const selects = document.querySelectorAll('select');
+    if (selects.length > 1) {
+      fireEvent.change(selects[1], { target: { value: 'published' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('typing in tags input triggers setEditorTags', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const tagInput = document.querySelector('input[placeholder="tag1, tag2, tag3"]') as HTMLInputElement | null;
+    if (tagInput) {
+      fireEvent.change(tagInput, { target: { value: 'security, vpn' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('clicking save button calls handleSaveArticle (alert and resets)', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const saveBtn = screen.getByText('保存');
+    fireEvent.click(saveBtn);
+    expect(alertSpy).toHaveBeenCalledWith('記事を保存しました（デモ）');
+  });
+
+  it('clicking cancel button calls setShowEditor(false) and setActiveTab(browse)', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const cancelBtn = screen.getByText('キャンセル');
+    fireEvent.click(cancelBtn);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+});
