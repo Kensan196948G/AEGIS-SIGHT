@@ -143,7 +143,7 @@ describe('DashboardLayout (app/dashboard/layout.tsx)', () => {
     expect(sidebar.getAttribute('data-mobile-open')).toBe('true');
   });
 
-  it('clicking backdrop closes mobile nav (mobileNavOpen=false branch)', async () => {
+  it('clicking backdrop closes mobile nav via onMobileClose (mobileNavOpen=false branch)', async () => {
     const { default: Layout } = await import('@/app/dashboard/layout');
     render(
       <Layout>
@@ -152,8 +152,24 @@ describe('DashboardLayout (app/dashboard/layout.tsx)', () => {
     );
     // Open sidebar
     fireEvent.click(screen.getByTestId('hamburger'));
-    // Click backdrop (aria-hidden div covers backdrop, but sidebar close button is accessible)
+    // Close via sidebar's close button (calls onMobileClose)
     fireEvent.click(screen.getByTestId('sidebar-close'));
+    expect(screen.getByTestId('sidebar').getAttribute('data-mobile-open')).toBe('false');
+  });
+
+  it('clicking backdrop div directly calls setMobileNavOpen(false) (line 27 fn coverage)', async () => {
+    const { default: Layout } = await import('@/app/dashboard/layout');
+    render(
+      <Layout>
+        <span />
+      </Layout>
+    );
+    // Open sidebar
+    fireEvent.click(screen.getByTestId('hamburger'));
+    // Click the actual backdrop div (onClick={() => setMobileNavOpen(false)})
+    const backdrop = screen.getByTestId('mobile-nav-backdrop');
+    fireEvent.click(backdrop);
+    // After clicking backdrop, sidebar should close
     expect(screen.getByTestId('sidebar').getAttribute('data-mobile-open')).toBe('false');
   });
 });

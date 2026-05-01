@@ -23,6 +23,7 @@ export default function DashboardLayout({
       {/* Mobile sidebar overlay backdrop */}
       {mobileNavOpen && (
         <div
+          data-testid="mobile-nav-backdrop"
           className="fixed inset-0 z-20 bg-black/50 lg:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-hidden="true"
