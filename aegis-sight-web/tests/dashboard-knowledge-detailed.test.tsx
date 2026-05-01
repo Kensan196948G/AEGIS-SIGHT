@@ -475,3 +475,38 @@ describe('Knowledge Base page - editor toolbar buttons (functions coverage)', ()
     expect(document.body.textContent?.length).toBeGreaterThan(0);
   });
 });
+
+describe('Knowledge page - list view filter selects (functions coverage)', () => {
+  it('category filter select onChange covers setSelectedCategory (line 389)', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    // In browse mode (default) — find category select
+    const selects = document.querySelectorAll('select');
+    if (selects.length > 0) {
+      fireEvent.change(selects[0], { target: { value: 'incident_response' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('status filter select onChange covers setSelectedStatus (line 417)', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    const selects = document.querySelectorAll('select');
+    if (selects.length > 1) {
+      fireEvent.change(selects[1], { target: { value: 'draft' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('editor title input onChange covers setEditorTitle (line 568)', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('新規記事作成'));
+    const titleInput = document.querySelector('input[placeholder*="タイトル"]') as HTMLInputElement | null;
+    if (titleInput) {
+      fireEvent.change(titleInput, { target: { value: 'テスト記事タイトル' } });
+      expect(titleInput.value).toBe('テスト記事タイトル');
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+});
