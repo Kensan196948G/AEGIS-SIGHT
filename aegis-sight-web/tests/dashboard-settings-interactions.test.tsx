@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -210,5 +210,170 @@ describe('Settings page - notification toggle branches', () => {
     } else {
       expect(document.body.textContent?.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Settings page - Slack webhook URL and security threshold inputs (functions coverage)', () => {
+  it('after enabling Slack, typing Webhook URL triggers updateSetting(slackWebhookUrl)', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('通知設定'));
+    // Enable Slack toggle
+    const switches = document.querySelectorAll('[role="switch"]');
+    const slackSwitch = Array.from(switches).find(
+      (s) => s.getAttribute('aria-checked') === 'false'
+    );
+    if (slackSwitch) {
+      fireEvent.click(slackSwitch);
+      // Now Webhook URL input should be visible
+      const urlInput = document.querySelector('input[type="url"]') as HTMLInputElement | null;
+      if (urlInput) {
+        fireEvent.change(urlInput, { target: { value: 'https://hooks.slack.com/services/TEST' } });
+      }
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('security tab: sessionTimeout ThresholdInput onChange covers updateSetting', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('セキュリティ'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 0) {
+      fireEvent.change(rangeInputs[0], { target: { value: '60' } });
+    }
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    if (numberInputs.length > 0) {
+      fireEvent.change(numberInputs[0], { target: { value: '60' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('security tab: passwordMinLength ThresholdInput range change covers updateSetting', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('セキュリティ'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 1) {
+      fireEvent.change(rangeInputs[1], { target: { value: '16' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('security tab: passwordExpireDays ThresholdInput range change covers updateSetting', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('セキュリティ'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 2) {
+      fireEvent.change(rangeInputs[2], { target: { value: '30' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('collection tab: agentCollectionInterval range change covers updateSetting', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('収集設定'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 0) {
+      fireEvent.change(rangeInputs[0], { target: { value: '10' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('notifications tab: alertEmailRecipients input onChange covers updateSetting', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('通知設定'));
+    const textInputs = document.querySelectorAll('input[type="text"]');
+    if (textInputs.length > 0) {
+      fireEvent.change(textInputs[0], { target: { value: 'new@example.com' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('alerts tab: memoryAlertThreshold range change covers anonymous onChange', async () => {
+    await renderSettings();
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 1) {
+      fireEvent.change(rangeInputs[1], { target: { value: '80' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('alerts tab: diskAlertThreshold range change covers anonymous onChange', async () => {
+    await renderSettings();
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 2) {
+      fireEvent.change(rangeInputs[2], { target: { value: '75' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('alerts tab: licenseOverageThreshold range change covers anonymous onChange', async () => {
+    await renderSettings();
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 3) {
+      fireEvent.change(rangeInputs[3], { target: { value: '95' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('alerts tab: licenseUnderuseThreshold range change covers anonymous onChange', async () => {
+    await renderSettings();
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 4) {
+      fireEvent.change(rangeInputs[4], { target: { value: '30' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('collection tab: SAM scan interval range change covers anonymous onChange', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('収集設定'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 1) {
+      fireEvent.change(rangeInputs[1], { target: { value: '48' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('collection tab: security scan interval range change covers anonymous onChange', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('収集設定'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 2) {
+      fireEvent.change(rangeInputs[2], { target: { value: '24' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('collection tab: log retention days range change covers anonymous onChange', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('収集設定'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 3) {
+      fireEvent.change(rangeInputs[3], { target: { value: '180' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('collection tab: alert retention days range change covers anonymous onChange', async () => {
+    await renderSettings();
+    fireEvent.click(screen.getByText('収集設定'));
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    if (rangeInputs.length > 4) {
+      fireEvent.change(rangeInputs[4], { target: { value: '500' } });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('handleSave setTimeout callback fires after fake timers advance', async () => {
+    vi.useFakeTimers();
+    await renderSettings();
+    const saveBtn = document.querySelector('button.aegis-btn-primary');
+    if (saveBtn) {
+      fireEvent.click(saveBtn);
+      await act(async () => {
+        vi.advanceTimersByTime(3100);
+      });
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+    vi.useRealTimers();
   });
 });

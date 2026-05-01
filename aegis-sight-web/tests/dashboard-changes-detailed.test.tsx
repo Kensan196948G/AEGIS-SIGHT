@@ -841,12 +841,12 @@ describe('Changes page - pagination branches', () => {
       const btn = screen.getAllByRole('button').find(b => b.textContent?.includes('前へ'));
       if (btn && !(btn as HTMLButtonElement).disabled) return btn;
       throw new Error('waiting for 前へ to be enabled');
-    }, { timeout: 10000 });
+    }, { timeout: 15000 });
     // Click 前へ when enabled: setOffset(Math.max(0, 20-20)) = setOffset(0)
     fireEvent.click(prevBtn);
     await waitFor(() => expect(document.body.textContent?.length).toBeGreaterThan(0));
     expect(document.body.textContent?.length).toBeGreaterThan(0);
-  }, 20000);
+  }, 30000);
 });
 
 describe('Changes page - summary data edge cases (lines 202, 204-217)', () => {

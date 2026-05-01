@@ -27,9 +27,9 @@
     "phase": "Verify",
     "auto_stop_threshold": 5,
     "graceful_shutdown": true,
-    "current_session_start_at": "2026-04-24T08:30:01+09:00",
+    "current_session_start_at": "2026-05-01T08:30:01+09:00",
     "last_trigger": "cron",
-    "last_cron_session_id": "20260424-083001-AEGIS-SIGHT"
+    "last_cron_session_id": "20260501-083001-AEGIS-SIGHT"
   },
   "token": {
     "total_budget": 100,
@@ -78,37 +78,27 @@
     "self_evolution": true
   },
   "session": {
-    "id": "2026-04-24-001",
-    "started_at": "2026-04-24T08:30:01+09:00",
+    "id": "2026-05-01-001",
+    "started_at": "2026-05-01T08:30:01+09:00",
     "loop_count": 2,
     "phase_history": [
-      "Monitor",
-      "Improvement",
-      "Build",
       "Verify",
-      "Build"
+      "Build",
+      "Verify"
     ],
-    "merged_prs": [
-      483,
-      484,
-      485
-    ],
-    "open_prs": [
-      488
-    ],
-    "closed_issues": [
-      479
-    ],
-    "last_updated": "2026-04-24T12:20:00+09:00",
-    "days_left": 154,
-    "notes": "PR#485/486/487 MERGED。vitest 2646件 / branch coverage 90.42%。PR#488(dlp GB+null+B) CI待ち。"
+    "merged_prs": [490, 491, 492, 493, 495, 497, 499, 500, 501, 502],
+    "open_prs": [503],
+    "closed_issues": [],
+    "last_updated": "2026-05-01T09:05:00+09:00",
+    "days_left": 147,
+    "notes": "vitest 2686件(+37) / functions 98.21%(+3.22%) / branch 90.76%。Dependabot 10PR MERGED。PR#503 CI待ち。Issue#504 middleware P2起票。250項目ブラウザ検証完了(React重複キー/favicon/manifest修正)。"
   },
   "kpi_status": {
-    "frontend_coverage_statements": 96.34,
-    "frontend_coverage_branches": 90.42,
-    "frontend_coverage_functions": 94.54,
-    "frontend_coverage_lines": 97.26,
-    "frontend_test_count": 2646,
+    "frontend_coverage_statements": 97.83,
+    "frontend_coverage_branches": 90.76,
+    "frontend_coverage_functions": 98.21,
+    "frontend_coverage_lines": 98.91,
+    "frontend_test_count": 2686,
     "frontend_test_files": 92,
     "frontend_all_passing": true,
     "coverage_artifact_generated": true,
