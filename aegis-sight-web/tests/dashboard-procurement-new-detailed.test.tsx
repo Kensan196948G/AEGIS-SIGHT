@@ -260,4 +260,19 @@ describe('NewProcurementPage', () => {
     fireEvent.change(dateInput, { target: { value: '2026-06-30' } });
     expect(dateInput.value).toBe('2026-06-30');
   });
+
+  it('quantity NaN input falls back to 0 via parseInt || 0 (line 239 branch)', () => {
+    render(<NewProcurementPage />);
+    const spinbuttons = screen.getAllByRole('spinbutton');
+    // Simulate non-numeric input → parseInt('') returns NaN → fallback 0
+    fireEvent.change(spinbuttons[0], { target: { value: '' } });
+    expect(spinbuttons[0]).toHaveValue(0);
+  });
+
+  it('unitPrice NaN input falls back to 0 via parseInt || 0 (line 252 branch)', () => {
+    render(<NewProcurementPage />);
+    const spinbuttons = screen.getAllByRole('spinbutton');
+    fireEvent.change(spinbuttons[1], { target: { value: '' } });
+    expect(spinbuttons[1]).toHaveValue(0);
+  });
 });
