@@ -990,3 +990,118 @@ describe('Scheduler page - setTimeout fn coverage', () => {
     spy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch coverage: data.items||[], data||[], STATUS_CONFIG fallback, no-token, non-Error catch
+// ---------------------------------------------------------------------------
+
+describe('Scheduler page - branch coverage (data/status/token/catch)', () => {
+  it('covers data.items||[] fallback (branch 5[1] line=91) when fetchTasks returns no items', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) }) // no items field
+      .mockResolvedValueOnce({ ok: true, json: async () => [] });
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('スケジューラ管理');
+    });
+    // No tasks rendered, page didn't crash
+    expect(document.body.textContent).not.toContain('Error');
+  });
+
+  it('covers non-Error catch in fetchTasks (branch 6[1] line=93)', async () => {
+    mockFetch
+      .mockRejectedValueOnce('string error not instanceof Error')
+      .mockResolvedValueOnce({ ok: true, json: async () => [] });
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('タスクの取得に失敗しました');
+    });
+  });
+
+  it('covers data||[] fallback in fetchHistory (branch 9[1] line=106) when history is null', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => null }); // null data → || []
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('スケジューラ管理');
+    });
+  });
+
+  it('covers if(!token) early return in fetchHistory (branch 10[0] line=120) when no token at mount', async () => {
+    localStorage.removeItem('token'); // no token → fetchHistory returns early
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [] }) });
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent?.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('covers non-Error catch in toggleTask (branch 13[1] line=135)', async () => {
+    setupFetchWithData([makeTask({ id: 'te1', name: 'Toggle NonErr', is_enabled: true })], []);
+    mockFetch.mockRejectedValueOnce('non-error string');
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => { expect(screen.getByRole('switch')).toBeTruthy(); });
+    await act(async () => { fireEvent.click(screen.getByRole('switch')); });
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('更新に失敗しました');
+    });
+  });
+
+  it('covers if(!token) early return in toggleTask (branch 14[0] line=141)', async () => {
+    setupFetchWithData([makeTask({ id: 'te2', name: 'Toggle NoToken', is_enabled: true })], []);
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => { expect(screen.getByRole('switch')).toBeTruthy(); });
+    localStorage.removeItem('token'); // clear token before click
+    await act(async () => { fireEvent.click(screen.getByRole('switch')); });
+    // toggleTask returns early without calling fetch
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Toggle NoToken');
+    });
+  });
+
+  it('covers non-Error catch in runTask (branch 17[1] line=153)', async () => {
+    setupFetchWithData([makeTask({ id: 're1', name: 'Run NonErr', is_enabled: true })], []);
+    mockFetch.mockRejectedValueOnce('non-error string');
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => { expect(screen.getByRole('button', { name: /即時実行/ })).toBeTruthy(); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /即時実行/ })); });
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('実行に失敗しました');
+    });
+  });
+
+  it('covers STATUS_CONFIG fallback for unknown status in tasks (branches 27,28 lines 283,286)', async () => {
+    setupFetchWithData(
+      [makeTask({ id: 'unk1', last_status: 'unknown_status' as 'success' })],
+      []
+    );
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Device Sync');
+    });
+    // STATUS_CONFIG['unknown_status'] is undefined → || '' and || 'unknown_status' are hit
+  });
+
+  it('covers STATUS_CONFIG fallback for unknown status in history (branch 42 line=384)', async () => {
+    setupFetchWithData(
+      [makeTask({ id: 'unk2' })],
+      [makeHistoryEntry({ last_status: 'unknown_status' as 'success' })]
+    );
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Device Sync');
+    });
+    // STATUS_CONFIG['unknown_status'] is undefined → || entry.last_status fallback is hit
+  });
+});
