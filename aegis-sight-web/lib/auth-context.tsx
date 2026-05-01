@@ -34,7 +34,8 @@ export function useAuth() {
 const STORAGE_KEY = 'aegis-sight-auth';
 
 function setAuthCookie(token: string) {
-  document.cookie = `aegis-sight-auth=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `aegis-sight-auth=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`;
 }
 
 function removeAuthCookie() {
