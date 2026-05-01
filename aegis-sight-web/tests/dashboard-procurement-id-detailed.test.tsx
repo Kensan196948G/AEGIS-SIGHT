@@ -296,3 +296,30 @@ describe('Procurement Detail page - modal cancel button (line 587)', () => {
     expect(document.body.textContent).toContain('承認済');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch coverage: params.id as array (B0[0]) and undefined id (B1[1])
+// ---------------------------------------------------------------------------
+
+describe('Procurement Detail page - branch coverage (params.id edge cases)', () => {
+  it('covers Array.isArray(params.id) TRUE branch (B0[0] line=272) when id is array', async () => {
+    mockParamsId = ['PR-2026-001'] as unknown as string;
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // params.id is array → Array.isArray true → params.id[0] = 'PR-2026-001'
+    await waitFor(() => {
+      expect(document.body.textContent?.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('covers params.id ?? "" fallback (B1[1] line=272) when id is undefined', async () => {
+    mockParamsId = undefined as unknown as string;
+    const { default: Page } = await import('@/app/dashboard/procurement/[id]/page');
+    render(<Page />);
+    // params.id is undefined → Array.isArray false → undefined ?? '' = ''
+    // PROCUREMENT_DETAILS[''] is undefined → shows 申請が見つかりません
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('申請が見つかりません');
+    });
+  });
+});

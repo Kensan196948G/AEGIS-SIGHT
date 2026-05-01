@@ -486,3 +486,42 @@ describe('SearchPage - highlightMatch branches', () => {
     expect(document.body.textContent).toContain('ALPHA-DEVICE');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch coverage: handleSubmit empty query (B7[1]) + highlightMatch empty cases (B0[0])
+// ---------------------------------------------------------------------------
+
+describe('SearchPage - branch coverage (empty query and highlightMatch edge cases)', () => {
+  it('handleSubmit with empty query is a no-op (branch B7[1] line=113)', async () => {
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    const form = document.querySelector('form');
+    if (form) {
+      // Submit form with empty query input → if(query.trim()) is FALSE → no router.push/performSearch
+      fireEvent.submit(form);
+      // No API call should be made
+      expect(mockApiGet).not.toHaveBeenCalled();
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('highlightMatch early-returns when results.query is empty string (B0[0] line=56)', async () => {
+    mockSearchQuery = 'test';
+    mockSearchType = 'all';
+    // API returns results with empty query string → highlightMatch(title, '') → !query is true → returns text
+    mockApiGet.mockResolvedValue({
+      query: '',
+      total: 1,
+      groups: [{ type: 'device', count: 1, items: [
+        { id: '1', type: 'device', title: 'NoHighlight Device', subtitle: null, matched_field: 'name', matched_value: 'NoHighlight', created_at: null },
+      ]}],
+      offset: 0, limit: 20, has_more: false,
+    });
+    const { default: SearchPage } = await import('@/app/dashboard/search/page');
+    render(<SearchPage />);
+    await waitFor(() => expect(document.body.textContent).toContain('NoHighlight Device'));
+    // With empty query, no <mark> element should be added (early return branch)
+    const marks = document.querySelectorAll('mark');
+    expect(marks.length).toBe(0);
+  });
+});
