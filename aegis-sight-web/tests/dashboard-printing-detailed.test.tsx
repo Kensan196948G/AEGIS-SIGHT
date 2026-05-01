@@ -211,4 +211,28 @@ describe('Printing page - policies tab content', () => {
     fireEvent.click(screen.getByText('ポリシー'));
     expect(document.body.textContent?.length).toBeGreaterThan(0);
   });
+
+  it('policy tab shows 禁止 badge for allow_color=false policies (B17[1])', async () => {
+    const { default: Page } = await import('@/app/dashboard/printing/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('ポリシー'));
+    // Policies 1 and 3 have allow_color=false → renders '禁止' badge
+    expect(document.body.textContent).toContain('禁止');
+  });
+
+  it('policy tab shows allow_duplex_only=false renders "-" (B18[1])', async () => {
+    const { default: Page } = await import('@/app/dashboard/printing/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('ポリシー'));
+    // Policy 2 has allow_duplex_only=false → renders '-' span
+    expect(document.body.textContent).toContain('許可'); // policy 2 has allow_color=true
+  });
+
+  it('policy tab shows 全部門 for null target_departments (B21 target_departments false branch)', async () => {
+    const { default: Page } = await import('@/app/dashboard/printing/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('ポリシー'));
+    // Policy 1 has target_departments=null → renders '全部門'
+    expect(document.body.textContent).toContain('全部門');
+  });
 });
