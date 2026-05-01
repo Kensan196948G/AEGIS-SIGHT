@@ -81,6 +81,18 @@ describe('Root page (app/page.tsx)', () => {
     const mod = await import('@/app/page');
     expect(typeof mod.default).toBe('function');
   });
+
+  it('renders Home component and calls redirect to /dashboard', async () => {
+    const { redirect } = await import('next/navigation');
+    const { default: Home } = await import('@/app/page');
+    // Rendering Home calls redirect('/dashboard')
+    try {
+      render(<Home />);
+    } catch {
+      // redirect() may throw in some environments — that's OK, it was called
+    }
+    expect(redirect).toHaveBeenCalledWith('/dashboard');
+  });
 });
 
 // ─── Error page ────────────────────────────────────────────────────────────
