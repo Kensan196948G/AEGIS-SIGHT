@@ -80,18 +80,46 @@
   "session": {
     "id": "2026-05-01-001",
     "started_at": "2026-05-01T08:30:01+09:00",
-    "loop_count": 2,
+    "loop_count": 3,
     "phase_history": [
       "Verify",
       "Build",
-      "Verify"
+      "Verify",
+      "Build",
+      "Verify",
+      "Build"
     ],
-    "merged_prs": [490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503],
-    "open_prs": [],
-    "closed_issues": [],
-    "last_updated": "2026-05-01T10:53:00+09:00",
+    "merged_prs": [
+      490,
+      491,
+      492,
+      493,
+      494,
+      495,
+      496,
+      497,
+      498,
+      499,
+      500,
+      501,
+      502,
+      503,
+      507
+    ],
+    "open_prs": [
+      508
+    ],
+    "closed_issues": [
+      504,
+      505,
+      506
+    ],
+    "last_updated": "2026-05-01T12:10:00+09:00",
     "days_left": 147,
-    "notes": "vitest 2701件(+15) / functions 99.37%(+1.16%) / branch 91.02%。Dependabot #494/#496/#498 MERGED。PR#503 MERGED(全CI green)。Open PR 0件。Issue#504 middleware P2・#505 mobile P3・#506 CSP P2・#325 ESLint10 保留。250項目ブラウザ検証完了。functions 99.37%は現実的上限(RootLayout/ResizeObserver/SSR関数は環境起因で計測不能)。"
+    "notes": "vitest 2720件(+6) / functions 99.82% / branches 91.30%(+0.42pp)。PR#507 MERGED(security: proxy.ts+CSP+Secure cookie+mobile nav)。PR#508 OPEN(coverage improvements: setTimeout/ResizeObserver/SAM aliases error handling)。追加テスト: scheduler setTimeout(2), dept abort(1), chart ResizeObserver(2), SAM aliases error(6)。Issues #504/#505/#506 CLOSED。Open Issues: #325(ESLint10保留)のみ。残2未カバーFn: getServerSnapshot(SSR専用)+RootLayout(Server Component)=実質上限99.82%。",
+    "frontend_test_count": 2720,
+    "frontend_coverage_functions": "99.82%",
+    "frontend_coverage_branches": "91.30%"
   },
   "kpi_status": {
     "frontend_coverage_statements": 98.37,

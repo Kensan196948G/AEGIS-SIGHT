@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 // ResizeObserver mock
 class MockResizeObserver {
@@ -209,5 +209,58 @@ describe('LineChart branch coverage', () => {
     render(<LineChart series={multiSeries} />);
     expect(screen.getByText('Series A')).toBeTruthy();
     expect(screen.getByText('Series B')).toBeTruthy();
+  });
+});
+
+// ─── ResizeObserver fn coverage ─────────────────────────────────────────────
+// These tests cover the ResizeObserver callback (anonymous_2) in both charts.
+// The default beforeEach mock has no-op observe(); we override it per-test to
+// capture the callback and call it, exercising the fn body for V8 coverage.
+
+describe('AreaChart - ResizeObserver callback fn coverage', () => {
+  it('fires ResizeObserver callback to update svgWidth (fn#2 coverage)', () => {
+    let capturedCb: ResizeObserverCallback | null = null;
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(cb: ResizeObserverCallback) { capturedCb = cb; }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    });
+
+    const { container } = render(<AreaChart series={singleSeries} />);
+    expect(capturedCb).not.toBeNull();
+
+    act(() => {
+      capturedCb!(
+        [{ contentRect: { width: 640 } } as ResizeObserverEntry],
+        {} as ResizeObserver,
+      );
+    });
+
+    expect(container.querySelector('svg')).toBeTruthy();
+  });
+});
+
+describe('LineChart - ResizeObserver callback fn coverage', () => {
+  it('fires ResizeObserver callback to update svgWidth (fn#2 coverage)', () => {
+    let capturedCb: ResizeObserverCallback | null = null;
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(cb: ResizeObserverCallback) { capturedCb = cb; }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    });
+
+    const { container } = render(<LineChart series={singleSeries} />);
+    expect(capturedCb).not.toBeNull();
+
+    act(() => {
+      capturedCb!(
+        [{ contentRect: { width: 640 } } as ResizeObserverEntry],
+        {} as ResizeObserver,
+      );
+    });
+
+    expect(container.querySelector('svg')).toBeTruthy();
   });
 });

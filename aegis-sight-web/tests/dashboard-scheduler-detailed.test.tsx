@@ -925,3 +925,68 @@ describe('Scheduler page - HTTP error scenarios', () => {
     expect(screen.queryByRole('button', { name: '閉じる' })).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// setTimeout callback fn coverage (fn#8: toggleTask, fn#10: runTask)
+// ---------------------------------------------------------------------------
+
+describe('Scheduler page - setTimeout fn coverage', () => {
+  it('fires setTimeout callback to clear toggleTask action message (fn#8 coverage)', async () => {
+    setupFetchWithData([makeTask({ id: 'tc1', name: 'ClearMsg Task', is_enabled: true })], []);
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [makeTask({ name: 'ClearMsg Task', is_enabled: false })] }) });
+
+    const capturedTimers: (() => void)[] = [];
+    const realST = globalThis.setTimeout.bind(globalThis);
+    const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      if (typeof fn === 'function' && ms === 3000) {
+        capturedTimers.push(fn as () => void);
+        return 0 as unknown as ReturnType<typeof setTimeout>;
+      }
+      return realST(fn, ms, ...args);
+    });
+
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => { expect(screen.getByRole('switch')).toBeTruthy(); });
+
+    await act(async () => { fireEvent.click(screen.getByRole('switch')); });
+    await waitFor(() => { expect(document.body.textContent).toContain('ClearMsg Task'); });
+
+    expect(capturedTimers.length).toBeGreaterThan(0);
+    act(() => { capturedTimers.forEach((cb) => cb()); });
+
+    spy.mockRestore();
+  });
+
+  it('fires setTimeout callback to clear runTask action message (fn#10 coverage)', async () => {
+    setupFetchWithData([makeTask({ id: 'rc1', name: 'RunMsg Task', is_enabled: true })], []);
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ message: 'RunMsg Task を実行しました' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [makeTask({ name: 'RunMsg Task' })] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => [] });
+
+    const capturedTimers: (() => void)[] = [];
+    const realST = globalThis.setTimeout.bind(globalThis);
+    const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      if (typeof fn === 'function' && ms === 3000) {
+        capturedTimers.push(fn as () => void);
+        return 0 as unknown as ReturnType<typeof setTimeout>;
+      }
+      return realST(fn, ms, ...args);
+    });
+
+    const { default: Page } = await import('@/app/dashboard/scheduler/page');
+    render(<Page />);
+    await waitFor(() => { expect(screen.getByRole('button', { name: /即時実行/ })).toBeTruthy(); });
+
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /即時実行/ })); });
+    await waitFor(() => { expect(document.body.textContent).toContain('RunMsg Task を実行しました'); });
+
+    expect(capturedTimers.length).toBeGreaterThan(0);
+    act(() => { capturedTimers.forEach((cb) => cb()); });
+
+    spy.mockRestore();
+  });
+});

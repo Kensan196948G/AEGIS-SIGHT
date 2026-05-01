@@ -393,7 +393,82 @@ describe('SKU Aliases page - edit input Enter key', () => {
   });
 });
 
-// ─── 10. SkeletonRow display ──────────────────────────────────────────────────
+// ─── 10. Error handling branch coverage ─────────────────────────────────────
+// Covers catch-block cond-expr at lines 62/80/93 and handleEdit guard-if at 71/72.
+// These tests MUST appear before the SkeletonRow describe because vi.doUnmock()
+// in SkeletonRow's afterEach clears the static vi.mock, breaking subsequent imports.
+
+describe('SKU Aliases page - error handling branch coverage', () => {
+  it('shows Error message when addAlias throws Error object (fn#62 e instanceof Error)', async () => {
+    mockAddAlias.mockRejectedValueOnce(new Error('API timeout'));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('エイリアスを追加'));
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK'));
+    fireEvent.change(input, { target: { value: 'NEW_SKU_ERR' } });
+    fireEvent.click(screen.getByText('追加'));
+    await waitFor(() => expect(document.body.textContent).toContain('API timeout'));
+  });
+
+  it('shows fallback message when addAlias throws non-Error (fn#62 else branch)', async () => {
+    mockAddAlias.mockRejectedValueOnce('string error');
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getByText('エイリアスを追加'));
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK'));
+    fireEvent.change(input, { target: { value: 'NEW_SKU_ERR2' } });
+    fireEvent.click(screen.getByText('追加'));
+    await waitFor(() => expect(document.body.textContent).toContain('追加に失敗しました'));
+  });
+
+  it('shows error when editAlias throws (fn#80 catch branch)', async () => {
+    mockEditAlias.mockRejectedValueOnce(new Error('Edit failed'));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement);
+    fireEvent.change(input, { target: { value: 'EDITED_SKU' } });
+    fireEvent.click(screen.getByText('保存'));
+    await waitFor(() => expect(document.body.textContent).toContain('Edit failed'));
+  });
+
+  it('handles removeAlias throw gracefully without crash (fn#93 catch branch)', async () => {
+    mockRemoveAlias.mockRejectedValueOnce(new Error('Delete failed'));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getAllByLabelText('削除')[0]);
+    await waitFor(() => expect(screen.getByTestId('confirm-dialog')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirm-ok'));
+    // After error, removeAlias was called and catch block ran without crash
+    // (formError is stored but only shown in add/edit modals, not delete dialog)
+    await waitFor(() => expect(mockRemoveAlias).toHaveBeenCalled());
+    // Page body should still be rendered (no unhandled crash)
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('shows empty-SKU error in edit modal (fn#71 if(!sku) branch)', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement);
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.click(screen.getByText('保存'));
+    await waitFor(() => expect(document.body.textContent).toContain('SKU Part Number を入力してください'));
+  });
+
+  it('shows duplicate error in edit modal for different alias id (fn#72 dup check branch)', async () => {
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/[id]/aliases/page');
+    render(<Page />);
+    fireEvent.click(screen.getAllByLabelText('編集')[0]);
+    const input = await waitFor(() => screen.getByPlaceholderText('例: ENTERPRISEPACK') as HTMLInputElement);
+    // Try editing alias[0] (ENTERPRISEPACK) to SPE_E3 which is alias[1]
+    fireEvent.change(input, { target: { value: 'SPE_E3' } });
+    fireEvent.click(screen.getByText('保存'));
+    await waitFor(() => expect(document.body.textContent).toContain('重複'));
+  });
+});
+
+// ─── 11. SkeletonRow display ──────────────────────────────────────────────────
 
 describe('SKU Aliases page - SkeletonRow display (loading state)', () => {
   beforeEach(() => {
@@ -429,3 +504,4 @@ describe('SKU Aliases page - SkeletonRow display (loading state)', () => {
     expect(document.body.textContent).toContain('読み込み中...');
   });
 });
+
