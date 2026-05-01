@@ -264,3 +264,30 @@ describe('LineChart - ResizeObserver callback fn coverage', () => {
     expect(container.querySelector('svg')).toBeTruthy();
   });
 });
+
+// ─── PieChart branch coverage (total === 0 case) ─────────────────────────────
+
+import { PieChart } from '@/components/charts/pie-chart';
+
+describe('PieChart - branch coverage (total=0 data)', () => {
+  it('covers total===0 branch in angle calc (B6[1]) and percentage calc (B8[1])', () => {
+    // data with value=0 → total=0 → angle=0 and percentage='0'
+    const { container } = render(
+      <PieChart data={[{ label: 'Nothing', value: 0 }]} />
+    );
+    expect(container.querySelector('svg')).toBeTruthy();
+    // With total=0, angle=0, percentage='0' → branches B6[1] and B8[1] covered
+    expect(document.body.textContent).toContain('Nothing');
+  });
+
+  it('covers area-chart max-min||1 fallback (B7[1]) with flat data', () => {
+    // All data points have same value → max-min=0 → || 1 fallback
+    const flatSeries = [{ name: 'Flat', data: [
+      { label: 'A', value: 50 },
+      { label: 'B', value: 50 },
+      { label: 'C', value: 50 },
+    ]}];
+    const { container } = render(<AreaChart series={flatSeries} />);
+    expect(container.querySelector('svg')).toBeTruthy();
+  });
+});
