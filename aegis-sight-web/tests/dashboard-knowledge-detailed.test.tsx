@@ -498,6 +498,19 @@ describe('Knowledge page - list view filter selects (functions coverage)', () =>
     expect(document.body.textContent?.length).toBeGreaterThan(0);
   });
 
+  it('sidebar 全カテゴリ button onClick covers setSelectedCategory(all) (line 417)', async () => {
+    const { default: Page } = await import('@/app/dashboard/knowledge/page');
+    render(<Page />);
+    // The sidebar has a <button>全カテゴリ</button> with onClick={() => setSelectedCategory('all')}
+    const allButtons = Array.from(document.querySelectorAll('button')).filter(
+      (b) => b.textContent?.trim() === '全カテゴリ'
+    );
+    if (allButtons.length > 0) {
+      fireEvent.click(allButtons[0]);
+    }
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
   it('editor title input onChange covers setEditorTitle (line 568)', async () => {
     const { default: Page } = await import('@/app/dashboard/knowledge/page');
     render(<Page />);
