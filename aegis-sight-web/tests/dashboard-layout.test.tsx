@@ -1,13 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock all UI components used by DashboardLayout
 vi.mock('@/components/ui/sidebar', () => ({
-  Sidebar: () => <nav data-testid="sidebar">Sidebar</nav>,
+  Sidebar: ({ mobileOpen, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) => (
+    <nav data-testid="sidebar" data-mobile-open={mobileOpen ? 'true' : 'false'}>
+      <button onClick={onMobileClose} data-testid="sidebar-close">Close</button>
+      Sidebar
+    </nav>
+  ),
 }));
 
 vi.mock('@/components/ui/header', () => ({
-  Header: () => <header data-testid="header">Header</header>,
+  Header: ({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) => (
+    <header data-testid="header">
+      <button onClick={onMobileMenuClick} data-testid="hamburger">Menu</button>
+      Header
+    </header>
+  ),
 }));
 
 vi.mock('@/components/ui/skip-link', () => ({
@@ -116,5 +126,50 @@ describe('DashboardLayout (app/dashboard/layout.tsx)', () => {
     );
     expect(screen.getByTestId('offline-indicator')).toBeTruthy();
     expect(screen.getByTestId('pwa-install')).toBeTruthy();
+  });
+
+  it('clicking hamburger opens mobile nav overlay (mobileNavOpen=true branch)', async () => {
+    const { default: Layout } = await import('@/app/dashboard/layout');
+    render(
+      <Layout>
+        <span />
+      </Layout>
+    );
+    // Hamburger click → mobileNavOpen = true → backdrop overlay renders
+    const hamburger = screen.getByTestId('hamburger');
+    fireEvent.click(hamburger);
+    // Sidebar should now show mobileOpen=true
+    const sidebar = screen.getByTestId('sidebar');
+    expect(sidebar.getAttribute('data-mobile-open')).toBe('true');
+  });
+
+  it('clicking backdrop closes mobile nav via onMobileClose (mobileNavOpen=false branch)', async () => {
+    const { default: Layout } = await import('@/app/dashboard/layout');
+    render(
+      <Layout>
+        <span />
+      </Layout>
+    );
+    // Open sidebar
+    fireEvent.click(screen.getByTestId('hamburger'));
+    // Close via sidebar's close button (calls onMobileClose)
+    fireEvent.click(screen.getByTestId('sidebar-close'));
+    expect(screen.getByTestId('sidebar').getAttribute('data-mobile-open')).toBe('false');
+  });
+
+  it('clicking backdrop div directly calls setMobileNavOpen(false) (line 27 fn coverage)', async () => {
+    const { default: Layout } = await import('@/app/dashboard/layout');
+    render(
+      <Layout>
+        <span />
+      </Layout>
+    );
+    // Open sidebar
+    fireEvent.click(screen.getByTestId('hamburger'));
+    // Click the actual backdrop div (onClick={() => setMobileNavOpen(false)})
+    const backdrop = screen.getByTestId('mobile-nav-backdrop');
+    fireEvent.click(backdrop);
+    // After clicking backdrop, sidebar should close
+    expect(screen.getByTestId('sidebar').getAttribute('data-mobile-open')).toBe('false');
   });
 });

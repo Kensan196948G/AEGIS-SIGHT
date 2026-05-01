@@ -172,11 +172,23 @@ const navigation = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-darker">
+    <aside
+      className={clsx(
+        'fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 dark:border-aegis-border dark:bg-aegis-darker',
+        // Desktop: always visible; Mobile: slide in/out
+        'lg:translate-x-0',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      )}
+    >
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-6 dark:border-aegis-border">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600">
@@ -202,6 +214,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onMobileClose}
               className={clsx(
                 'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive

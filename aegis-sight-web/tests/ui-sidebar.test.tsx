@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/dashboard'),
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
-    <a href={href} className={className}>{children}</a>
+  default: ({ href, children, className, onClick }: { href: string; children: React.ReactNode; className?: string; onClick?: () => void }) => (
+    <a href={href} className={className} onClick={onClick}>{children}</a>
   ),
 }));
 
@@ -69,5 +69,28 @@ describe('Sidebar', () => {
     render(<Sidebar />);
     expect(screen.getByText('管理者')).toBeInTheDocument();
     expect(screen.getByText('admin@aegis-sight.local')).toBeInTheDocument();
+  });
+});
+
+describe('Sidebar - mobile props', () => {
+  it('renders with mobileOpen=false (default, sidebar hidden on mobile)', () => {
+    const { container } = render(<Sidebar mobileOpen={false} />);
+    const aside = container.querySelector('aside');
+    expect(aside?.className).toContain('-translate-x-full');
+  });
+
+  it('renders with mobileOpen=true (sidebar visible on mobile)', () => {
+    const { container } = render(<Sidebar mobileOpen={true} />);
+    const aside = container.querySelector('aside');
+    // translate-x-0 should be present (not -translate-x-full)
+    expect(aside?.className).not.toContain('-translate-x-full');
+  });
+
+  it('calls onMobileClose when nav link clicked on mobile', () => {
+    const onMobileClose = vi.fn();
+    render(<Sidebar mobileOpen={true} onMobileClose={onMobileClose} />);
+    const links = screen.getAllByRole('link');
+    fireEvent.click(links[0]);
+    expect(onMobileClose).toHaveBeenCalledTimes(1);
   });
 });

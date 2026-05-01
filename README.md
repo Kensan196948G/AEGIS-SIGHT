@@ -72,7 +72,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v8 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,636件** / vitest **2,646件**・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了・**SAM Frontend API 実接続完了 (PR#484/#485)** ・**branch coverage 90.42% 達成** |
+| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,636件** / vitest **2,701件**・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了・**SAM Frontend API 実接続完了 (PR#484/#485)** ・**branch coverage 91.02% / functions 99.37% 達成** |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -158,7 +158,7 @@ flowchart LR
 
     subgraph TEST["🧪 テスト (DB付き)"]
         PYTEST["🐍 pytest\n4,636件 + coverage"]
-        VITEST["⚛️ vitest\n2,646件 + coverage v8"]
+        VITEST["⚛️ vitest\n2,701件 + coverage v8"]
         REPORT["📊 PR Summary\nコメント自動投稿"]
     end
 
@@ -462,7 +462,7 @@ gantt
 | 🏗️ スキャフォールド (94ファイル) | ✅ Done | PR #4 merged |
 | 🐍 Backend API (10ドメイン) | ✅ Done | auth/assets/sam/procurement/telemetry/dashboard/security/logs/software/metrics |
 | ⚛️ Frontend (9ページ+ログイン) | ✅ Done | 全ページAPI接続済み |
-| 🧪 テスト (7,282+ケース) | ✅ Done | pytest **4,636件** + Vitest **2,646件** + Playwright E2E ・branch coverage **90.42%** |
+| 🧪 テスト (7,337+ケース) | ✅ Done | pytest **4,636件** + Vitest **2,701件** + Playwright E2E ・branch **91.02%** / functions **99.37%** |
 | 🐳 Docker/CI最適化 | ✅ Done | マルチステージ, セキュリティスキャン, dependabot |
 | 📊 GitHub Projects | ✅ Active | [司令盤 #14](https://github.com/users/Kensan196948G/projects/14) |
 | 🔄 CI/CD | ✅ Passing | GitHub Actions (lint/test/build/security) + Frontend CI専用ワークフロー（paths filter）|
@@ -683,16 +683,17 @@ graph LR
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
 | Backend テスト | 全テスト通過 | ✅ **181 ファイル / 4,636件** pytest |
-| Frontend テスト | 全テスト通過 | ✅ 81 ファイル / 1,942件 vitest |
-| フロントカバレッジ | Lines ≥ 90% | ✅ **96.26%** |
-| ブランチカバレッジ | Branches ≥ 85% | ✅ **90.21%** |
+| Frontend テスト | 全テスト通過 | ✅ 92 ファイル / 2,701件 vitest |
+| フロントカバレッジ | Lines ≥ 90% | ✅ **99.29%** |
+| ブランチカバレッジ | Branches ≥ 85% | ✅ **91.02%** |
+| 関数カバレッジ | Functions ≥ 85% | ✅ **99.37%** |
 | CI | GitHub Actions 成功 | ✅ |
 | Lint | ruff + ESLint エラー 0 | ✅ |
 | Build | Docker build 成功 | ✅ |
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：✅ STABLE — Session 2026-04-23 全チェック通過 (PR#474 / #478 merged, pytest 4,636 / vitest 1,942)
+> **N = 3** (通常変更)：✅ STABLE — Session 2026-05-01 全チェック通過 (PR#503 / #507 merged, pytest 4,636 / vitest 2,701 / functions 99.37% / branches 91.02%)
 
 ### Agent Teams
 
@@ -818,8 +819,24 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 - `main` への直接 push 禁止
 - feature branch または Git WorkTree で開発
 - PR 必須、CI 通過必須（lint / test / build / security）
-- テストカバレッジ: Statements 90%+, Branches 85%+, Functions 88%+, Lines 90%+
+- テストカバレッジ: Statements **98.37%**, Branches **91.02%**, Functions **99.37%**, Lines **99.29%**
 - ClaudeOS 自律開発ループによる継続的品質改善
+
+## 🛡️ セキュリティヘッダー
+
+フロントエンドは以下の HTTP セキュリティヘッダーを全レスポンスに付与しています：
+
+| ヘッダー | 値 | 目的 |
+|:---|:---|:---|
+| `Content-Security-Policy` | frame-ancestors/form-action/object-src 制限 | XSS・クリックジャッキング防止 |
+| `X-Frame-Options` | `DENY` | フレーム埋め込み禁止 |
+| `X-Content-Type-Options` | `nosniff` | MIME スニッフィング防止 |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | リファラー情報最小化 |
+| `Permissions-Policy` | camera/mic/geolocation 無効 | 不要 API 権限を制限 |
+
+### Next.js 16 proxy.ts 移行
+
+Next.js 16 にて `middleware.ts` が `proxy.ts` に改名 (PR#507)。auth クッキーによる Server-side ルート保護は継続。
 
 ---
 

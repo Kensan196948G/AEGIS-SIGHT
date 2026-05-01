@@ -5,7 +5,11 @@ import { useAuth } from '@/lib/auth-context';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import Link from 'next/link';
 
-export function Header() {
+interface HeaderProps {
+  onMobileMenuClick?: () => void;
+}
+
+export function Header({ onMobileMenuClick }: HeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
 
@@ -15,9 +19,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 px-6 backdrop-blur-sm dark:border-aegis-border dark:bg-aegis-dark/80">
-      {/* Left: Page breadcrumb area */}
+      {/* Left: Hamburger (mobile) + breadcrumb area */}
       <div className="flex items-center gap-4">
         <button
+          onClick={onMobileMenuClick}
           className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-aegis-surface lg:hidden"
           aria-label="メニューを開く"
         >

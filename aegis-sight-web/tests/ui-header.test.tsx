@@ -92,3 +92,21 @@ describe('Header with null user', () => {
     expect(screen.getByText('管')).toBeInTheDocument();
   });
 });
+
+describe('Header - onMobileMenuClick prop', () => {
+  it('calls onMobileMenuClick when hamburger button clicked', () => {
+    const onMobileMenuClick = vi.fn();
+    render(<Header onMobileMenuClick={onMobileMenuClick} />);
+    const hamburger = screen.getByLabelText('メニューを開く');
+    fireEvent.click(hamburger);
+    expect(onMobileMenuClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders without onMobileMenuClick prop (optional prop)', () => {
+    render(<Header />);
+    const hamburger = screen.getByLabelText('メニューを開く');
+    // Should not throw when clicked without handler
+    fireEvent.click(hamburger);
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+});
