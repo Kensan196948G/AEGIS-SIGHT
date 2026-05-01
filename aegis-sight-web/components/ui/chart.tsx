@@ -43,7 +43,7 @@ export function BarChart({
         const color = item.color || defaultColors[index % defaultColors.length];
 
         return (
-          <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
+          <div key={`${item.label}-${index}`} className="flex flex-1 flex-col items-center gap-1">
             {showValues && (
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 {item.value.toLocaleString()}
