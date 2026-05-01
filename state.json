@@ -114,12 +114,12 @@
       505,
       506
     ],
-    "last_updated": "2026-05-01T11:55:00+09:00",
+    "last_updated": "2026-05-01T12:10:00+09:00",
     "days_left": 147,
-    "notes": "vitest 2714件(+5) / functions 99.82%(+0.45pp) / branches 90.88%。PR#507 MERGED(security: proxy.ts+CSP+Secure cookie+mobile nav)。PR#508 OPEN(coverage fns 99.82%: scheduler/dept/chart callbacks)。Issues #504/#505/#506 CLOSED。残2未カバー: getServerSnapshot(SSR専用)+RootLayout(Server Component)=実質上限99.82%。Open Issues: #325(ESLint10保留)のみ。",
-    "frontend_test_count": 2714,
+    "notes": "vitest 2720件(+6) / functions 99.82% / branches 91.30%(+0.42pp)。PR#507 MERGED(security: proxy.ts+CSP+Secure cookie+mobile nav)。PR#508 OPEN(coverage improvements: setTimeout/ResizeObserver/SAM aliases error handling)。追加テスト: scheduler setTimeout(2), dept abort(1), chart ResizeObserver(2), SAM aliases error(6)。Issues #504/#505/#506 CLOSED。Open Issues: #325(ESLint10保留)のみ。残2未カバーFn: getServerSnapshot(SSR専用)+RootLayout(Server Component)=実質上限99.82%。",
+    "frontend_test_count": 2720,
     "frontend_coverage_functions": "99.82%",
-    "frontend_coverage_branches": "90.88%"
+    "frontend_coverage_branches": "91.30%"
   },
   "kpi_status": {
     "frontend_coverage_statements": 98.37,
