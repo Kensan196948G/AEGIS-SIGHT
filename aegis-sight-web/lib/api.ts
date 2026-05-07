@@ -347,3 +347,15 @@ export async function approveProcurementRequest(id: string): Promise<BackendProc
 export async function rejectProcurementRequest(id: string): Promise<BackendProcurementResponse> {
   return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/reject`);
 }
+
+export async function fetchProcurementById(id: string): Promise<BackendProcurementResponse> {
+  return api.get<BackendProcurementResponse>(`/api/v1/procurement/${id}`);
+}
+
+export async function orderProcurementRequest(id: string): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/order`);
+}
+
+export async function receiveProcurementRequest(id: string): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/receive`);
+}

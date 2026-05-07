@@ -1,283 +1,150 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/modal';
+import {
+  fetchProcurementById,
+  submitProcurementRequest,
+  approveProcurementRequest,
+  rejectProcurementRequest,
+  orderProcurementRequest,
+  receiveProcurementRequest,
+} from '@/lib/api';
+import type { BackendProcurementResponse } from '@/lib/api';
 
-type Status = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
-type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type FrontendStatus =
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'ordered'
+  | 'delivered'
+  | 'completed';
 
-interface ProcurementItem { name: string; quantity: number; unitPrice: number; subtotal: number; }
-interface Approver { name: string; role: string; status: 'approved' | 'pending' | 'rejected'; date: string; comment?: string; }
-interface TimelineEvent { date: string; event: string; user: string; detail: string; }
-
-interface ProcurementDetail {
-  id: string;
-  title: string;
-  description: string;
-  requesterName: string;
-  requesterEmail: string;
-  department: string;
-  category: string;
-  priority: Priority;
-  status: Status;
-  estimatedCost: number;
-  currency: string;
-  createdAt: string;
-  updatedAt: string;
-  deliveryDate: string;
-  items: ProcurementItem[];
-  approvers: Approver[];
-  timeline: TimelineEvent[];
-}
-
-const PROCUREMENT_DETAILS: Record<string, ProcurementDetail> = {
-  'PR-2026-001': {
-    id: 'PR-2026-001', title: 'Dell Latitude 5540 x 20台',
-    description: '新入社員向けの業務用ノートPCの調達。エンジニアリング部門の増員に伴い、標準スペックのノートPCが必要。Intel Core i7、16GB RAM、512GB SSDを標準構成とし、開発作業に耐えうるスペックを確保する。',
-    requesterName: '田中 太郎', requesterEmail: 'tanaka@aegis-sight.local', department: 'エンジニアリング',
-    category: 'ハードウェア', priority: 'high', status: 'approved', estimatedCost: 3200000, currency: 'JPY',
-    createdAt: '2026-03-14 10:30', updatedAt: '2026-03-15 16:00', deliveryDate: '2026-04-30',
-    items: [
-      { name: 'Dell Latitude 5540 (i7/16GB/512GB)', quantity: 20, unitPrice: 145000, subtotal: 2900000 },
-      { name: 'Dell USB-Cドッキングステーション WD19S', quantity: 20, unitPrice: 15000, subtotal: 300000 },
-    ],
-    approvers: [
-      { name: '鈴木部長', role: '部門長', status: 'approved', date: '2026-03-15', comment: '承認します。仕様は問題ありません。' },
-      { name: '山本課長', role: 'IT管理', status: 'approved', date: '2026-03-15', comment: '在庫確認済み。標準構成です。' },
-    ],
-    timeline: [
-      { date: '2026-03-14 10:30', event: '申請作成', user: '田中 太郎', detail: '調達申請が作成されました' },
-      { date: '2026-03-14 11:00', event: '申請提出', user: '田中 太郎', detail: '承認ワークフローに提出されました' },
-      { date: '2026-03-15 14:20', event: '部門長承認', user: '鈴木部長', detail: '部門長が承認しました' },
-      { date: '2026-03-15 16:00', event: 'IT管理承認', user: '山本課長', detail: 'IT管理部門が承認しました' },
-    ],
-  },
-  'PR-2026-002': {
-    id: 'PR-2026-002', title: 'Adobe CC ライセンス追加 10本',
-    description: 'デザイン部門の人員増加に伴い、Adobe Creative Cloud ライセンスを10本追加。現在58本超過状態が発生しており、コンプライアンス対応として早急に購入が必要。',
-    requesterName: '佐藤 花子', requesterEmail: 'sato@aegis-sight.local', department: 'デザイン',
-    category: 'ソフトウェア', priority: 'medium', status: 'submitted', estimatedCost: 720000, currency: 'JPY',
-    createdAt: '2026-03-19 09:00', updatedAt: '2026-03-20 10:30', deliveryDate: '2026-04-15',
-    items: [
-      { name: 'Adobe Creative Cloud All Apps (1年間)', quantity: 10, unitPrice: 72000, subtotal: 720000 },
-    ],
-    approvers: [
-      { name: '中山部長', role: '部門長', status: 'pending', date: '-', comment: '' },
-    ],
-    timeline: [
-      { date: '2026-03-19 09:00', event: '申請作成', user: '佐藤 花子', detail: '調達申請が作成されました' },
-      { date: '2026-03-20 10:30', event: '申請提出', user: '佐藤 花子', detail: '承認ワークフローに提出されました' },
-    ],
-  },
-  'PR-2026-003': {
-    id: 'PR-2026-003', title: 'Cisco Catalyst 9300 スイッチ',
-    description: 'インフラ更新計画の一環として、本社ネットワーク基幹スイッチをCisco Catalyst 9300に置き換え。既存Catalyst 3650のEOL対応。',
-    requesterName: '山田 次郎', requesterEmail: 'yamada@aegis-sight.local', department: 'インフラ',
-    category: 'ネットワーク', priority: 'high', status: 'submitted', estimatedCost: 1500000, currency: 'JPY',
-    createdAt: '2026-03-21 14:00', updatedAt: '2026-03-22 09:00', deliveryDate: '2026-05-31',
-    items: [
-      { name: 'Cisco Catalyst C9300-48P-E', quantity: 2, unitPrice: 600000, subtotal: 1200000 },
-      { name: 'Cisco StackWise-480 ケーブル 1M', quantity: 1, unitPrice: 150000, subtotal: 150000 },
-      { name: 'ラックマウントキット', quantity: 2, unitPrice: 75000, subtotal: 150000 },
-    ],
-    approvers: [
-      { name: '小林部長', role: '部門長', status: 'pending', date: '-', comment: '' },
-      { name: '山本課長', role: 'IT管理', status: 'pending', date: '-', comment: '' },
-    ],
-    timeline: [
-      { date: '2026-03-21 14:00', event: '申請作成', user: '山田 次郎', detail: '調達申請が作成されました' },
-      { date: '2026-03-22 09:00', event: '申請提出', user: '山田 次郎', detail: '承認ワークフローに提出されました' },
-    ],
-  },
-  'PR-2026-004': {
-    id: 'PR-2026-004', title: '27インチ 4K モニター x 15台',
-    description: '営業部門のリモートワーク強化および生産性向上のため、27インチ 4Kモニターを15台調達。現状の24インチFHDからのアップグレード。',
-    requesterName: '鈴木 一郎', requesterEmail: 'suzuki@aegis-sight.local', department: '営業',
-    category: '周辺機器', priority: 'low', status: 'draft', estimatedCost: 900000, currency: 'JPY',
-    createdAt: '2026-03-25 11:00', updatedAt: '2026-03-25 11:00', deliveryDate: '2026-05-15',
-    items: [
-      { name: 'LG 27UK850-W 4K IPS USB-C モニター', quantity: 15, unitPrice: 60000, subtotal: 900000 },
-    ],
-    approvers: [],
-    timeline: [
-      { date: '2026-03-25 11:00', event: '申請作成', user: '鈴木 一郎', detail: '下書きとして保存されました' },
-    ],
-  },
-  'PR-2026-005': {
-    id: 'PR-2026-005', title: 'Microsoft 365 E5 アップグレード',
-    description: 'Microsoft 365 E3からE5へのアップグレード。Defender for Endpoint P2、Azure AD Premium P2、Purview Information Protection等の高度なセキュリティ機能を利用するため。',
-    requesterName: '高橋 美咲', requesterEmail: 'takahashi@aegis-sight.local', department: 'IT管理',
-    category: 'ソフトウェア', priority: 'medium', status: 'ordered', estimatedCost: 2400000, currency: 'JPY',
-    createdAt: '2026-03-08 10:00', updatedAt: '2026-03-12 14:00', deliveryDate: '2026-04-01',
-    items: [
-      { name: 'Microsoft 365 E5 アップグレード (500ユーザー/年)', quantity: 500, unitPrice: 4800, subtotal: 2400000 },
-    ],
-    approvers: [
-      { name: '山本課長', role: 'IT管理', status: 'approved', date: '2026-03-10', comment: 'セキュリティ強化に必要。承認。' },
-      { name: '田村取締役', role: 'CIO', status: 'approved', date: '2026-03-12', comment: '予算内。セキュリティ投資として承認。' },
-    ],
-    timeline: [
-      { date: '2026-03-08 10:00', event: '申請作成', user: '高橋 美咲', detail: '調達申請が作成されました' },
-      { date: '2026-03-08 10:30', event: '申請提出', user: '高橋 美咲', detail: '承認ワークフローに提出されました' },
-      { date: '2026-03-10 11:00', event: 'IT管理承認', user: '山本課長', detail: 'IT管理部門が承認しました' },
-      { date: '2026-03-12 14:00', event: '最終承認', user: '田村取締役', detail: 'CIOが最終承認しました' },
-      { date: '2026-03-13 09:00', event: '発注', user: 'IT管理部', detail: 'Microsoftへ発注が完了しました' },
-    ],
-  },
-  'PR-2026-006': {
-    id: 'PR-2026-006', title: 'HP EliteBook 840 G10 x 5台',
-    description: '経理部門の老朽化PC（5年以上使用）の更新。セキュリティパッチ適用不可の旧OSからの移行も兼ねる。',
-    requesterName: '中村 健太', requesterEmail: 'nakamura@aegis-sight.local', department: '経理',
-    category: 'ハードウェア', priority: 'medium', status: 'delivered', estimatedCost: 750000, currency: 'JPY',
-    createdAt: '2026-02-28 14:00', updatedAt: '2026-03-20 10:00', deliveryDate: '2026-03-20',
-    items: [
-      { name: 'HP EliteBook 840 G10 (i5/16GB/256GB)', quantity: 5, unitPrice: 130000, subtotal: 650000 },
-      { name: 'HP USB-Cドック G5', quantity: 5, unitPrice: 20000, subtotal: 100000 },
-    ],
-    approvers: [
-      { name: '鈴木部長', role: '部門長', status: 'approved', date: '2026-03-02', comment: '更新必要。承認。' },
-      { name: '山本課長', role: 'IT管理', status: 'approved', date: '2026-03-03', comment: '資産台帳確認済み。' },
-    ],
-    timeline: [
-      { date: '2026-02-28 14:00', event: '申請作成', user: '中村 健太', detail: '調達申請が作成されました' },
-      { date: '2026-02-28 15:00', event: '申請提出', user: '中村 健太', detail: '承認ワークフローに提出されました' },
-      { date: '2026-03-02 10:00', event: '部門長承認', user: '鈴木部長', detail: '部門長が承認しました' },
-      { date: '2026-03-03 11:00', event: 'IT管理承認', user: '山本課長', detail: 'IT管理部門が承認しました' },
-      { date: '2026-03-04 09:00', event: '発注', user: 'IT管理部', detail: 'HPダイレクトへ発注が完了しました' },
-      { date: '2026-03-20 10:00', event: '納品', user: 'IT管理部', detail: '5台の納品が完了しました' },
-    ],
-  },
-  'PR-2026-007': {
-    id: 'PR-2026-007', title: 'Fortinet FortiGate 60F',
-    description: '現行UTMの老朽化に伴う緊急交換。セキュリティパッチサポート終了のため、即時対応が必要。新拠点の開設に合わせてFortiGate 60Fを導入し、SSL-VPN・IPS・WAFを統合管理する。',
-    requesterName: '小林 真一', requesterEmail: 'kobayashi@aegis-sight.local', department: 'インフラ',
-    category: 'セキュリティ', priority: 'urgent', status: 'approved', estimatedCost: 480000, currency: 'JPY',
-    createdAt: '2026-03-27 09:00', updatedAt: '2026-03-28 12:00', deliveryDate: '2026-04-07',
-    items: [
-      { name: 'Fortinet FortiGate 60F (本体)', quantity: 1, unitPrice: 380000, subtotal: 380000 },
-      { name: 'FortiCare Premium 1年間', quantity: 1, unitPrice: 60000, subtotal: 60000 },
-      { name: 'FortiGuard UTMバンドル 1年間', quantity: 1, unitPrice: 40000, subtotal: 40000 },
-    ],
-    approvers: [
-      { name: '山本課長', role: 'IT管理', status: 'approved', date: '2026-03-28', comment: '緊急案件。即時承認。' },
-      { name: '田村取締役', role: 'CIO', status: 'approved', date: '2026-03-28', comment: 'セキュリティリスク対応として承認。' },
-    ],
-    timeline: [
-      { date: '2026-03-27 09:00', event: '申請作成', user: '小林 真一', detail: '緊急調達申請が作成されました' },
-      { date: '2026-03-27 09:15', event: '申請提出', user: '小林 真一', detail: '緊急承認フローに提出されました' },
-      { date: '2026-03-28 11:00', event: 'IT管理承認', user: '山本課長', detail: '緊急対応として即時承認しました' },
-      { date: '2026-03-28 12:00', event: '最終承認', user: '田村取締役', detail: 'CIOが緊急承認しました' },
-    ],
-  },
-  'PR-2026-008': {
-    id: 'PR-2026-008', title: 'Epson エコタンク複合機 x 3台',
-    description: '総務部門のコスト削減目的で、インクカートリッジ式から大容量エコタンク式複合機への切り替えを申請。',
-    requesterName: '松本 あかね', requesterEmail: 'matsumoto@aegis-sight.local', department: '総務',
-    category: '周辺機器', priority: 'low', status: 'rejected', estimatedCost: 210000, currency: 'JPY',
-    createdAt: '2026-03-17 10:00', updatedAt: '2026-03-18 14:00', deliveryDate: '2026-04-30',
-    items: [
-      { name: 'Epson EW-M752T エコタンク複合機', quantity: 3, unitPrice: 70000, subtotal: 210000 },
-    ],
-    approvers: [
-      { name: '鈴木部長', role: '部門長', status: 'rejected', date: '2026-03-18', comment: '既存複合機のリース契約が残っているため却下。リース終了後に再申請すること。' },
-    ],
-    timeline: [
-      { date: '2026-03-17 10:00', event: '申請作成', user: '松本 あかね', detail: '調達申請が作成されました' },
-      { date: '2026-03-17 11:00', event: '申請提出', user: '松本 あかね', detail: '承認ワークフローに提出されました' },
-      { date: '2026-03-18 14:00', event: '申請却下', user: '鈴木部長', detail: 'リース契約の残存を理由に却下されました' },
-    ],
-  },
-  'PR-2026-009': {
-    id: 'PR-2026-009', title: 'VMware vSphere 8 ライセンス',
-    description: 'インフラ仮想化基盤のvSphere 7からvSphere 8へのアップグレード。NSX-T統合とKubernetes対応強化のため。本番・開発・DR環境合計15ホスト分のライセンス更新を含む。',
-    requesterName: '渡辺 剛', requesterEmail: 'watanabe@aegis-sight.local', department: 'インフラ',
-    category: 'ソフトウェア', priority: 'high', status: 'completed', estimatedCost: 1800000, currency: 'JPY',
-    createdAt: '2026-02-18 14:00', updatedAt: '2026-03-15 11:00', deliveryDate: '2026-03-15',
-    items: [
-      { name: 'VMware vSphere 8 Enterprise Plus (25 CPUコア)', quantity: 3, unitPrice: 480000, subtotal: 1440000 },
-      { name: 'VMware vCenter Server 8 Standard', quantity: 1, unitPrice: 360000, subtotal: 360000 },
-    ],
-    approvers: [
-      { name: '小林部長', role: '部門長', status: 'approved', date: '2026-02-22', comment: 'インフラ年次計画内。承認。' },
-      { name: '山本課長', role: 'IT管理', status: 'approved', date: '2026-02-23', comment: '仮想化戦略と整合。承認。' },
-      { name: '田村取締役', role: 'CIO', status: 'approved', date: '2026-02-25', comment: '予算承認済み。' },
-    ],
-    timeline: [
-      { date: '2026-02-18 14:00', event: '申請作成', user: '渡辺 剛', detail: '調達申請が作成されました' },
-      { date: '2026-02-20 09:00', event: '申請提出', user: '渡辺 剛', detail: '承認ワークフローに提出されました' },
-      { date: '2026-02-22 10:00', event: '部門長承認', user: '小林部長', detail: '部門長が承認しました' },
-      { date: '2026-02-23 14:00', event: 'IT管理承認', user: '山本課長', detail: 'IT管理部門が承認しました' },
-      { date: '2026-02-25 11:00', event: '最終承認', user: '田村取締役', detail: 'CIOが最終承認しました' },
-      { date: '2026-02-26 09:00', event: '発注', user: 'IT管理部', detail: 'VMwareパートナーへ発注完了' },
-      { date: '2026-03-10 11:00', event: 'ライセンスキー受領', user: 'IT管理部', detail: 'ライセンスキーがメールで送付されました' },
-      { date: '2026-03-15 11:00', event: '完了', user: '渡辺 剛', detail: 'ライセンス適用・動作確認完了' },
-    ],
-  },
-  'PR-2026-010': {
-    id: 'PR-2026-010', title: 'iPad Pro 12.9" + Apple Pencil x 10台',
-    description: '建設現場でのデジタル図面閲覧・工程管理・写真記録のためにiPad Proを導入。AEGIS-SIGHTのPWA機能を活用し、オフライン環境でも資産管理・現場報告が可能。',
-    requesterName: '伊藤 沙織', requesterEmail: 'ito@aegis-sight.local', department: '建設現場',
-    category: 'モバイル', priority: 'medium', status: 'submitted', estimatedCost: 1600000, currency: 'JPY',
-    createdAt: '2026-03-29 10:00', updatedAt: '2026-03-30 09:00', deliveryDate: '2026-05-01',
-    items: [
-      { name: 'Apple iPad Pro 12.9" M2 (256GB Wi-Fi+Cellular)', quantity: 10, unitPrice: 140000, subtotal: 1400000 },
-      { name: 'Apple Pencil (第2世代)', quantity: 10, unitPrice: 19000, subtotal: 190000 },
-      { name: 'Apple Magic Keyboard for iPad Pro 12.9"', quantity: 5, unitPrice: 10000, subtotal: 10000 },
-    ],
-    approvers: [
-      { name: '中山部長', role: '部門長', status: 'pending', date: '-', comment: '' },
-      { name: '山本課長', role: 'IT管理', status: 'pending', date: '-', comment: '' },
-    ],
-    timeline: [
-      { date: '2026-03-29 10:00', event: '申請作成', user: '伊藤 沙織', detail: '調達申請が作成されました' },
-      { date: '2026-03-30 09:00', event: '申請提出', user: '伊藤 沙織', detail: '承認ワークフローに提出されました' },
-    ],
-  },
+const statusMap: Record<string, FrontendStatus> = {
+  draft: 'draft',
+  submitted: 'submitted',
+  approved: 'approved',
+  rejected: 'rejected',
+  ordered: 'ordered',
+  received: 'delivered',
+  registered: 'completed',
+  active: 'completed',
+  disposal_requested: 'completed',
+  disposed: 'completed',
 };
 
-const statusFlow: Record<Status, Status[]> = {
-  draft: ['submitted'],
-  submitted: ['approved', 'rejected'],
-  approved: ['ordered'],
-  rejected: [],
-  ordered: ['delivered'],
-  delivered: ['completed'],
-  completed: [],
-};
-
-const statusConfig: Record<Status, { label: string; variant: 'default' | 'info' | 'success' | 'danger' | 'warning' | 'purple' }> = {
+const statusConfig: Record<FrontendStatus, {
+  label: string;
+  variant: 'default' | 'info' | 'success' | 'danger' | 'warning' | 'purple';
+}> = {
   draft:     { label: '下書き', variant: 'default' },
   submitted: { label: '申請中', variant: 'info' },
   approved:  { label: '承認済', variant: 'success' },
-  rejected:  { label: '却下', variant: 'danger' },
+  rejected:  { label: '却下',   variant: 'danger' },
   ordered:   { label: '発注済', variant: 'purple' },
   delivered: { label: '納品済', variant: 'success' },
-  completed: { label: '完了', variant: 'default' },
+  completed: { label: '完了',   variant: 'default' },
 };
 
-const priorityConfig: Record<Priority, { label: string; variant: 'default' | 'warning' | 'danger' }> = {
-  low:    { label: '低', variant: 'default' },
-  medium: { label: '中', variant: 'warning' },
-  high:   { label: '高', variant: 'danger' },
-  urgent: { label: '緊急', variant: 'danger' },
+const allStatuses: FrontendStatus[] = [
+  'draft', 'submitted', 'approved', 'ordered', 'delivered', 'completed',
+];
+
+const categoryLabel: Record<string, string> = {
+  hardware:   'ハードウェア',
+  software:   'ソフトウェア',
+  service:    'サービス',
+  consumable: '消耗品',
 };
 
-const allStatuses: Status[] = ['draft', 'submitted', 'approved', 'ordered', 'delivered', 'completed'];
+type ActionType = 'submit' | 'approve' | 'reject' | 'order' | 'receive';
+
+interface ActionConfig {
+  label: string;
+  action: ActionType;
+  variant: 'primary' | 'danger' | 'secondary';
+}
+
+const nextActions: Record<FrontendStatus, ActionConfig[]> = {
+  draft:     [{ label: '申請提出', action: 'submit',  variant: 'primary' }],
+  submitted: [
+    { label: '承認する', action: 'approve', variant: 'primary' },
+    { label: '却下する', action: 'reject',  variant: 'danger' },
+  ],
+  approved:  [{ label: '発注済みにする', action: 'order',   variant: 'primary' }],
+  ordered:   [{ label: '納品済みにする', action: 'receive', variant: 'primary' }],
+  delivered: [],
+  rejected:  [],
+  completed: [],
+};
 
 export default function ProcurementDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : (params.id ?? '');
 
-  const procurementDetail = PROCUREMENT_DETAILS[id];
+  const [data, setData] = useState<BackendProcurementResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
 
-  const [currentStatus, setCurrentStatus] = useState<Status>(procurementDetail?.status ?? 'draft');
-  const [showModal, setShowModal] = useState(false);
-  const [nextStatus, setNextStatus] = useState<Status | null>(null);
+  const [modal, setModal] = useState<{ action: ActionType; label: string } | null>(null);
+  const [comment, setComment] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  if (!procurementDetail) {
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetchProcurementById(id);
+      setData(res);
+    } catch {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, [id]);
+
+  async function executeAction(action: ActionType) {
+    if (!data) return;
+    setActionInProgress(true);
+    setActionError(null);
+    try {
+      switch (action) {
+        case 'submit':  await submitProcurementRequest(data.id);  break;
+        case 'approve': await approveProcurementRequest(data.id); break;
+        case 'reject':  await rejectProcurementRequest(data.id);  break;
+        case 'order':   await orderProcurementRequest(data.id);   break;
+        case 'receive': await receiveProcurementRequest(data.id); break;
+      }
+      await load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : '操作に失敗しました');
+    } finally {
+      setActionInProgress(false);
+      setModal(null);
+      setComment('');
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="h-10 w-64 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="aegis-card animate-pulse space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !data) {
     return (
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-center gap-4">
@@ -291,29 +158,19 @@ export default function ProcurementDetailPage() {
           </button>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">申請が見つかりません</h1>
         </div>
-        <div className="aegis-card text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">申請番号 <span className="font-mono font-semibold">{id}</span> は存在しません。</p>
+        <div className="aegis-card py-12 text-center">
+          <p className="text-gray-500 dark:text-gray-400">
+            申請ID <span className="font-mono font-semibold">{id}</span> は存在しません。
+          </p>
         </div>
       </div>
     );
   }
 
-  const nextStatuses = statusFlow[currentStatus] || [];
-
-  function handleStatusChange(status: Status) {
-    setNextStatus(status);
-    setShowModal(true);
-  }
-
-  function confirmStatusChange() {
-    if (nextStatus) {
-      setCurrentStatus(nextStatus);
-    }
-    setShowModal(false);
-    setNextStatus(null);
-  }
-
-  const currentStepIndex = allStatuses.indexOf(currentStatus);
+  const frontendStatus = statusMap[data.status] ?? 'draft';
+  const currentStepIndex = allStatuses.indexOf(frontendStatus);
+  const actions = nextActions[frontendStatus] ?? [];
+  const totalPrice = parseFloat(data.total_price);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -331,45 +188,51 @@ export default function ProcurementDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {procurementDetail.id}
+                {data.request_number}
               </h1>
-              <Badge variant={statusConfig[currentStatus].variant} size="md">
-                {statusConfig[currentStatus].label}
-              </Badge>
-              <Badge variant={priorityConfig[procurementDetail.priority].variant}>
-                優先度: {priorityConfig[procurementDetail.priority].label}
+              <Badge variant={statusConfig[frontendStatus].variant} size="md">
+                {statusConfig[frontendStatus].label}
               </Badge>
             </div>
             <p className="mt-1 text-lg text-gray-700 dark:text-gray-300">
-              {procurementDetail.title}
+              {data.item_name}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          {nextStatuses.map((status) => (
+          {actions.map(({ label, action, variant }) => (
             <button
-              key={status}
-              onClick={() => handleStatusChange(status)}
-              className={status === 'rejected' ? 'aegis-btn-secondary text-red-600' : 'aegis-btn-primary'}
+              key={action}
+              disabled={actionInProgress}
+              onClick={() => { setModal({ action, label }); setComment(''); }}
+              className={
+                variant === 'danger'
+                  ? 'aegis-btn-secondary text-red-600 disabled:opacity-50'
+                  : 'aegis-btn-primary disabled:opacity-50'
+              }
             >
-              {statusConfig[status].label}にする
+              {label}
             </button>
           ))}
         </div>
       </div>
 
+      {actionError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+          {actionError}
+        </div>
+      )}
+
       {/* Status Progress */}
       <div className="aegis-card">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
-          ステータス進捗
-        </h2>
+        <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">ステータス進捗</h2>
         <div className="flex items-center">
           {allStatuses
             .filter((s) => s !== 'rejected')
             .map((status, index, arr) => {
-              const isCompleted = allStatuses.indexOf(status) <= currentStepIndex;
-              const isCurrent = status === currentStatus;
-
+              const stepIndex = allStatuses.indexOf(status);
+              const isCompleted = stepIndex <= currentStepIndex;
+              const isCurrent = status === frontendStatus;
               return (
                 <div key={status} className="flex flex-1 items-center">
                   <div className="flex flex-col items-center">
@@ -399,7 +262,7 @@ export default function ProcurementDetailPage() {
                   {index < arr.length - 1 && (
                     <div
                       className={`mx-1 h-0.5 flex-1 ${
-                        allStatuses.indexOf(status) < currentStepIndex
+                        stepIndex < currentStepIndex
                           ? 'bg-primary-600'
                           : 'bg-gray-200 dark:bg-gray-700'
                       }`}
@@ -414,22 +277,18 @@ export default function ProcurementDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: Details */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Description */}
+          {/* Purpose */}
           <div className="aegis-card">
-            <h2 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-              申請内容
-            </h2>
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-              {procurementDetail.description}
+            <h2 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">調達目的</h2>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              {data.purpose}
             </p>
           </div>
 
-          {/* Items Table */}
+          {/* Item Table */}
           <div className="aegis-card overflow-hidden p-0">
             <div className="border-b border-gray-200 px-6 py-3 dark:border-aegis-border">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-                品目明細
-              </h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">品目明細</h2>
             </div>
             <table className="w-full">
               <thead>
@@ -441,94 +300,70 @@ export default function ProcurementDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-                {procurementDetail.items.map((item, i) => (
-                  <tr key={i}>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{item.name}</td>
-                    <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">{item.quantity}</td>
-                    <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">{item.unitPrice.toLocaleString()}円</td>
-                    <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">{item.subtotal.toLocaleString()}円</td>
-                  </tr>
-                ))}
+                <tr>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    {data.item_name}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
+                    {data.quantity}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
+                    {parseFloat(data.unit_price).toLocaleString()}円
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
+                    {totalPrice.toLocaleString()}円
+                  </td>
+                </tr>
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-gray-200 dark:border-aegis-border">
-                  <td colSpan={3} className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">合計</td>
+                  <td colSpan={3} className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                    合計
+                  </td>
                   <td className="px-6 py-4 text-right text-lg font-bold text-primary-600 dark:text-primary-400">
-                    {procurementDetail.estimatedCost.toLocaleString()}円
+                    {totalPrice.toLocaleString()}円
                   </td>
                 </tr>
               </tfoot>
             </table>
           </div>
-
-          {/* Approvers */}
-          {procurementDetail.approvers.length > 0 && (
-            <div className="aegis-card">
-              <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-                承認者
-              </h2>
-              <div className="space-y-3">
-                {procurementDetail.approvers.map((approver, i) => (
-                  <div key={i} className="flex items-start gap-4 rounded-lg border border-gray-200 p-4 dark:border-aegis-border">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
-                      {approver.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white">{approver.name}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({approver.role})</span>
-                        <Badge variant={approver.status === 'approved' ? 'success' : approver.status === 'rejected' ? 'danger' : 'warning'} size="sm">
-                          {approver.status === 'approved' ? '承認済' : approver.status === 'rejected' ? '却下' : '保留中'}
-                        </Badge>
-                      </div>
-                      {approver.comment && (
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          {approver.comment}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-gray-400">{approver.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right: Info & Timeline */}
+        {/* Right: Info */}
         <div className="space-y-6">
-          {/* Info Card */}
           <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-              申請情報
-            </h2>
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">申請情報</h2>
             <dl className="space-y-3">
               {[
-                { label: '申請者', value: procurementDetail.requesterName },
-                { label: 'メール', value: procurementDetail.requesterEmail },
-                { label: '部門', value: procurementDetail.department },
-                { label: 'カテゴリ', value: procurementDetail.category },
-                { label: '作成日', value: procurementDetail.createdAt },
-                { label: '更新日', value: procurementDetail.updatedAt },
-                { label: '希望納期', value: procurementDetail.deliveryDate },
+                { label: '申請番号', value: data.request_number },
+                { label: '部門', value: data.department },
+                { label: 'カテゴリ', value: categoryLabel[data.category] ?? data.category },
+                { label: '作成日時', value: new Date(data.created_at).toLocaleString('ja-JP') },
+                { label: '更新日時', value: new Date(data.updated_at).toLocaleString('ja-JP') },
               ].map((info) => (
-                <div key={info.label} className="flex justify-between">
-                  <dt className="text-xs text-gray-500 dark:text-gray-400">{info.label}</dt>
-                  <dd className="text-sm font-medium text-gray-900 dark:text-white">{info.value}</dd>
+                <div key={info.label} className="flex justify-between gap-4">
+                  <dt className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{info.label}</dt>
+                  <dd className="text-right text-sm font-medium text-gray-900 dark:text-white">{info.value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          {/* Timeline */}
+          {/* Quick Timeline derived from status */}
           <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-              タイムライン
-            </h2>
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">イベント</h2>
             <div className="space-y-0">
-              {procurementDetail.timeline.map((event, i) => (
+              {[
+                { event: '申請作成', date: data.created_at },
+                ...(data.status !== 'draft'
+                  ? [{ event: '申請提出', date: data.updated_at }]
+                  : []),
+                ...((['approved', 'rejected', 'ordered', 'received', 'registered', 'active'].includes(data.status))
+                  ? [{ event: statusConfig[frontendStatus].label, date: data.updated_at }]
+                  : []),
+              ].map((ev, i, arr) => (
                 <div key={i} className="relative flex gap-3 pb-6 last:pb-0">
-                  {i < procurementDetail.timeline.length - 1 && (
+                  {i < arr.length - 1 && (
                     <div className="absolute left-[11px] top-6 h-full w-0.5 bg-gray-200 dark:bg-gray-700" />
                   )}
                   <div className="relative z-10 mt-1 h-6 w-6 shrink-0">
@@ -537,16 +372,10 @@ export default function ProcurementDetailPage() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {event.event}
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{ev.event}</p>
+                    <p className="mt-0.5 text-xs text-gray-400">
+                      {new Date(ev.date).toLocaleString('ja-JP')}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {event.detail}
-                    </p>
-                    <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-400">
-                      <span>{event.user}</span>
-                      <span>{event.date}</span>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -555,23 +384,20 @@ export default function ProcurementDetailPage() {
         </div>
       </div>
 
-      {/* Status Change Modal */}
+      {/* Action Confirmation Modal */}
       <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="ステータスを変更"
+        isOpen={modal !== null}
+        onClose={() => setModal(null)}
+        title="操作の確認"
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            ステータスを
-            <span className="mx-1 font-semibold text-gray-900 dark:text-white">
-              {statusConfig[currentStatus].label}
-            </span>
-            から
+            <span className="font-semibold text-gray-900 dark:text-white">「{data.item_name}」</span>
+            に対して
             <span className="mx-1 font-semibold text-primary-600 dark:text-primary-400">
-              {nextStatus ? statusConfig[nextStatus].label : ''}
+              {modal?.label}
             </span>
-            に変更しますか?
+            を実行しますか?
           </p>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -579,16 +405,22 @@ export default function ProcurementDetailPage() {
             </label>
             <textarea
               rows={3}
-              placeholder="変更理由やコメントを入力"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="理由やコメントを入力"
               className="aegis-input resize-none"
             />
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowModal(false)} className="aegis-btn-secondary">
+            <button onClick={() => setModal(null)} className="aegis-btn-secondary">
               キャンセル
             </button>
-            <button onClick={confirmStatusChange} className="aegis-btn-primary">
-              変更を確定
+            <button
+              disabled={actionInProgress}
+              onClick={() => modal && executeAction(modal.action)}
+              className="aegis-btn-primary disabled:opacity-50"
+            >
+              {actionInProgress ? '処理中...' : '確定'}
             </button>
           </div>
         </div>
