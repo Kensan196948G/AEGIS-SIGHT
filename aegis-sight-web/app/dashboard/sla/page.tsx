@@ -22,38 +22,38 @@ const DUMMY_DASHBOARD: BackendSLADashboard = {
   active_definitions: 10,
   total_violations: 3,
   items: [
-    { sla_id: 'sla-001', name: 'システム可用性 (基幹系)', metric_type: 'availability', target_value: 99.9, current_value: 99.95, achievement_rate: 100.0, is_met: true },
-    { sla_id: 'sla-002', name: 'インシデント初動対応時間', metric_type: 'response_time', target_value: 15, current_value: 12.3, achievement_rate: 100.0, is_met: true },
-    { sla_id: 'sla-003', name: 'パッチ適用率 (重要度: 緊急)', metric_type: 'patch_compliance', target_value: 100, current_value: 97.8, achievement_rate: 97.8, is_met: false },
-    { sla_id: 'sla-004', name: 'バックアップ成功率', metric_type: 'backup_success', target_value: 99.0, current_value: 99.4, achievement_rate: 100.0, is_met: true },
-    { sla_id: 'sla-005', name: 'セキュリティスキャン完了率', metric_type: 'scan_completion', target_value: 95.0, current_value: 93.1, achievement_rate: 98.0, is_met: false },
-    { sla_id: 'sla-006', name: 'ヘルプデスク応答時間 (P1)', metric_type: 'helpdesk_response', target_value: 30, current_value: 22.5, achievement_rate: 100.0, is_met: true },
-    { sla_id: 'sla-007', name: 'ネットワーク稼働率', metric_type: 'availability', target_value: 99.5, current_value: 99.8, achievement_rate: 100.0, is_met: true },
-    { sla_id: 'sla-008', name: 'SAM ライセンス遵守率', metric_type: 'compliance_rate', target_value: 98.0, current_value: 96.4, achievement_rate: 98.4, is_met: null },
+    { sla_id: 'sla-001', name: 'システム可用性 (基幹系)', metric_type: 'availability', target_value: 99.9, current_value: 99.95, achievement_rate: 100.0, is_met: true, measurement_period: 'monthly', total_measurements: 720, met_count: 720, violation_count: 0 },
+    { sla_id: 'sla-002', name: 'インシデント初動対応時間', metric_type: 'response_time', target_value: 15, current_value: 12.3, achievement_rate: 100.0, is_met: true, measurement_period: 'monthly', total_measurements: 48, met_count: 48, violation_count: 0 },
+    { sla_id: 'sla-003', name: 'パッチ適用率 (重要度: 緊急)', metric_type: 'patch_compliance', target_value: 100, current_value: 97.8, achievement_rate: 97.8, is_met: false, measurement_period: 'monthly', total_measurements: 12, met_count: 10, violation_count: 2 },
+    { sla_id: 'sla-004', name: 'バックアップ成功率', metric_type: 'backup_success', target_value: 99.0, current_value: 99.4, achievement_rate: 100.0, is_met: true, measurement_period: 'weekly', total_measurements: 52, met_count: 52, violation_count: 0 },
+    { sla_id: 'sla-005', name: 'セキュリティスキャン完了率', metric_type: 'scan_completion', target_value: 95.0, current_value: 93.1, achievement_rate: 98.0, is_met: false, measurement_period: 'monthly', total_measurements: 12, met_count: 11, violation_count: 1 },
+    { sla_id: 'sla-006', name: 'ヘルプデスク応答時間 (P1)', metric_type: 'helpdesk_response', target_value: 30, current_value: 22.5, achievement_rate: 100.0, is_met: true, measurement_period: 'monthly', total_measurements: 63, met_count: 63, violation_count: 0 },
+    { sla_id: 'sla-007', name: 'ネットワーク稼働率', metric_type: 'availability', target_value: 99.5, current_value: 99.8, achievement_rate: 100.0, is_met: true, measurement_period: 'monthly', total_measurements: 720, met_count: 720, violation_count: 0 },
+    { sla_id: 'sla-008', name: 'SAM ライセンス遵守率', metric_type: 'compliance_rate', target_value: 98.0, current_value: 96.4, achievement_rate: 98.4, is_met: null, measurement_period: 'quarterly', total_measurements: 4, met_count: 3, violation_count: 1 },
   ],
 };
 
 const DUMMY_DEFINITIONS: BackendSLADefinition[] = [
-  { id: 'def-001', name: 'システム可用性 (基幹系)', metric_type: 'availability', target_value: 99.9, unit: '%', warning_threshold: 99.5, is_active: true },
-  { id: 'def-002', name: 'インシデント初動対応時間', metric_type: 'response_time', target_value: 15, unit: '分', warning_threshold: 20, is_active: true },
-  { id: 'def-003', name: 'パッチ適用率 (緊急)', metric_type: 'patch_compliance', target_value: 100, unit: '%', warning_threshold: 95, is_active: true },
-  { id: 'def-004', name: 'バックアップ成功率', metric_type: 'backup_success', target_value: 99.0, unit: '%', warning_threshold: 97.0, is_active: true },
-  { id: 'def-005', name: 'セキュリティスキャン完了率', metric_type: 'scan_completion', target_value: 95.0, unit: '%', warning_threshold: 90.0, is_active: true },
-  { id: 'def-006', name: 'ヘルプデスク応答時間 (P1)', metric_type: 'helpdesk_response', target_value: 30, unit: '分', warning_threshold: 45, is_active: true },
-  { id: 'def-007', name: 'ネットワーク稼働率', metric_type: 'availability', target_value: 99.5, unit: '%', warning_threshold: 99.0, is_active: true },
-  { id: 'def-008', name: 'SAM ライセンス遵守率', metric_type: 'compliance_rate', target_value: 98.0, unit: '%', warning_threshold: 95.0, is_active: true },
-  { id: 'def-009', name: 'クラウドコスト予算遵守', metric_type: 'budget_compliance', target_value: 100, unit: '%', warning_threshold: 110, is_active: true },
-  { id: 'def-010', name: 'データ暗号化率', metric_type: 'encryption_rate', target_value: 100, unit: '%', warning_threshold: 98.0, is_active: true },
-  { id: 'def-011', name: 'ユーザー教育完了率', metric_type: 'training_completion', target_value: 90.0, unit: '%', warning_threshold: 80.0, is_active: false },
-  { id: 'def-012', name: 'レポート配信遅延率', metric_type: 'delivery_failure', target_value: 0, unit: '%', warning_threshold: 5.0, is_active: false },
+  { id: 'def-001', name: 'システム可用性 (基幹系)', description: '基幹業務システムの月次稼働率', metric_type: 'availability', target_value: 99.9, unit: '%', measurement_period: 'monthly', warning_threshold: 99.5, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-002', name: 'インシデント初動対応時間', description: 'P1インシデント発生から担当者が初動対応を開始するまでの時間', metric_type: 'response_time', target_value: 15, unit: '分', measurement_period: 'monthly', warning_threshold: 20, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-003', name: 'パッチ適用率 (緊急)', description: '緊急セキュリティパッチの適用完了率', metric_type: 'patch_compliance', target_value: 100, unit: '%', measurement_period: 'monthly', warning_threshold: 95, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-004', name: 'バックアップ成功率', description: '定期バックアップジョブの成功率', metric_type: 'backup_success', target_value: 99.0, unit: '%', measurement_period: 'weekly', warning_threshold: 97.0, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-005', name: 'セキュリティスキャン完了率', description: '全管理対象端末へのセキュリティスキャン完了率', metric_type: 'scan_completion', target_value: 95.0, unit: '%', measurement_period: 'monthly', warning_threshold: 90.0, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-006', name: 'ヘルプデスク応答時間 (P1)', description: 'P1チケットへの初回応答時間', metric_type: 'helpdesk_response', target_value: 30, unit: '分', measurement_period: 'monthly', warning_threshold: 45, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-007', name: 'ネットワーク稼働率', description: 'コアネットワーク機器の月次稼働率', metric_type: 'availability', target_value: 99.5, unit: '%', measurement_period: 'monthly', warning_threshold: 99.0, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-008', name: 'SAM ライセンス遵守率', description: 'ソフトウェアライセンス遵守状況', metric_type: 'compliance_rate', target_value: 98.0, unit: '%', measurement_period: 'quarterly', warning_threshold: 95.0, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-009', name: 'クラウドコスト予算遵守', description: 'クラウドサービス費用の予算内遵守', metric_type: 'budget_compliance', target_value: 100, unit: '%', measurement_period: 'monthly', warning_threshold: 110, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-010', name: 'データ暗号化率', description: '管理対象デバイスのディスク暗号化適用率', metric_type: 'encryption_rate', target_value: 100, unit: '%', measurement_period: 'monthly', warning_threshold: 98.0, is_active: true, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-011', name: 'ユーザー教育完了率', description: '年次情報セキュリティ教育の受講完了率', metric_type: 'training_completion', target_value: 90.0, unit: '%', measurement_period: 'yearly', warning_threshold: 80.0, is_active: false, created_at: '2025-11-01T00:00:00Z' },
+  { id: 'def-012', name: 'レポート配信遅延率', description: '定期レポートの期日内配信失敗率', metric_type: 'delivery_failure', target_value: 0, unit: '%', measurement_period: 'monthly', warning_threshold: 5.0, is_active: false, created_at: '2025-11-01T00:00:00Z' },
 ];
 
 const DUMMY_VIOLATIONS: BackendSLAViolation[] = [
-  { id: 'viol-001', sla_id: 'def-003-uuid-1234', measured_value: 97.8, target_value: 100, deviation: -2.2, period_start: '2026-05-01', is_acknowledged: true },
-  { id: 'viol-002', sla_id: 'def-005-uuid-5678', measured_value: 93.1, target_value: 95.0, deviation: -1.9, period_start: '2026-05-01', is_acknowledged: false },
-  { id: 'viol-003', sla_id: 'def-008-uuid-9012', measured_value: 96.4, target_value: 98.0, deviation: -1.6, period_start: '2026-04-01', is_acknowledged: true },
-  { id: 'viol-004', sla_id: 'def-003-uuid-1234', measured_value: 96.5, target_value: 100, deviation: -3.5, period_start: '2026-04-01', is_acknowledged: true },
-  { id: 'viol-005', sla_id: 'def-005-uuid-5678', measured_value: 91.0, target_value: 95.0, deviation: -4.0, period_start: '2026-03-01', is_acknowledged: true },
+  { id: 'viol-001', sla_id: 'def-003-uuid-1234', measured_value: 97.8, target_value: 100, deviation: -2.2, period_start: '2026-05-01', period_end: '2026-05-31', is_acknowledged: true, created_at: '2026-06-01T00:05:00Z' },
+  { id: 'viol-002', sla_id: 'def-005-uuid-5678', measured_value: 93.1, target_value: 95.0, deviation: -1.9, period_start: '2026-05-01', period_end: '2026-05-31', is_acknowledged: false, created_at: '2026-06-01T00:06:00Z' },
+  { id: 'viol-003', sla_id: 'def-008-uuid-9012', measured_value: 96.4, target_value: 98.0, deviation: -1.6, period_start: '2026-04-01', period_end: '2026-06-30', is_acknowledged: true, created_at: '2026-07-01T00:05:00Z' },
+  { id: 'viol-004', sla_id: 'def-003-uuid-1234', measured_value: 96.5, target_value: 100, deviation: -3.5, period_start: '2026-04-01', period_end: '2026-04-30', is_acknowledged: true, created_at: '2026-05-01T00:05:00Z' },
+  { id: 'viol-005', sla_id: 'def-005-uuid-5678', measured_value: 91.0, target_value: 95.0, deviation: -4.0, period_start: '2026-03-01', period_end: '2026-03-31', is_acknowledged: true, created_at: '2026-04-01T00:05:00Z' },
 ];
 
 // 6-month achievement trend
@@ -160,8 +160,9 @@ export default function SLAPage() {
   }
 
   const metCount = activeDash.items.filter((i) => i.is_met === true).length;
-  const donutColor = activeDash.overall_achievement_rate >= 99
-    ? '#10b981' : activeDash.overall_achievement_rate >= 95
+  const achievementRate = activeDash.overall_achievement_rate ?? 0;
+  const donutColor = achievementRate >= 99
+    ? '#10b981' : achievementRate >= 95
     ? '#f59e0b' : '#ef4444';
 
   return (
