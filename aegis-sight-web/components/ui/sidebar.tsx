@@ -2,175 +2,88 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const navigationGroups: NavGroup[] = [
   {
-    name: 'ダッシュボード',
-    href: '/dashboard',
-    icon: DashboardIcon,
+    title: '概要',
+    items: [
+      { name: 'ダッシュボード', href: '/dashboard', icon: DashboardIcon },
+    ],
   },
   {
-    name: '資産管理',
-    href: '/dashboard/assets',
-    icon: DevicesIcon,
+    title: '資産管理',
+    items: [
+      { name: '資産管理',       href: '/dashboard/assets',        icon: DevicesIcon },
+      { name: 'デバイス管理',   href: '/dashboard/devices',       icon: DevicesIcon },
+      { name: 'SAM',            href: '/dashboard/sam',           icon: LicenseIcon },
+      { name: 'デバイスグループ', href: '/dashboard/device-groups', icon: DeviceGroupIcon },
+      { name: '部門管理',       href: '/dashboard/departments',   icon: DepartmentIcon },
+      { name: '調達管理',       href: '/dashboard/procurement',   icon: ProcurementIcon },
+      { name: 'ライフサイクル', href: '/dashboard/lifecycle',     icon: LifecycleIcon },
+    ],
   },
   {
-    name: 'デバイス管理',
-    href: '/dashboard/devices',
-    icon: DevicesIcon,
+    title: 'セキュリティ',
+    items: [
+      { name: 'セキュリティ',   href: '/dashboard/security',  icon: SecurityIcon },
+      { name: 'ポリシー管理',   href: '/dashboard/policies',  icon: PolicyIcon },
+      { name: 'DLP',            href: '/dashboard/dlp',       icon: DLPIcon },
+      { name: '構成変更履歴',   href: '/dashboard/changes',   icon: ChangeTrackingIcon },
+      { name: 'アラート',       href: '/dashboard/alerts',    icon: AlertIcon },
+      { name: 'インシデント',   href: '/dashboard/incidents', icon: IncidentIcon },
+    ],
   },
   {
-    name: 'SAM',
-    href: '/dashboard/sam',
-    icon: LicenseIcon,
+    title: '運用・監視',
+    items: [
+      { name: '監視',           href: '/dashboard/monitoring',   icon: MonitoringIcon },
+      { name: 'パッチ管理',     href: '/dashboard/patches',      icon: PatchIcon },
+      { name: 'ネットワーク管理', href: '/dashboard/network',    icon: NetworkManagementIcon },
+      { name: '印刷管理',       href: '/dashboard/printing',     icon: PrintingIcon },
+      { name: 'セッション管理', href: '/dashboard/sessions',     icon: SessionIcon },
+      { name: 'リモートワーク', href: '/dashboard/remote-work',  icon: RemoteWorkIcon },
+      { name: 'SLA管理',        href: '/dashboard/sla',          icon: SLAIcon },
+      { name: 'スケジューラ',   href: '/dashboard/scheduler',    icon: SchedulerIcon },
+    ],
   },
   {
-    name: 'デバイスグループ',
-    href: '/dashboard/device-groups',
-    icon: DeviceGroupIcon,
-  },
-  {
-    name: '部門管理',
-    href: '/dashboard/departments',
-    icon: DepartmentIcon,
-  },
-  {
-    name: '調達管理',
-    href: '/dashboard/procurement',
-    icon: ProcurementIcon,
-  },
-  {
-    name: 'ライフサイクル',
-    href: '/dashboard/lifecycle',
-    icon: LifecycleIcon,
-  },
-  {
-    name: '監視',
-    href: '/dashboard/monitoring',
-    icon: MonitoringIcon,
-  },
-  {
-    name: 'パッチ管理',
-    href: '/dashboard/patches',
-    icon: PatchIcon,
-  },
-  {
-    name: 'ネットワーク管理',
-    href: '/dashboard/network',
-    icon: NetworkManagementIcon,
-  },
-  {
-    name: 'ポリシー管理',
-    href: '/dashboard/policies',
-    icon: PolicyIcon,
-  },
-  {
-    name: '構成変更履歴',
-    href: '/dashboard/changes',
-    icon: ChangeTrackingIcon,
-  },
-  {
-    name: 'DLP',
-    href: '/dashboard/dlp',
-    icon: DLPIcon,
-  },
-  {
-    name: '印刷管理',
-    href: '/dashboard/printing',
-    icon: PrintingIcon,
-  },
-  {
-    name: 'セッション管理',
-    href: '/dashboard/sessions',
-    icon: SessionIcon,
-  },
-  {
-    name: 'リモートワーク',
-    href: '/dashboard/remote-work',
-    icon: RemoteWorkIcon,
-  },
-  {
-    name: 'インシデント',
-    href: '/dashboard/incidents',
-    icon: IncidentIcon,
-  },
-  {
-    name: 'SLA管理',
-    href: '/dashboard/sla',
-    icon: SLAIcon,
-  },
-  {
-    name: 'ナレッジベース',
-    href: '/dashboard/knowledge',
-    icon: KnowledgeIcon,
-  },
-  {
-    name: 'セキュリティ',
-    href: '/dashboard/security',
-    icon: SecurityIcon,
-  },
-  {
-    name: 'コンプライアンス',
-    href: '/dashboard/compliance',
-    icon: ComplianceIcon,
-  },
-  {
-    name: '監査ログ',
-    href: '/dashboard/audit',
-    icon: AuditLogIcon,
-  },
-  {
-    name: 'レポート',
-    href: '/dashboard/reports',
-    icon: ReportIcon,
-  },
-  {
-    name: 'アラート',
-    href: '/dashboard/alerts',
-    icon: AlertIcon,
-  },
-  {
-    name: '通知設定',
-    href: '/dashboard/notifications',
-    icon: NotificationSettingsIcon,
-  },
-  {
-    name: 'スケジューラ',
-    href: '/dashboard/scheduler',
-    icon: SchedulerIcon,
-  },
-  {
-    name: 'エクスポート',
-    href: '/dashboard/export',
-    icon: ExportIcon,
-  },
-  {
-    name: 'ユーザー管理',
-    href: '/dashboard/users',
-    icon: UsersIcon,
-  },
-  {
-    name: '検索',
-    href: '/dashboard/search',
-    icon: SearchIcon,
-  },
-  {
-    name: '設定',
-    href: '/dashboard/settings',
-    icon: SettingsIcon,
-  },
-  {
-    name: 'API状態',
-    href: '/dashboard/api-status',
-    icon: ApiStatusIcon,
-  },
-  {
-    name: 'バージョン情報',
-    href: '/dashboard/about',
-    icon: InfoIcon,
+    title: 'レポート・管理',
+    items: [
+      { name: 'レポート',       href: '/dashboard/reports',       icon: ReportIcon },
+      { name: 'コンプライアンス', href: '/dashboard/compliance',  icon: ComplianceIcon },
+      { name: '監査ログ',       href: '/dashboard/audit',         icon: AuditLogIcon },
+      { name: 'ナレッジベース', href: '/dashboard/knowledge',     icon: KnowledgeIcon },
+      { name: '通知設定',       href: '/dashboard/notifications', icon: NotificationSettingsIcon },
+      { name: 'エクスポート',   href: '/dashboard/export',        icon: ExportIcon },
+      { name: 'ユーザー管理',   href: '/dashboard/users',         icon: UsersIcon },
+      { name: '検索',           href: '/dashboard/search',        icon: SearchIcon },
+      { name: '設定',           href: '/dashboard/settings',      icon: SettingsIcon },
+      { name: 'API状態',        href: '/dashboard/api-status',    icon: ApiStatusIcon },
+      { name: 'バージョン情報', href: '/dashboard/about',         icon: InfoIcon },
+    ],
   },
 ];
+
+function isItemActive(href: string, pathname: string): boolean {
+  return href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
+}
+
+function groupContainsActive(group: NavGroup, pathname: string): boolean {
+  return group.items.some((item) => isItemActive(item.href, pathname));
+}
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -180,11 +93,35 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    for (const group of navigationGroups) {
+      initial[group.title] = groupContainsActive(group, pathname);
+    }
+    return initial;
+  });
+
+  // Auto-expand the group for the current page when the path changes
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const group of navigationGroups) {
+        if (groupContainsActive(group, pathname)) {
+          next[group.title] = true;
+        }
+      }
+      return next;
+    });
+  }, [pathname]);
+
+  function toggleGroup(title: string) {
+    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  }
+
   return (
     <aside
       className={clsx(
         'fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 dark:border-aegis-border dark:bg-aegis-darker',
-        // Desktop: always visible; Mobile: slide in/out
         'lg:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}
@@ -203,35 +140,71 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navigation.map((item) => {
-          const isActive =
-            item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
+      <nav className="flex-1 overflow-y-auto py-3">
+        {navigationGroups.map((group) => {
+          const isOpen = openGroups[group.title] ?? false;
+          const hasActive = groupContainsActive(group, pathname);
 
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={onMobileClose}
-              className={clsx(
-                'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-aegis-surface dark:hover:text-gray-200'
-              )}
-            >
-              <item.icon
+            <div key={group.title} className="mb-1">
+              {/* Group header */}
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.title)}
                 className={clsx(
-                  'h-5 w-5 shrink-0',
-                  isActive
+                  'flex w-full items-center justify-between px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
+                  hasActive
                     ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                 )}
-              />
-              {item.name}
-            </Link>
+                aria-expanded={isOpen}
+              >
+                <span>{group.title}</span>
+                <ChevronIcon
+                  className={clsx(
+                    'h-3.5 w-3.5 transition-transform duration-200',
+                    isOpen ? 'rotate-180' : 'rotate-0'
+                  )}
+                />
+              </button>
+
+              {/* Group items — accordion */}
+              <div
+                className={clsx(
+                  'overflow-hidden transition-all duration-200 ease-in-out',
+                  isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                )}
+              >
+                <div className="space-y-0.5 px-2 pb-1">
+                  {group.items.map((item) => {
+                    const active = isItemActive(item.href, pathname);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={onMobileClose}
+                        className={clsx(
+                          'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          active
+                            ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-aegis-surface dark:hover:text-gray-200'
+                        )}
+                      >
+                        <item.icon
+                          className={clsx(
+                            'h-4 w-4 shrink-0',
+                            active
+                              ? 'text-primary-600 dark:text-primary-400'
+                              : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+                          )}
+                        />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           );
         })}
       </nav>
@@ -256,7 +229,16 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   );
 }
 
-// Inline SVG Icons
+// ── Inline SVG Icons ─────────────────────────────────────────────────────────
+
+function ChevronIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+}
+
 function ShieldIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
