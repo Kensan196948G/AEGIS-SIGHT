@@ -1,39 +1,56 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, BarChart } from '@/components/ui/chart';
+import {
+  fetchProcurementList,
+  approveProcurementRequest,
+  rejectProcurementRequest,
+} from '@/lib/api';
+import type { BackendProcurementResponse } from '@/lib/api';
 
-type ProcurementStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
-type ProcurementPriority = 'low' | 'medium' | 'high' | 'urgent';
+type FrontendStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
 
-interface ProcurementRequest {
+interface DisplayRequest {
+  backendId: string;
   id: string;
   title: string;
-  requester: string;
   dept: string;
   cost: number;
-  priority: ProcurementPriority;
-  status: ProcurementStatus;
+  status: FrontendStatus;
   submitted_at: string;
   category: string;
 }
 
-const demoRequests: ProcurementRequest[] = [
-  { id: 'PR-2026-001', title: 'Dell Latitude 5540 x 20台', requester: '田中 太郎', dept: 'エンジニアリング', cost: 3200000, priority: 'high', status: 'approved', submitted_at: '2026-03-15', category: 'ハードウェア' },
-  { id: 'PR-2026-002', title: 'Adobe CC ライセンス追加 10本', requester: '佐藤 花子', dept: 'デザイン', cost: 720000, priority: 'medium', status: 'submitted', submitted_at: '2026-03-20', category: 'ソフトウェア' },
-  { id: 'PR-2026-003', title: 'Cisco Catalyst 9300 スイッチ', requester: '山田 次郎', dept: 'インフラ', cost: 1500000, priority: 'high', status: 'submitted', submitted_at: '2026-03-22', category: 'ネットワーク' },
-  { id: 'PR-2026-004', title: '27インチ 4K モニター x 15台', requester: '鈴木 一郎', dept: '営業', cost: 900000, priority: 'low', status: 'draft', submitted_at: '2026-03-25', category: '周辺機器' },
-  { id: 'PR-2026-005', title: 'Microsoft 365 E5 アップグレード', requester: '高橋 美咲', dept: 'IT管理', cost: 2400000, priority: 'medium', status: 'ordered', submitted_at: '2026-03-10', category: 'ソフトウェア' },
-  { id: 'PR-2026-006', title: 'HP EliteBook 840 G10 x 5台', requester: '中村 健太', dept: '経理', cost: 750000, priority: 'medium', status: 'delivered', submitted_at: '2026-03-01', category: 'ハードウェア' },
-  { id: 'PR-2026-007', title: 'Fortinet FortiGate 60F', requester: '小林 真一', dept: 'インフラ', cost: 480000, priority: 'urgent', status: 'approved', submitted_at: '2026-03-28', category: 'セキュリティ' },
-  { id: 'PR-2026-008', title: 'Epson エコタンク複合機 x 3台', requester: '松本 あかね', dept: '総務', cost: 210000, priority: 'low', status: 'rejected', submitted_at: '2026-03-18', category: '周辺機器' },
-  { id: 'PR-2026-009', title: 'VMware vSphere 8 ライセンス', requester: '渡辺 剛', dept: 'インフラ', cost: 1800000, priority: 'high', status: 'completed', submitted_at: '2026-02-20', category: 'ソフトウェア' },
-  { id: 'PR-2026-010', title: 'iPad Pro 12.9" + Apple Pencil x 10台', requester: '伊藤 沙織', dept: '建設現場', cost: 1600000, priority: 'medium', status: 'submitted', submitted_at: '2026-03-30', category: 'モバイル' },
-];
+const statusMap: Record<string, FrontendStatus> = {
+  draft: 'draft',
+  submitted: 'submitted',
+  approved: 'approved',
+  rejected: 'rejected',
+  ordered: 'ordered',
+  received: 'delivered',
+  registered: 'completed',
+  active: 'completed',
+  disposal_requested: 'completed',
+  disposed: 'completed',
+};
 
-const statusConfig: Record<ProcurementStatus, { variant: 'success' | 'warning' | 'danger' | 'info' | 'default' | 'purple'; label: string }> = {
+function mapToDisplay(r: BackendProcurementResponse): DisplayRequest {
+  return {
+    backendId: r.id,
+    id: r.request_number,
+    title: r.item_name,
+    dept: r.department,
+    cost: parseFloat(r.total_price),
+    status: statusMap[r.status] ?? 'draft',
+    submitted_at: r.created_at.split('T')[0] ?? r.created_at,
+    category: r.category,
+  };
+}
+
+const statusConfig: Record<FrontendStatus, { variant: 'success' | 'warning' | 'danger' | 'info' | 'default' | 'purple'; label: string }> = {
   draft:     { variant: 'default',  label: '下書き' },
   submitted: { variant: 'info',     label: '申請中' },
   approved:  { variant: 'success',  label: '承認済' },
@@ -43,26 +60,25 @@ const statusConfig: Record<ProcurementStatus, { variant: 'success' | 'warning' |
   completed: { variant: 'default',  label: '完了' },
 };
 
-const priorityConfig: Record<ProcurementPriority, { color: string; label: string }> = {
-  low:    { color: 'text-gray-500 dark:text-gray-400',             label: '低' },
-  medium: { color: 'text-amber-600 dark:text-amber-400',           label: '中' },
-  high:   { color: 'text-red-600 dark:text-red-400',               label: '高' },
-  urgent: { color: 'text-red-700 dark:text-red-300 font-bold',     label: '緊急' },
+const categoryLabel: Record<string, string> = {
+  hardware:    'ハードウェア',
+  software:    'ソフトウェア',
+  service:     'サービス',
+  consumable:  '消耗品',
 };
 
 const ITEMS_PER_PAGE = 8;
 
-// ライフサイクルステップ（申請→承認→発注→納品→完了）
-const LIFECYCLE_STEPS: ProcurementStatus[] = ['submitted', 'approved', 'ordered', 'delivered', 'completed'];
+const LIFECYCLE_STEPS: FrontendStatus[] = ['submitted', 'approved', 'ordered', 'delivered', 'completed'];
 
 function formatCost(cost: number): string {
   return `¥${cost.toLocaleString('ja-JP')}`;
 }
 
-function LifecycleStepper({ status }: { status: ProcurementStatus }) {
+function LifecycleStepper({ status }: { status: FrontendStatus }) {
   if (status === 'draft' || status === 'rejected') return null;
   const currentIndex = LIFECYCLE_STEPS.indexOf(status);
-  const stepLabels: Record<ProcurementStatus, string> = {
+  const stepLabels: Record<FrontendStatus, string> = {
     submitted: '申請', approved: '承認', ordered: '発注', delivered: '納品', completed: '完了',
     draft: '', rejected: '',
   };
@@ -90,47 +106,72 @@ function LifecycleStepper({ status }: { status: ProcurementStatus }) {
 }
 
 interface ApprovalModal {
-  id: string;
+  backendId: string;
   title: string;
   action: 'approve' | 'reject';
 }
 
 export default function ProcurementPage() {
+  const [requests, setRequests] = useState<DisplayRequest[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [actionInProgress, setActionInProgress] = useState(false);
+
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ProcurementStatus | 'all'>('all');
-  const [priorityFilter, setPriorityFilter] = useState<ProcurementPriority | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<FrontendStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [statuses, setStatuses] = useState<Record<string, ProcurementStatus>>(
-    Object.fromEntries(demoRequests.map((r) => [r.id, r.status]))
-  );
+
   const [modal, setModal] = useState<ApprovalModal | null>(null);
   const [comment, setComment] = useState('');
 
-  const handleApprovalConfirm = useCallback(() => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const backendStatus = statusFilter !== 'all'
+        ? Object.entries(statusMap).find(([, v]) => v === statusFilter)?.[0]
+        : undefined;
+      const data = await fetchProcurementList(0, 200, backendStatus);
+      setRequests(data.items.map(mapToDisplay));
+      setTotal(data.total);
+    } catch {
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, search, categoryFilter]);
+
+  const handleApprovalConfirm = useCallback(async () => {
     if (!modal) return;
-    setStatuses((prev) => ({
-      ...prev,
-      [modal.id]: modal.action === 'approve' ? 'approved' : 'rejected',
-    }));
-    setModal(null);
-    setComment('');
-  }, [modal]);
+    setActionInProgress(true);
+    try {
+      if (modal.action === 'approve') {
+        await approveProcurementRequest(modal.backendId);
+      } else {
+        await rejectProcurementRequest(modal.backendId);
+      }
+      setModal(null);
+      setComment('');
+      await load();
+    } finally {
+      setActionInProgress(false);
+    }
+  }, [modal, load]);
 
-  const requests = demoRequests.map((r) => ({ ...r, status: statuses[r.id] ?? r.status }));
-
-  const categories = Array.from(new Set(demoRequests.map((r) => r.category))).sort();
+  const categories = Array.from(new Set(requests.map((r) => r.category))).sort();
 
   const filtered = requests.filter((req) => {
     const matchesSearch =
       search === '' ||
       req.title.toLowerCase().includes(search.toLowerCase()) ||
-      req.requester.toLowerCase().includes(search.toLowerCase()) ||
-      req.id.toLowerCase().includes(search.toLowerCase());
+      req.id.toLowerCase().includes(search.toLowerCase()) ||
+      req.dept.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || req.priority === priorityFilter;
     const matchesCategory = categoryFilter === 'all' || req.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -139,19 +180,29 @@ export default function ProcurementPage() {
   const resetFilters = () => {
     setSearch('');
     setStatusFilter('all');
-    setPriorityFilter('all');
     setCategoryFilter('all');
     setCurrentPage(1);
   };
 
-  const hasFilters = search || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all';
+  const hasFilters = search || statusFilter !== 'all' || categoryFilter !== 'all';
 
-  // Summary counts (reactive to local approval state)
   const totalBudget = requests
     .filter((r) => ['approved', 'ordered', 'delivered', 'completed'].includes(r.status))
     .reduce((sum, r) => sum + r.cost, 0);
   const pendingCount = requests.filter((r) => r.status === 'submitted').length;
-  const urgentCount = requests.filter((r) => r.priority === 'urgent' && !['rejected', 'completed'].includes(r.status)).length;
+  const completedCount = requests.filter((r) => ['delivered', 'completed'].includes(r.status)).length;
+  const approvalRate = requests.length > 0 ? Math.round((completedCount / requests.length) * 100) : 0;
+  const approvalColor = approvalRate >= 60 ? '#10b981' : approvalRate >= 40 ? '#f59e0b' : '#ef4444';
+
+  const categoryCounts: Record<string, number> = {};
+  requests.forEach((r) => { categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1; });
+  const categoryBarData = Object.entries(categoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, count], i) => ({
+      label: categoryLabel[cat] ?? cat,
+      value: count,
+      color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] ?? 'bg-gray-400',
+    }));
 
   return (
     <div className="space-y-6">
@@ -172,56 +223,61 @@ export default function ProcurementPage() {
       </div>
 
       {/* 調達概要チャート */}
-      {(() => {
-        const completedCount = demoRequests.filter(r => ['delivered', 'completed'].includes(r.status)).length;
-        const approvalRate = Math.round((completedCount / demoRequests.length) * 100);
-        const approvalColor = approvalRate >= 60 ? '#10b981' : approvalRate >= 40 ? '#f59e0b' : '#ef4444';
-        const categoryCounts: Record<string, number> = {};
-        demoRequests.forEach(r => { categoryCounts[r.category] = (categoryCounts[r.category] || 0) + 1; });
-        const categoryBarData = Object.entries(categoryCounts)
-          .sort((a, b) => b[1] - a[1])
-          .map(([cat, count], i) => ({
-            label: cat,
-            value: count,
-            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] || 'bg-gray-400',
-          }));
-        return (
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">調達概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">完了率</p>
-                <DonutChart value={approvalRate} max={100} size={140} strokeWidth={14} color={approvalColor} label={`${approvalRate}%`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  全 {demoRequests.length} 件中 {completedCount} 件完了
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">カテゴリ別申請件数</p>
-                <BarChart data={categoryBarData} maxValue={Math.max(...categoryBarData.map(d => d.value))} height={160} showValues />
-              </div>
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">調達概要</h2>
+        {loading ? (
+          <div className="animate-pulse h-40 rounded bg-gray-100 dark:bg-gray-800" />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">完了率</p>
+              <DonutChart value={approvalRate} max={100} size={140} strokeWidth={14} color={approvalColor} label={`${approvalRate}%`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                全 {requests.length} 件中 {completedCount} 件完了
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">カテゴリ別申請件数</p>
+              {categoryBarData.length > 0 ? (
+                <BarChart
+                  data={categoryBarData}
+                  maxValue={Math.max(...categoryBarData.map((d) => d.value))}
+                  height={160}
+                  showValues
+                />
+              ) : (
+                <p className="text-sm text-gray-400">データがありません</p>
+              )}
             </div>
           </div>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="aegis-card text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">総申請数</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{demoRequests.length}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+            {loading ? '—' : total.toLocaleString()}
+          </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">承認待ち</p>
-          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">{pendingCount}</p>
+          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {loading ? '—' : pendingCount}
+          </p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">緊急対応</p>
-          <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">{urgentCount}</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">完了件数</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+            {loading ? '—' : completedCount}
+          </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">承認済み予算</p>
-          <p className="mt-2 text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCost(totalBudget)}</p>
+          <p className="mt-2 text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            {loading ? '—' : formatCost(totalBudget)}
+          </p>
         </div>
       </div>
 
@@ -231,7 +287,7 @@ export default function ProcurementPage() {
           <div className="min-w-[200px] flex-1">
             <input
               type="text"
-              placeholder="申請番号、タイトル、申請者で検索..."
+              placeholder="申請番号、タイトル、部門で検索..."
               className="aegis-input"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
@@ -240,21 +296,11 @@ export default function ProcurementPage() {
           <select
             className="aegis-input w-auto"
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value as ProcurementStatus | 'all'); setCurrentPage(1); }}
+            onChange={(e) => { setStatusFilter(e.target.value as FrontendStatus | 'all'); setCurrentPage(1); }}
           >
             <option value="all">すべてのステータス</option>
-            {(Object.keys(statusConfig) as ProcurementStatus[]).map((s) => (
+            {(Object.keys(statusConfig) as FrontendStatus[]).map((s) => (
               <option key={s} value={s}>{statusConfig[s].label}</option>
-            ))}
-          </select>
-          <select
-            className="aegis-input w-auto"
-            value={priorityFilter}
-            onChange={(e) => { setPriorityFilter(e.target.value as ProcurementPriority | 'all'); setCurrentPage(1); }}
-          >
-            <option value="all">すべての優先度</option>
-            {(Object.keys(priorityConfig) as ProcurementPriority[]).map((p) => (
-              <option key={p} value={p}>{priorityConfig[p].label}</option>
             ))}
           </select>
           <select
@@ -264,7 +310,7 @@ export default function ProcurementPage() {
           >
             <option value="all">すべてのカテゴリ</option>
             {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>{categoryLabel[c] ?? c}</option>
             ))}
           </select>
           {hasFilters && (
@@ -281,7 +327,7 @@ export default function ProcurementPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                {['申請番号', 'タイトル', 'カテゴリ', '申請者', '見積額', '優先度', 'ステータス', '申請日', 'アクション'].map((h) => (
+                {['申請番号', 'タイトル', 'カテゴリ', '部門', '見積額', 'ステータス', '申請日', 'アクション'].map((h) => (
                   <th key={h} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     {h}
                   </th>
@@ -289,18 +335,27 @@ export default function ProcurementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {paginated.length > 0 ? paginated.map((req) => {
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    {[...Array(8)].map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : paginated.length > 0 ? paginated.map((req) => {
                 const { variant, label: statusLabel } = statusConfig[req.status];
-                const { color, label: priorityLabel } = priorityConfig[req.priority];
                 return (
                   <tr
-                    key={req.id}
+                    key={req.backendId}
                     className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-aegis-dark/30"
-                    onClick={() => { window.location.href = `/dashboard/procurement/${req.id}`; }}
+                    onClick={() => { window.location.href = `/dashboard/procurement/${req.backendId}`; }}
                   >
                     <td className="whitespace-nowrap px-6 py-4">
                       <Link
-                        href={`/dashboard/procurement/${req.id}`}
+                        href={`/dashboard/procurement/${req.backendId}`}
                         className="font-mono text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -311,17 +366,13 @@ export default function ProcurementPage() {
                       {req.title}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {req.category}
+                      {categoryLabel[req.category] ?? req.category}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {req.requester}
-                      <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">({req.dept})</span>
+                      {req.dept}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium tabular-nums text-gray-900 dark:text-white">
                       {formatCost(req.cost)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span className={`text-sm font-semibold ${color}`}>{priorityLabel}</span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex flex-col gap-1">
@@ -337,13 +388,13 @@ export default function ProcurementPage() {
                         <div className="flex gap-1">
                           <button
                             className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
-                            onClick={() => { setModal({ id: req.id, title: req.title, action: 'approve' }); setComment(''); }}
+                            onClick={() => { setModal({ backendId: req.backendId, title: req.title, action: 'approve' }); setComment(''); }}
                           >
                             承認
                           </button>
                           <button
                             className="rounded bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
-                            onClick={() => { setModal({ id: req.id, title: req.title, action: 'reject' }); setComment(''); }}
+                            onClick={() => { setModal({ backendId: req.backendId, title: req.title, action: 'reject' }); setComment(''); }}
                           >
                             却下
                           </button>
@@ -354,7 +405,7 @@ export default function ProcurementPage() {
                 );
               }) : (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     条件に一致する申請が見つかりません
                   </td>
                 </tr>
@@ -378,7 +429,7 @@ export default function ProcurementPage() {
             >
               前へ
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 className={page === currentPage ? 'aegis-btn-primary px-3' : 'aegis-btn-secondary px-3'}
@@ -419,14 +470,15 @@ export default function ProcurementPage() {
               />
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button className="aegis-btn-secondary" onClick={() => setModal(null)}>
+              <button className="aegis-btn-secondary" onClick={() => setModal(null)} disabled={actionInProgress}>
                 キャンセル
               </button>
               <button
-                className={modal.action === 'approve' ? 'aegis-btn-primary' : 'rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700'}
+                className={modal.action === 'approve' ? 'aegis-btn-primary disabled:opacity-60' : 'rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60'}
                 onClick={handleApprovalConfirm}
+                disabled={actionInProgress}
               >
-                {modal.action === 'approve' ? '承認する' : '却下する'}
+                {actionInProgress ? '処理中...' : modal.action === 'approve' ? '承認する' : '却下する'}
               </button>
             </div>
           </div>

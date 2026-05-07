@@ -290,3 +290,60 @@ export async function updateSamAlias(
 export async function deleteSamAlias(aliasId: string): Promise<void> {
   return api.delete<void>(`/api/v1/sam/sku-aliases/${aliasId}`);
 }
+
+// ── Procurement ──────────────────────────────────────────────────────────────
+
+export interface BackendProcurementCreate {
+  item_name: string;
+  category: 'hardware' | 'software' | 'service' | 'consumable';
+  quantity: number;
+  unit_price: number;
+  department: string;
+  purpose: string;
+}
+
+export interface BackendProcurementResponse {
+  id: string;
+  request_number: string;
+  item_name: string;
+  category: string;
+  quantity: number;
+  unit_price: string;
+  total_price: string;
+  requester_id: string;
+  department: string;
+  purpose: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createProcurementRequest(
+  data: BackendProcurementCreate,
+): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>('/api/v1/procurement', data);
+}
+
+export async function submitProcurementRequest(id: string): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/submit`);
+}
+
+export async function fetchProcurementList(
+  skip = 0,
+  limit = 50,
+  status?: string,
+  department?: string,
+): Promise<PaginatedBackend<BackendProcurementResponse>> {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  if (status) params.set('status', status);
+  if (department) params.set('department', department);
+  return api.get<PaginatedBackend<BackendProcurementResponse>>(`/api/v1/procurement?${params}`);
+}
+
+export async function approveProcurementRequest(id: string): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/approve`);
+}
+
+export async function rejectProcurementRequest(id: string): Promise<BackendProcurementResponse> {
+  return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/reject`);
+}

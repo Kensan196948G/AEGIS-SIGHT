@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { createProcurementRequest, submitProcurementRequest } from '@/lib/api';
+import type { BackendProcurementCreate } from '@/lib/api';
 
 interface FormData {
   title: string;
@@ -27,6 +29,7 @@ export default function NewProcurementPage() {
     notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function addItem() {
     setFormData((prev) => ({
@@ -56,13 +59,40 @@ export default function NewProcurementPage() {
     0
   );
 
-  async function handleSubmit(e: FormEvent) {
+  const categoryMap: Record<string, BackendProcurementCreate['category']> = {
+    hardware: 'hardware',
+    software: 'software',
+    service: 'service',
+    consumable: 'consumable',
+    other: 'service',
+  };
+
+  async function handleSubmit(e: FormEvent, asDraft = false) {
     e.preventDefault();
     setSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSubmitting(false);
-    router.push('/dashboard/procurement');
+    setSubmitError(null);
+    try {
+      const category = categoryMap[formData.category] ?? 'hardware';
+      const createdIds: string[] = [];
+      for (const item of formData.items) {
+        const res = await createProcurementRequest({
+          item_name: item.name || formData.title,
+          category,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          department: formData.department,
+          purpose: formData.purpose + (formData.notes ? `\n${formData.notes}` : ''),
+        });
+        createdIds.push(res.id);
+      }
+      if (!asDraft) {
+        await Promise.all(createdIds.map((id) => submitProcurementRequest(id)));
+      }
+      router.push('/dashboard/procurement');
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : '送信に失敗しました');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -300,6 +330,13 @@ export default function NewProcurementPage() {
           />
         </div>
 
+        {/* Error */}
+        {submitError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+            {submitError}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-end gap-3">
           <button
@@ -310,9 +347,10 @@ export default function NewProcurementPage() {
             キャンセル
           </button>
           <button
-            type="submit"
+            type="button"
             disabled={submitting}
-            className="aegis-btn-secondary"
+            onClick={(e) => handleSubmit(e as unknown as FormEvent, true)}
+            className="aegis-btn-secondary disabled:opacity-60"
           >
             下書き保存
           </button>
