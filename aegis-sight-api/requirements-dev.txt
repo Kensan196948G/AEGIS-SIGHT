@@ -7,5 +7,5 @@ pytest-xdist>=3.8.0
 httpx>=0.28.0
 ruff>=0.15.12
 mypy>=1.20.2
-factory-boy>=3.3.0
+factory-boy>=3.3.3
 faker>=33.0.0
