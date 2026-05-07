@@ -1,6 +1,7 @@
 import type { ApiResponse } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const AUTH_STORAGE_KEY = 'aegis-sight-auth';
 
 class ApiClient {
   private baseUrl: string;
@@ -18,6 +19,21 @@ class ApiClient {
     this.token = null;
   }
 
+  private getAuthToken(): string | null {
+    if (this.token) return this.token;
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as { token?: string };
+        return parsed.token ?? null;
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return null;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -29,8 +45,9 @@ class ApiClient {
       ...options.headers,
     };
 
-    if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getAuthToken();
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(url, {
@@ -90,15 +107,73 @@ export class ApiError extends Error {
 
 export const api = new ApiClient(API_BASE_URL);
 
-// Convenience functions
-export async function fetchDashboardStats() {
-  return api.get<ApiResponse<import('./types').DashboardStats>>('/api/v1/dashboard/stats');
+// ── Backend response types (snake_case as returned by API) ──────────────────
+
+export interface BackendDashboardStats {
+  total_devices: number;
+  online_devices: number;
+  total_licenses: number;
+  compliance_rate: number;
+  pending_procurements: number;
+  active_alerts: number;
 }
 
-export async function fetchDevices(page = 1, perPage = 20) {
-  return api.get<ApiResponse<import('./types').Device[]>>(
-    `/api/v1/devices?page=${page}&per_page=${perPage}`
-  );
+export interface BackendAlert {
+  id: string;
+  device_id: string | null;
+  severity: 'critical' | 'warning' | 'info';
+  category: 'security' | 'license' | 'hardware' | 'network';
+  title: string;
+  message: string;
+  is_acknowledged: boolean;
+  acknowledged_by: string | null;
+  acknowledged_at: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export interface BackendDevice {
+  id: string;
+  hostname: string;
+  os_version: string | null;
+  ip_address: string | null;
+  mac_address: string | null;
+  domain: string | null;
+  status: 'active' | 'inactive' | 'maintenance';
+  last_seen: string | null;
+  created_at: string;
+}
+
+export interface PaginatedBackend<T> {
+  items: T[];
+  total: number;
+  offset: number;
+  limit: number;
+  has_more: boolean;
+}
+
+// ── Convenience functions ───────────────────────────────────────────────────
+
+export async function fetchDashboardStats(): Promise<BackendDashboardStats> {
+  return api.get<BackendDashboardStats>('/api/v1/dashboard/stats');
+}
+
+export async function fetchRecentAlerts(limit = 5): Promise<PaginatedBackend<BackendAlert>> {
+  return api.get<PaginatedBackend<BackendAlert>>(`/api/v1/alerts?limit=${limit}&offset=0`);
+}
+
+export async function fetchDevices(
+  offset = 0,
+  limit = 50,
+  status?: string,
+): Promise<PaginatedBackend<BackendDevice>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (status) params.set('status', status);
+  return api.get<PaginatedBackend<BackendDevice>>(`/api/v1/assets?${params}`);
+}
+
+export async function fetchDevice(id: string): Promise<BackendDevice> {
+  return api.get<BackendDevice>(`/api/v1/assets/${id}`);
 }
 
 export async function fetchLicenses(page = 1, perPage = 20) {
@@ -113,9 +188,60 @@ export async function fetchProcurementRequests(page = 1, perPage = 20) {
   );
 }
 
-export async function fetchAlerts(page = 1, perPage = 20) {
-  return api.get<ApiResponse<import('./types').Alert[]>>(
-    `/api/v1/alerts?page=${page}&per_page=${perPage}`
+export async function fetchAlerts(
+  offset = 0,
+  limit = 50,
+  severity?: string,
+  category?: string,
+  isAcknowledged?: boolean,
+): Promise<PaginatedBackend<BackendAlert>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (severity) params.set('severity', severity);
+  if (category) params.set('category', category);
+  if (isAcknowledged !== undefined) params.set('is_acknowledged', String(isAcknowledged));
+  return api.get<PaginatedBackend<BackendAlert>>(`/api/v1/alerts?${params}`);
+}
+
+export interface BackendAlertStats {
+  total: number;
+  critical: number;
+  warning: number;
+  info: number;
+  unacknowledged: number;
+  unresolved: number;
+}
+
+export async function fetchAlertStats(): Promise<BackendAlertStats> {
+  return api.get<BackendAlertStats>('/api/v1/alerts/stats');
+}
+
+export async function acknowledgeAlert(alertId: string): Promise<void> {
+  return api.post<void>(`/api/v1/alerts/${alertId}/acknowledge`);
+}
+
+export async function resolveAlert(alertId: string): Promise<void> {
+  return api.post<void>(`/api/v1/alerts/${alertId}/resolve`);
+}
+
+// ── Software Inventory ───────────────────────────────────────────────────────
+
+export interface BackendSoftwareInventory {
+  id: number;
+  device_id: string;
+  software_name: string;
+  version: string | null;
+  publisher: string | null;
+  install_date: string | null;
+  detected_at: string;
+}
+
+export async function fetchDeviceSoftware(
+  deviceId: string,
+  offset = 0,
+  limit = 100,
+): Promise<PaginatedBackend<BackendSoftwareInventory>> {
+  return api.get<PaginatedBackend<BackendSoftwareInventory>>(
+    `/api/v1/software/devices/${deviceId}?offset=${offset}&limit=${limit}`,
   );
 }
 

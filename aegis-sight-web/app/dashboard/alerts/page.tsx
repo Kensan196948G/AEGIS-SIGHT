@@ -1,23 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, BarChart } from '@/components/ui/chart';
+import {
+  fetchAlerts,
+  fetchAlertStats,
+  acknowledgeAlert,
+  resolveAlert,
+} from '@/lib/api';
+import type { BackendAlert, BackendAlertStats } from '@/lib/api';
 
 type Severity = 'critical' | 'warning' | 'info';
 type Category = 'security' | 'license' | 'hardware' | 'network';
 type AlertStatus = 'open' | 'acknowledged' | 'resolved';
-
-interface AlertItem {
-  id: string;
-  severity: Severity;
-  category: Category;
-  title: string;
-  message: string;
-  is_acknowledged: boolean;
-  resolved_at: string | null;
-  created_at: string;
-}
 
 const severityVariant: Record<Severity, 'danger' | 'warning' | 'info'> = {
   critical: 'danger',
@@ -38,174 +34,142 @@ const categoryLabel: Record<Category, string> = {
   network: 'ネットワーク',
 };
 
-// Demo data
-const demoAlerts: AlertItem[] = [
-  {
-    id: '1',
-    severity: 'critical',
-    category: 'security',
-    title: '不正アクセス試行を検出',
-    message: '外部IPからの複数回ログイン失敗が検出されました。',
-    is_acknowledged: false,
-    resolved_at: null,
-    created_at: '2026-03-27T14:30:00Z',
-  },
-  {
-    id: '2',
-    severity: 'critical',
-    category: 'hardware',
-    title: 'ディスク使用率が95%を超過',
-    message: 'SRV-DB-01のディスク使用率が95%を超えています。',
-    is_acknowledged: true,
-    resolved_at: null,
-    created_at: '2026-03-27T13:15:00Z',
-  },
-  {
-    id: '3',
-    severity: 'warning',
-    category: 'license',
-    title: 'Adobe CCライセンス残数不足',
-    message: '残りライセンス数が5以下です。追加購入を検討してください。',
-    is_acknowledged: false,
-    resolved_at: null,
-    created_at: '2026-03-27T12:00:00Z',
-  },
-  {
-    id: '4',
-    severity: 'warning',
-    category: 'network',
-    title: 'VPNゲートウェイ応答遅延',
-    message: 'VPN-GW-02の応答時間が閾値を超過しています。',
-    is_acknowledged: true,
-    resolved_at: null,
-    created_at: '2026-03-27T11:45:00Z',
-  },
-  {
-    id: '5',
-    severity: 'info',
-    category: 'security',
-    title: 'Windows Defenderパターン更新完了',
-    message: '全端末のDefenderパターンファイルが最新に更新されました。',
-    is_acknowledged: true,
-    resolved_at: '2026-03-27T10:30:00Z',
-    created_at: '2026-03-27T09:00:00Z',
-  },
-  {
-    id: '6',
-    severity: 'warning',
-    category: 'hardware',
-    title: 'UPS バッテリー劣化警告',
-    message: 'サーバールームUPS-01のバッテリー残容量が60%を下回っています。',
-    is_acknowledged: false,
-    resolved_at: null,
-    created_at: '2026-03-26T16:20:00Z',
-  },
-  {
-    id: '7',
-    severity: 'info',
-    category: 'license',
-    title: 'Microsoft 365ライセンス自動更新完了',
-    message: 'E3ライセンス200件の自動更新が完了しました。',
-    is_acknowledged: true,
-    resolved_at: '2026-03-26T14:00:00Z',
-    created_at: '2026-03-26T12:00:00Z',
-  },
-];
-
-const demoStats = {
-  total: 47,
-  critical: 8,
-  warning: 21,
-  info: 18,
-  unacknowledged: 15,
-  unresolved: 32,
-};
-
-function getAlertStatus(alert: AlertItem): AlertStatus {
+function getAlertStatus(alert: BackendAlert): AlertStatus {
   if (alert.resolved_at) return 'resolved';
   if (alert.is_acknowledged) return 'acknowledged';
   return 'open';
 }
 
 export default function AlertsPage() {
+  const [alerts, setAlerts] = useState<BackendAlert[]>([]);
+  const [stats, setStats] = useState<BackendAlertStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<AlertStatus | 'all'>('all');
 
-  const filtered = demoAlerts.filter((alert) => {
-    if (severityFilter !== 'all' && alert.severity !== severityFilter) return false;
-    if (categoryFilter !== 'all' && alert.category !== categoryFilter) return false;
-    const status = getAlertStatus(alert);
-    if (statusFilter !== 'all' && status !== statusFilter) return false;
-    return true;
-  });
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const isAck = statusFilter === 'acknowledged' ? true
+        : statusFilter === 'open' ? false
+        : undefined;
+      const [alertData, statsData] = await Promise.all([
+        fetchAlerts(0, 100,
+          severityFilter !== 'all' ? severityFilter : undefined,
+          categoryFilter !== 'all' ? categoryFilter : undefined,
+          isAck,
+        ),
+        fetchAlertStats(),
+      ]);
+      let items = alertData.items;
+      if (statusFilter === 'resolved') {
+        items = items.filter(a => a.resolved_at !== null);
+      }
+      setAlerts(items);
+      setStats(statsData);
+    } catch {
+      // show empty state
+    } finally {
+      setLoading(false);
+    }
+  }, [severityFilter, categoryFilter, statusFilter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function handleAcknowledge(alertId: string) {
+    setActionInProgress(alertId);
+    try {
+      await acknowledgeAlert(alertId);
+      await load();
+    } finally {
+      setActionInProgress(null);
+    }
+  }
+
+  async function handleResolve(alertId: string) {
+    setActionInProgress(alertId);
+    try {
+      await resolveAlert(alertId);
+      await load();
+    } finally {
+      setActionInProgress(null);
+    }
+  }
+
+  const total = stats?.total ?? 0;
+  const resolvedCount = total - (stats?.unresolved ?? total);
+  const resolveRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+  const resolveRateColor = resolveRate >= 80 ? '#10b981' : resolveRate >= 60 ? '#f59e0b' : '#ef4444';
+  const severityBarData = [
+    { label: '重大', value: stats?.critical ?? 0, color: 'bg-red-500' },
+    { label: '警告', value: stats?.warning ?? 0, color: 'bg-amber-500' },
+    { label: '情報', value: stats?.info ?? 0, color: 'bg-blue-400' },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          アラート管理
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">アラート管理</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           システムアラートの一覧と管理
         </p>
       </div>
 
       {/* アラート概要チャート */}
-      {(() => {
-        const resolvedCount = demoStats.total - demoStats.unresolved;
-        const resolveRate = Math.round((resolvedCount / Math.max(demoStats.total, 1)) * 100);
-        const resolveRateColor = resolveRate >= 80 ? '#10b981' : resolveRate >= 60 ? '#f59e0b' : '#ef4444';
-        const severityBarData = [
-          { label: '重大', value: demoStats.critical, color: 'bg-red-500' },
-          { label: '警告', value: demoStats.warning, color: 'bg-amber-500' },
-          { label: '情報', value: demoStats.info, color: 'bg-blue-400' },
-        ];
-        return (
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">アラート概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">解決率</p>
-                <DonutChart value={resolveRate} max={100} size={140} strokeWidth={14} color={resolveRateColor} label={`${resolveRate}%`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  全 {demoStats.total} 件中 {resolvedCount} 件解決済（未解決: {demoStats.unresolved}）
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">重要度別アラート数</p>
-                <BarChart data={severityBarData} maxValue={Math.max(demoStats.critical, demoStats.warning, demoStats.info)} height={160} showValues />
-              </div>
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">アラート概要</h2>
+        {loading && !stats ? (
+          <div className="animate-pulse h-40 bg-gray-100 dark:bg-gray-800 rounded" />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">解決率</p>
+              <DonutChart value={resolveRate} max={100} size={140} strokeWidth={14} color={resolveRateColor} label={`${resolveRate}%`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                全 {total} 件中 {resolvedCount} 件解決済（未解決: {stats?.unresolved ?? 0}）
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">重要度別アラート数</p>
+              <BarChart
+                data={severityBarData}
+                maxValue={Math.max(stats?.critical ?? 1, stats?.warning ?? 1, stats?.info ?? 1)}
+                height={160}
+                showValues
+              />
             </div>
           </div>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{demoStats.total}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.total ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">合計</p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{demoStats.critical}</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats?.critical ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">重大</p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{demoStats.warning}</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats?.warning ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">警告</p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{demoStats.info}</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.info ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">情報</p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{demoStats.unacknowledged}</p>
+          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats?.unacknowledged ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">未確認</p>
         </div>
         <div className="aegis-card text-center">
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{demoStats.unresolved}</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.unresolved ?? '—'}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">未解決</p>
         </div>
       </div>
@@ -262,76 +226,85 @@ export default function AlertsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {filtered.map((alert) => {
-                const status = getAlertStatus(alert);
-                return (
-                  <tr
-                    key={alert.id}
-                    className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50"
-                  >
-                    <td className="px-6 py-4">
-                      <Badge variant={severityVariant[alert.severity]} dot>
-                        {severityLabel[alert.severity]}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        {categoryLabel[alert.category]}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {alert.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                          {alert.message}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge
-                        variant={
-                          status === 'resolved'
-                            ? 'success'
-                            : status === 'acknowledged'
-                              ? 'info'
-                              : 'danger'
-                        }
-                      >
-                        {status === 'resolved'
-                          ? '解決済'
-                          : status === 'acknowledged'
-                            ? '確認済'
-                            : '未対応'}
-                      </Badge>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-gray-500 dark:text-gray-400">
-                      {new Date(alert.created_at).toLocaleString('ja-JP')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {!alert.is_acknowledged && (
-                          <button className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50">
-                            確認
-                          </button>
-                        )}
-                        {!alert.resolved_at && (
-                          <button className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50">
-                            解決
-                          </button>
-                        )}
-                      </div>
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={6} className="px-6 py-4">
+                      <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
                     </td>
                   </tr>
-                );
-              })}
-              {filtered.length === 0 && (
+                ))
+              ) : alerts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     該当するアラートはありません
                   </td>
                 </tr>
+              ) : (
+                alerts.map((alert) => {
+                  const status = getAlertStatus(alert);
+                  const sev = alert.severity as Severity;
+                  const cat = alert.category as Category;
+                  const isActing = actionInProgress === String(alert.id);
+                  return (
+                    <tr key={String(alert.id)} className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
+                      <td className="px-6 py-4">
+                        <Badge variant={severityVariant[sev] ?? 'info'} dot>
+                          {severityLabel[sev] ?? sev}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {categoryLabel[cat] ?? cat}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{alert.title}</p>
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{alert.message}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant={
+                            status === 'resolved' ? 'success'
+                            : status === 'acknowledged' ? 'info'
+                            : 'danger'
+                          }
+                        >
+                          {status === 'resolved' ? '解決済'
+                           : status === 'acknowledged' ? '確認済'
+                           : '未対応'}
+                        </Badge>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-gray-500 dark:text-gray-400">
+                        {new Date(alert.created_at).toLocaleString('ja-JP')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {!alert.is_acknowledged && (
+                            <button
+                              disabled={isActing}
+                              onClick={() => handleAcknowledge(String(alert.id))}
+                              className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                            >
+                              確認
+                            </button>
+                          )}
+                          {!alert.resolved_at && (
+                            <button
+                              disabled={isActing}
+                              onClick={() => handleResolve(String(alert.id))}
+                              className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
+                            >
+                              解決
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
