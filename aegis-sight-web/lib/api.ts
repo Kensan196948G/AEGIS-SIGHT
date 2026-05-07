@@ -359,3 +359,96 @@ export async function orderProcurementRequest(id: string): Promise<BackendProcur
 export async function receiveProcurementRequest(id: string): Promise<BackendProcurementResponse> {
   return api.post<BackendProcurementResponse>(`/api/v1/procurement/${id}/receive`);
 }
+
+// ── Security Overview ────────────────────────────────────────────────────────
+
+export interface BackendDefenderSummary {
+  enabled_count: number;
+  disabled_count: number;
+  enabled_percentage: number;
+}
+
+export interface BackendBitLockerSummary {
+  enabled_count: number;
+  disabled_count: number;
+  enabled_percentage: number;
+}
+
+export interface BackendPatchSummary {
+  total_pending: number;
+  devices_with_pending: number;
+  devices_fully_patched: number;
+}
+
+export interface BackendSecurityOverview {
+  total_devices_with_status: number;
+  defender: BackendDefenderSummary;
+  bitlocker: BackendBitLockerSummary;
+  patches: BackendPatchSummary;
+}
+
+export async function fetchSecurityOverview(): Promise<BackendSecurityOverview> {
+  return api.get<BackendSecurityOverview>('/api/v1/security/overview');
+}
+
+// ── Users ────────────────────────────────────────────────────────────────────
+
+export type UserRole = 'admin' | 'operator' | 'auditor' | 'readonly';
+
+export interface BackendUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export async function fetchUsers(
+  skip = 0,
+  limit = 50,
+  role?: UserRole,
+  isActive?: boolean,
+): Promise<PaginatedBackend<BackendUser>> {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  if (role) params.set('role', role);
+  if (isActive !== undefined) params.set('is_active', String(isActive));
+  return api.get<PaginatedBackend<BackendUser>>(`/api/v1/users?${params}`);
+}
+
+export async function updateUser(
+  userId: string,
+  data: { full_name?: string; role?: UserRole; is_active?: boolean },
+): Promise<BackendUser> {
+  return api.patch<BackendUser>(`/api/v1/users/${userId}`, data);
+}
+
+// ── Audit Logs ───────────────────────────────────────────────────────────────
+
+export interface BackendAuditLog {
+  id: string;
+  user_id: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  detail: Record<string, unknown> | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
+export async function fetchAuditLogs(
+  offset = 0,
+  limit = 50,
+  action?: string,
+  resourceType?: string,
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<PaginatedBackend<BackendAuditLog>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (action) params.set('action', action);
+  if (resourceType) params.set('resource_type', resourceType);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo) params.set('date_to', dateTo);
+  return api.get<PaginatedBackend<BackendAuditLog>>(`/api/v1/audit/logs?${params}`);
+}

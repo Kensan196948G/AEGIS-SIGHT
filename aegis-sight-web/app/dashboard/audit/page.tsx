@@ -1,46 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, BarChart } from '@/components/ui/chart';
+import { fetchAuditLogs } from '@/lib/api';
+import type { BackendAuditLog } from '@/lib/api';
 
-// ---------------------------------------------------------------------------
-// Mock Data
-// ---------------------------------------------------------------------------
-
-interface AuditLogEntry {
-  id: string;
-  action: string;
-  user: string;
-  resource: string;
-  resourceId: string;
-  ipAddress: string;
-  userAgent: string;
-  detail: Record<string, unknown>;
-  createdAt: string;
-}
-
-const actionTypes = [
-  'login', 'logout', 'create', 'update', 'delete', 'export', 'import',
-  'approve', 'reject', 'password_change', 'role_change',
-];
-
-const mockLogs: AuditLogEntry[] = [
-  { id: 'a1b2c3d4', action: 'login', user: 'admin@aegis-sight.local', resource: 'session', resourceId: 'sess-001', ipAddress: '192.168.1.10', userAgent: 'Mozilla/5.0 Chrome/122', detail: { method: 'password', mfa: true }, createdAt: '2026-03-27T10:30:00Z' },
-  { id: 'e5f6g7h8', action: 'create', user: 'operator@aegis-sight.local', resource: 'device', resourceId: 'dev-042', ipAddress: '192.168.1.25', userAgent: 'Mozilla/5.0 Chrome/122', detail: { hostname: 'PC-SALES-042', os: 'Windows 11' }, createdAt: '2026-03-27T09:45:00Z' },
-  { id: 'i9j0k1l2', action: 'update', user: 'admin@aegis-sight.local', resource: 'license', resourceId: 'lic-015', ipAddress: '192.168.1.10', userAgent: 'Mozilla/5.0 Chrome/122', detail: { field: 'purchased_count', old: 50, new: 75 }, createdAt: '2026-03-27T09:15:00Z' },
-  { id: 'm3n4o5p6', action: 'export', user: 'auditor@aegis-sight.local', resource: 'audit_log', resourceId: '', ipAddress: '10.0.0.5', userAgent: 'Mozilla/5.0 Firefox/123', detail: { format: 'csv', records: 1250 }, createdAt: '2026-03-26T17:30:00Z' },
-  { id: 'q7r8s9t0', action: 'delete', user: 'admin@aegis-sight.local', resource: 'alert', resourceId: 'alert-088', ipAddress: '192.168.1.10', userAgent: 'Mozilla/5.0 Chrome/122', detail: { reason: 'resolved' }, createdAt: '2026-03-26T16:00:00Z' },
-  { id: 'u1v2w3x4', action: 'role_change', user: 'admin@aegis-sight.local', resource: 'user', resourceId: 'usr-007', ipAddress: '192.168.1.10', userAgent: 'Mozilla/5.0 Chrome/122', detail: { old_role: 'readonly', new_role: 'operator' }, createdAt: '2026-03-26T14:20:00Z' },
-  { id: 'y5z6a7b8', action: 'approve', user: 'manager@aegis-sight.local', resource: 'procurement', resourceId: 'proc-023', ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 Safari/17', detail: { amount: 150000, vendor: 'Dell' }, createdAt: '2026-03-26T11:00:00Z' },
-  { id: 'c9d0e1f2', action: 'password_change', user: 'user05@aegis-sight.local', resource: 'user', resourceId: 'usr-005', ipAddress: '192.168.1.102', userAgent: 'Mozilla/5.0 Chrome/122', detail: { forced: false }, createdAt: '2026-03-26T10:30:00Z' },
-  { id: 'g3h4i5j6', action: 'import', user: 'operator@aegis-sight.local', resource: 'device', resourceId: '', ipAddress: '192.168.1.25', userAgent: 'Mozilla/5.0 Chrome/122', detail: { file: 'devices_batch.csv', records: 45 }, createdAt: '2026-03-25T16:45:00Z' },
-  { id: 'k7l8m9n0', action: 'login', user: 'auditor@aegis-sight.local', resource: 'session', resourceId: 'sess-002', ipAddress: '10.0.0.5', userAgent: 'Mozilla/5.0 Firefox/123', detail: { method: 'sso', mfa: true }, createdAt: '2026-03-25T09:00:00Z' },
-];
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const AUDIT_ACTIONS = ['create', 'update', 'delete', 'login', 'logout', 'export', 'approve', 'reject'] as const;
 
 const actionBadgeVariant = (action: string): 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'default' => {
   switch (action) {
@@ -48,7 +14,6 @@ const actionBadgeVariant = (action: string): 'success' | 'warning' | 'danger' | 
     case 'logout':
       return 'info';
     case 'create':
-    case 'import':
       return 'success';
     case 'update':
     case 'approve':
@@ -58,9 +23,6 @@ const actionBadgeVariant = (action: string): 'success' | 'warning' | 'danger' | 
       return 'danger';
     case 'export':
       return 'default';
-    case 'role_change':
-    case 'password_change':
-      return 'warning';
     default:
       return 'default';
   }
@@ -74,38 +36,55 @@ const actionLabel = (action: string): string => {
     update: '更新',
     delete: '削除',
     export: 'エクスポート',
-    import: 'インポート',
     approve: '承認',
     reject: '却下',
-    password_change: 'パスワード変更',
-    role_change: '権限変更',
   };
   return map[action] || action;
 };
 
-// ---------------------------------------------------------------------------
-// Page Component
-// ---------------------------------------------------------------------------
+function shortId(uuid: string | null | undefined): string {
+  if (!uuid) return '(システム)';
+  return uuid.substring(0, 8);
+}
 
 export default function AuditLogPage() {
+  const [logs, setLogs] = useState<BackendAuditLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
+
   const [filterAction, setFilterAction] = useState('');
-  const [filterUser, setFilterUser] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
-  const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
+  const [selectedLog, setSelectedLog] = useState<BackendAuditLog | null>(null);
 
-  const filteredLogs = mockLogs.filter((log) => {
-    if (filterAction && log.action !== filterAction) return false;
-    if (filterUser && !log.user.toLowerCase().includes(filterUser.toLowerCase())) return false;
-    if (filterDateFrom && log.createdAt < filterDateFrom) return false;
-    if (filterDateTo && log.createdAt > filterDateTo + 'T23:59:59Z') return false;
-    return true;
-  });
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAuditLogs(
+        page * PAGE_SIZE,
+        PAGE_SIZE,
+        filterAction || undefined,
+        undefined,
+        filterDateFrom || undefined,
+        filterDateTo || undefined,
+      );
+      setLogs(data.items);
+      setTotal(data.total);
+    } catch {
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filterAction, filterDateFrom, filterDateTo]);
+
+  useEffect(() => { setPage(0); }, [filterAction, filterDateFrom, filterDateTo]);
+  useEffect(() => { load(); }, [load]);
 
   const handleExport = (format: 'csv' | 'json') => {
-    const data = filteredLogs;
     if (format === 'json') {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -113,8 +92,10 @@ export default function AuditLogPage() {
       a.click();
       URL.revokeObjectURL(url);
     } else {
-      const headers = ['ID', 'Action', 'User', 'Resource', 'ResourceID', 'IP', 'Timestamp'];
-      const rows = data.map((l) => [l.id, l.action, l.user, l.resource, l.resourceId, l.ipAddress, l.createdAt]);
+      const headers = ['ID', 'Action', 'UserID', 'ResourceType', 'ResourceID', 'IP', 'Timestamp'];
+      const rows = logs.map((l) => [
+        l.id, l.action, l.user_id ?? '', l.resource_type, l.resource_id ?? '', l.ip_address ?? '', l.created_at,
+      ]);
       const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -125,6 +106,22 @@ export default function AuditLogPage() {
       URL.revokeObjectURL(url);
     }
   };
+
+  const actionCounts: Record<string, number> = {};
+  logs.forEach((log) => {
+    actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+  });
+  const uniqueUserIds = new Set(logs.map((l) => l.user_id).filter(Boolean)).size;
+  const topActions = Object.entries(actionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([action, count], i) => ({
+      label: actionLabel(action),
+      value: count,
+      color: (['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-gray-500'] as const)[i] || 'bg-gray-400',
+    }));
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -153,47 +150,48 @@ export default function AuditLogPage() {
       </div>
 
       {/* 監査ログ概要チャート */}
-      {(() => {
-        const actionCounts: Record<string, number> = {};
-        mockLogs.forEach(log => {
-          actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
-        });
-        const uniqueUsers = new Set(mockLogs.map(l => l.user)).size;
-        const userCoverage = Math.round((uniqueUsers / 5) * 100); // 5 = total registered users estimate
-        const coverageColor = userCoverage >= 80 ? '#10b981' : userCoverage >= 60 ? '#f59e0b' : '#ef4444';
-        const topActions = Object.entries(actionCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 6)
-          .map(([action, count], i) => ({
-            label: actionLabel(action),
-            value: count,
-            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-gray-500'][i] || 'bg-gray-400',
-          }));
-        return (
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">監査ログ概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ユーザーカバレッジ</p>
-                <DonutChart value={userCoverage} max={100} size={140} strokeWidth={14} color={coverageColor} label={`${uniqueUsers}人`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {uniqueUsers} ユーザーの操作を記録中
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクション種別別件数</p>
-                <BarChart data={topActions} maxValue={Math.max(...topActions.map(a => a.value))} height={160} showValues />
-              </div>
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">監査ログ概要</h2>
+        {loading && logs.length === 0 ? (
+          <div className="h-40 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">操作ユーザー数（現在ページ）</p>
+              <DonutChart
+                value={uniqueUserIds}
+                max={Math.max(uniqueUserIds, 1)}
+                size={140}
+                strokeWidth={14}
+                color="#3b82f6"
+                label={`${uniqueUserIds}人`}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {uniqueUserIds} ユーザーの操作を記録中（全 {total.toLocaleString()} 件）
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクション種別別件数</p>
+              {topActions.length > 0 ? (
+                <BarChart
+                  data={topActions}
+                  maxValue={Math.max(...topActions.map((a) => a.value), 1)}
+                  height={160}
+                  showValues
+                />
+              ) : (
+                <div className="flex h-40 items-center justify-center text-sm text-gray-400">データなし</div>
+              )}
             </div>
           </div>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Filters */}
       <div className="aegis-card">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               アクション種別
             </label>
             <select
@@ -202,25 +200,13 @@ export default function AuditLogPage() {
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-surface dark:text-white"
             >
               <option value="">すべて</option>
-              {actionTypes.map((a) => (
+              {AUDIT_ACTIONS.map((a) => (
                 <option key={a} value={a}>{actionLabel(a)}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              ユーザー
-            </label>
-            <input
-              type="text"
-              value={filterUser}
-              onChange={(e) => setFilterUser(e.target.value)}
-              placeholder="メールで検索..."
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-surface dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               開始日
             </label>
             <input
@@ -231,7 +217,7 @@ export default function AuditLogPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               終了日
             </label>
             <input
@@ -251,7 +237,7 @@ export default function AuditLogPage() {
             <thead className="bg-gray-50 dark:bg-aegis-surface">
               <tr>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">アクション</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">ユーザー</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">ユーザーID</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">リソース</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">IP</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">タイムスタンプ</th>
@@ -259,57 +245,93 @@ export default function AuditLogPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {filteredLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-aegis-surface/50 transition-colors">
-                  <td className="px-6 py-3">
-                    <Badge variant={actionBadgeVariant(log.action)}>
-                      {actionLabel(log.action)}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-3 text-gray-900 dark:text-white">{log.user}</td>
-                  <td className="px-6 py-3 text-gray-700 dark:text-gray-300">
-                    {log.resource}
-                    {log.resourceId && (
-                      <span className="ml-1 text-xs text-gray-400">({log.resourceId})</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{log.ipAddress}</td>
-                  <td className="px-6 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                    {new Date(log.createdAt).toLocaleString('ja-JP')}
-                  </td>
-                  <td className="px-6 py-3">
-                    <button
-                      onClick={() => setSelectedLog(log)}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs font-medium"
-                    >
-                      表示
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredLogs.length === 0 && (
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={6} className="px-6 py-4">
+                      <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+                    </td>
+                  </tr>
+                ))
+              ) : logs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     該当するログがありません
                   </td>
                 </tr>
+              ) : (
+                logs.map((log) => (
+                  <tr key={log.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
+                    <td className="px-6 py-3">
+                      <Badge variant={actionBadgeVariant(log.action)}>
+                        {actionLabel(log.action)}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
+                      {shortId(log.user_id)}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700 dark:text-gray-300">
+                      {log.resource_type}
+                      {log.resource_id && (
+                        <span className="ml-1 text-xs text-gray-400">({shortId(log.resource_id)})</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
+                      {log.ip_address ?? '—'}
+                    </td>
+                    <td className="px-6 py-3 text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(log.created_at).toLocaleString('ja-JP')}
+                    </td>
+                    <td className="px-6 py-3">
+                      <button
+                        onClick={() => setSelectedLog(log)}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        表示
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
-        <div className="border-t border-gray-200 dark:border-aegis-border px-6 py-3 text-sm text-gray-500 dark:text-gray-400">
-          {filteredLogs.length}件のログを表示中
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-aegis-border">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            全 <span className="font-medium">{total.toLocaleString()}</span> 件中{' '}
+            <span className="font-medium">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)}</span> 件を表示
+          </p>
+          <div className="flex gap-2">
+            <button
+              className="aegis-btn-secondary"
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              前へ
+            </button>
+            <button
+              className="aegis-btn-secondary"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              次へ
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Detail Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSelectedLog(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setSelectedLog(null)}
+        >
           <div
             className="mx-4 w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-aegis-darker"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">ログ詳細</h3>
               <button
                 onClick={() => setSelectedLog(null)}
@@ -324,7 +346,7 @@ export default function AuditLogPage() {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">ID:</span>
-                  <span className="ml-2 font-mono text-gray-900 dark:text-white">{selectedLog.id}</span>
+                  <span className="ml-2 font-mono text-xs text-gray-900 dark:text-white">{selectedLog.id}</span>
                 </div>
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">アクション:</span>
@@ -333,34 +355,46 @@ export default function AuditLogPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">ユーザー:</span>
-                  <span className="ml-2 text-gray-900 dark:text-white">{selectedLog.user}</span>
+                  <span className="text-gray-500 dark:text-gray-400">ユーザーID:</span>
+                  <span className="ml-2 font-mono text-xs text-gray-900 dark:text-white">
+                    {selectedLog.user_id ?? '(システム)'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">リソース:</span>
-                  <span className="ml-2 text-gray-900 dark:text-white">{selectedLog.resource}</span>
+                  <span className="ml-2 text-gray-900 dark:text-white">{selectedLog.resource_type}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 dark:text-gray-400">リソースID:</span>
+                  <span className="ml-2 font-mono text-xs text-gray-900 dark:text-white">
+                    {selectedLog.resource_id ?? '—'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">IP:</span>
-                  <span className="ml-2 font-mono text-gray-900 dark:text-white">{selectedLog.ipAddress}</span>
+                  <span className="ml-2 font-mono text-gray-900 dark:text-white">{selectedLog.ip_address ?? '—'}</span>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <span className="text-gray-500 dark:text-gray-400">日時:</span>
                   <span className="ml-2 text-gray-900 dark:text-white">
-                    {new Date(selectedLog.createdAt).toLocaleString('ja-JP')}
+                    {new Date(selectedLog.created_at).toLocaleString('ja-JP')}
                   </span>
                 </div>
               </div>
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">User Agent:</span>
-                <p className="mt-1 text-xs font-mono text-gray-700 dark:text-gray-300 break-all">{selectedLog.userAgent}</p>
-              </div>
-              <div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">詳細 (JSONB):</span>
-                <pre className="mt-1 rounded-lg bg-gray-100 p-3 text-xs font-mono text-gray-800 dark:bg-aegis-surface dark:text-gray-200 overflow-auto max-h-48">
-                  {JSON.stringify(selectedLog.detail, null, 2)}
-                </pre>
-              </div>
+              {selectedLog.user_agent && (
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">User Agent:</span>
+                  <p className="mt-1 break-all font-mono text-xs text-gray-700 dark:text-gray-300">{selectedLog.user_agent}</p>
+                </div>
+              )}
+              {selectedLog.detail && (
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">詳細 (JSONB):</span>
+                  <pre className="mt-1 max-h-48 overflow-auto rounded-lg bg-gray-100 p-3 font-mono text-xs text-gray-800 dark:bg-aegis-surface dark:text-gray-200">
+                    {JSON.stringify(selectedLog.detail, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         </div>

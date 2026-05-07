@@ -1,28 +1,10 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, BarChart, ProgressBar } from '@/components/ui/chart';
-
-const defenderStatus = {
-  total: 1284,
-  active: 1245,
-  outdated: 28,
-  disabled: 11,
-};
-
-const bitlockerStatus = {
-  total: 1284,
-  encrypted: 1198,
-  inProgress: 32,
-  notEncrypted: 54,
-};
-
-const patchStatus = {
-  total: 1284,
-  upToDate: 1105,
-  pending: 132,
-  failed: 47,
-};
+import { fetchSecurityOverview } from '@/lib/api';
+import type { BackendSecurityOverview } from '@/lib/api';
 
 const vulnerabilities = [
   { id: 'CVE-2024-21338', severity: 'critical', title: 'Windows Kernel Elevation of Privilege', affected: 47, status: 'patching' },
@@ -56,6 +38,31 @@ const statusVariants: Record<string, 'success' | 'warning' | 'danger' | 'info' |
 };
 
 export default function SecurityPage() {
+  const [overview, setOverview] = useState<BackendSecurityOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSecurityOverview()
+      .then(setOverview)
+      .catch(() => setOverview(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const total = overview?.total_devices_with_status ?? 0;
+  const defenderEnabled = overview?.defender.enabled_count ?? 0;
+  const defenderDisabled = overview?.defender.disabled_count ?? 0;
+  const defenderPct = overview?.defender.enabled_percentage ?? 0;
+
+  const bitlockerEnabled = overview?.bitlocker.enabled_count ?? 0;
+  const bitlockerDisabled = overview?.bitlocker.disabled_count ?? 0;
+  const bitlockerPct = overview?.bitlocker.enabled_percentage ?? 0;
+
+  const devicesFullyPatched = overview?.patches.devices_fully_patched ?? 0;
+  const devicesWithPending = overview?.patches.devices_with_pending ?? 0;
+  const patchPct = total > 0 ? Math.round((devicesFullyPatched / total) * 100) : 0;
+
+  const overallScore = Math.round((defenderPct + bitlockerPct + patchPct) / 3);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -84,29 +91,39 @@ export default function SecurityPage() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               Microsoft Defender
             </h3>
-            <Badge variant="success" dot>稼働中</Badge>
+            {loading ? (
+              <div className="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <Badge variant={defenderPct >= 95 ? 'success' : defenderPct >= 80 ? 'warning' : 'danger'} dot>
+                {defenderPct}%
+              </Badge>
+            )}
           </div>
           <div className="mt-4 flex items-center gap-4">
-            <DonutChart
-              value={defenderStatus.active}
-              max={defenderStatus.total}
-              size={90}
-              strokeWidth={8}
-              color="#10b981"
-              label="有効"
-            />
+            {loading ? (
+              <div className="h-[90px] w-[90px] animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <DonutChart
+                value={defenderEnabled}
+                max={total || 1}
+                size={90}
+                strokeWidth={8}
+                color="#10b981"
+                label="有効"
+              />
+            )}
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="text-gray-600 dark:text-gray-400">有効: {defenderStatus.active}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span className="text-gray-600 dark:text-gray-400">定義古い: {defenderStatus.outdated}</span>
+                <span className="text-gray-600 dark:text-gray-400">有効: {loading ? '—' : defenderEnabled}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span className="text-gray-600 dark:text-gray-400">無効: {defenderStatus.disabled}</span>
+                <span className="text-gray-600 dark:text-gray-400">無効: {loading ? '—' : defenderDisabled}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-gray-400" />
+                <span className="text-gray-600 dark:text-gray-400">合計: {loading ? '—' : total}</span>
               </div>
             </div>
           </div>
@@ -118,29 +135,39 @@ export default function SecurityPage() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               BitLocker暗号化
             </h3>
-            <Badge variant="info" dot>93.3%</Badge>
+            {loading ? (
+              <div className="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <Badge variant={bitlockerPct >= 95 ? 'success' : bitlockerPct >= 80 ? 'info' : 'warning'} dot>
+                {bitlockerPct}%
+              </Badge>
+            )}
           </div>
           <div className="mt-4 flex items-center gap-4">
-            <DonutChart
-              value={bitlockerStatus.encrypted}
-              max={bitlockerStatus.total}
-              size={90}
-              strokeWidth={8}
-              color="#2563eb"
-              label="暗号化"
-            />
+            {loading ? (
+              <div className="h-[90px] w-[90px] animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <DonutChart
+                value={bitlockerEnabled}
+                max={total || 1}
+                size={90}
+                strokeWidth={8}
+                color="#2563eb"
+                label="暗号化"
+              />
+            )}
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary-500" />
-                <span className="text-gray-600 dark:text-gray-400">暗号化済: {bitlockerStatus.encrypted}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span className="text-gray-600 dark:text-gray-400">暗号化中: {bitlockerStatus.inProgress}</span>
+                <span className="text-gray-600 dark:text-gray-400">暗号化済: {loading ? '—' : bitlockerEnabled}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span className="text-gray-600 dark:text-gray-400">未暗号化: {bitlockerStatus.notEncrypted}</span>
+                <span className="text-gray-600 dark:text-gray-400">未暗号化: {loading ? '—' : bitlockerDisabled}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-gray-400" />
+                <span className="text-gray-600 dark:text-gray-400">合計: {loading ? '—' : total}</span>
               </div>
             </div>
           </div>
@@ -152,31 +179,39 @@ export default function SecurityPage() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               パッチ適用状況
             </h3>
-            <Badge variant={patchStatus.failed > 0 ? 'warning' : 'success'} dot>
-              {Math.round((patchStatus.upToDate / patchStatus.total) * 100)}%
-            </Badge>
+            {loading ? (
+              <div className="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <Badge variant={patchPct >= 90 ? 'success' : patchPct >= 70 ? 'warning' : 'danger'} dot>
+                {patchPct}%
+              </Badge>
+            )}
           </div>
           <div className="mt-4 flex items-center gap-4">
-            <DonutChart
-              value={patchStatus.upToDate}
-              max={patchStatus.total}
-              size={90}
-              strokeWidth={8}
-              color="#f59e0b"
-              label="最新"
-            />
+            {loading ? (
+              <div className="h-[90px] w-[90px] animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <DonutChart
+                value={devicesFullyPatched}
+                max={total || 1}
+                size={90}
+                strokeWidth={8}
+                color="#f59e0b"
+                label="最新"
+              />
+            )}
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="text-gray-600 dark:text-gray-400">最新: {patchStatus.upToDate}</span>
+                <span className="text-gray-600 dark:text-gray-400">最新: {loading ? '—' : devicesFullyPatched}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span className="text-gray-600 dark:text-gray-400">適用待: {patchStatus.pending}</span>
+                <span className="text-gray-600 dark:text-gray-400">適用待: {loading ? '—' : devicesWithPending}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span className="text-gray-600 dark:text-gray-400">失敗: {patchStatus.failed}</span>
+                <span className="h-2 w-2 rounded-full bg-gray-400" />
+                <span className="text-gray-600 dark:text-gray-400">合計: {loading ? '—' : total}</span>
               </div>
             </div>
           </div>
@@ -189,24 +224,37 @@ export default function SecurityPage() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             セキュリティスコア
           </h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400">最終更新: 15分前</span>
+          {!loading && overview && (
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              対象デバイス: {total.toLocaleString()}台
+            </span>
+          )}
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
-            { label: 'エンドポイント保護', value: 97, max: 100 },
-            { label: 'ディスク暗号化', value: 93, max: 100 },
-            { label: 'パッチ適用率', value: 86, max: 100 },
-            { label: '総合スコア', value: 92, max: 100 },
+            { label: 'エンドポイント保護 (Defender)', value: loading ? 0 : Math.round(defenderPct) },
+            { label: 'ディスク暗号化 (BitLocker)', value: loading ? 0 : Math.round(bitlockerPct) },
+            { label: 'パッチ適用率', value: loading ? 0 : patchPct },
           ].map((metric) => (
             <div key={metric.label} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">{metric.label}</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{metric.value}%</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {loading ? '—' : `${metric.value}%`}
+                </span>
               </div>
-              <ProgressBar value={metric.value} max={metric.max} color="auto" size="md" showLabel={false} />
+              <ProgressBar value={metric.value} max={100} color="auto" size="md" showLabel={false} />
             </div>
           ))}
         </div>
+        {!loading && (
+          <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-200 pt-4 dark:border-aegis-border">
+            <span className="text-sm text-gray-500 dark:text-gray-400">総合スコア:</span>
+            <span className={`text-2xl font-bold ${overallScore >= 90 ? 'text-emerald-600' : overallScore >= 70 ? 'text-amber-600' : 'text-red-600'}`}>
+              {overallScore}%
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -230,7 +278,7 @@ export default function SecurityPage() {
                   {vuln.severity === 'critical' ? '重大' : vuln.severity === 'warning' ? '警告' : '情報'}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
                     {vuln.title}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -282,18 +330,23 @@ export default function SecurityPage() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           OS別端末分布
         </h2>
-        <BarChart
-          data={[
-            { label: 'Win 11 23H2', value: 680 },
-            { label: 'Win 11 22H2', value: 245 },
-            { label: 'Win 10 22H2', value: 47 },
-            { label: 'macOS 14', value: 156 },
-            { label: 'macOS 13', value: 89 },
-            { label: 'Ubuntu 22', value: 42 },
-            { label: 'Other', value: 25 },
-          ]}
-          height={200}
-        />
+        {loading ? (
+          <div className="h-[200px] animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+        ) : (
+          <BarChart
+            data={[
+              { label: 'Defender有効', value: defenderEnabled, color: 'bg-emerald-500' },
+              { label: 'Defender無効', value: defenderDisabled, color: 'bg-red-500' },
+              { label: 'BitLocker有効', value: bitlockerEnabled, color: 'bg-blue-500' },
+              { label: 'BitLocker無効', value: bitlockerDisabled, color: 'bg-orange-500' },
+              { label: 'パッチ最新', value: devicesFullyPatched, color: 'bg-amber-500' },
+              { label: 'パッチ待ち', value: devicesWithPending, color: 'bg-gray-400' },
+            ]}
+            maxValue={Math.max(defenderEnabled, bitlockerEnabled, devicesFullyPatched, 1)}
+            height={200}
+            showValues
+          />
+        )}
       </div>
     </div>
   );
