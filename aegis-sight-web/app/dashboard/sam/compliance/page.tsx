@@ -1,228 +1,104 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { fetchSAMCompliance, type BackendSAMComplianceCheck } from '@/lib/api';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/design-components';
 
-// ---------------------------------------------------------------------------
-// Skeleton helpers
-// ---------------------------------------------------------------------------
-function SkeletonRow({ cols }: { cols: number }) {
-  return (
-    <tr>
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-6 py-4">
-          <div className="h-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-        </td>
-      ))}
-    </tr>
-  );
-}
+const COMPLIANCE_DATA = [
+  { id: 1,  software: 'Microsoft 365 Business Premium', purchased: 500, installed: 0,   m365: 423, overDeployed: 0  },
+  { id: 2,  software: 'Google Chrome',                  purchased: 500, installed: 489, m365: 0,   overDeployed: 0  },
+  { id: 3,  software: 'Sophos Intercept X',             purchased: 300, installed: 312, m365: 0,   overDeployed: 12 },
+  { id: 4,  software: 'Adobe Acrobat Reader DC',        purchased: 100, installed: 87,  m365: 0,   overDeployed: 0  },
+  { id: 5,  software: 'Slack Business+',                purchased: 200, installed: 0,   m365: 0,   overDeployed: 0  },
+  { id: 6,  software: 'Zoom Business',                  purchased: 150, installed: 142, m365: 0,   overDeployed: 0  },
+  { id: 7,  software: '7-Zip',                          purchased: 500, installed: 489, m365: 0,   overDeployed: 0  },
+  { id: 8,  software: 'Notepad++',                      purchased: 200, installed: 198, m365: 0,   overDeployed: 0  },
+  { id: 9,  software: 'Visual Studio Code',             purchased: 100, installed: 108, m365: 0,   overDeployed: 8  },
+  { id: 10, software: 'Git for Windows',                purchased: 100, installed: 95,  m365: 0,   overDeployed: 0  },
+];
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+type Filter = 'all' | 'compliant' | 'non-compliant';
+
 export default function CompliancePage() {
-  const [data, setData] = useState<BackendSAMComplianceCheck[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'compliant' | 'non-compliant'>('all');
+  const [filter, setFilter] = useState<Filter>('all');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchSAMCompliance();
-      setData(res);
-    } catch {
-      setData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const withStatus = COMPLIANCE_DATA.map(d => ({
+    ...d,
+    total:     d.installed + d.m365,
+    compliant: (d.installed + d.m365) <= d.purchased,
+  }));
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const compliantCount    = withStatus.filter(d =>  d.compliant).length;
+  const nonCompliantCount = withStatus.filter(d => !d.compliant).length;
+  const totalOverDeployed = withStatus.reduce((s, d) => s + d.overDeployed, 0);
 
-  // ── Derived stats ─────────────────────────────────────────────────────────
-  const totalChecked = data.length;
-  const compliantCount = data.filter((d) => d.is_compliant).length;
-  const nonCompliantCount = data.filter((d) => !d.is_compliant).length;
-  const totalOverDeployed = data.reduce((sum, d) => sum + d.over_deployed, 0);
-
-  // ── Filtered rows ─────────────────────────────────────────────────────────
   const filtered =
-    filter === 'all'
-      ? data
-      : filter === 'compliant'
-        ? data.filter((d) => d.is_compliant)
-        : data.filter((d) => !d.is_compliant);
+    filter === 'compliant'      ? withStatus.filter(d =>  d.compliant) :
+    filter === 'non-compliant'  ? withStatus.filter(d => !d.compliant) :
+    withStatus;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            コンプライアンスチェック
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            ライセンスコンプライアンス状況の確認
-          </p>
+          <h1 className="page-title">コンプライアンスチェック</h1>
+          <p className="page-subtitle">ライセンスコンプライアンス状況の確認</p>
         </div>
-        <button onClick={load} className="aegis-btn-secondary">
-          <svg
-            className="mr-2 h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
-            />
-          </svg>
-          再読み込み
-        </button>
+        <button className="btn-secondary">再読み込み</button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">チェック総数</p>
-          {loading ? (
-            <div className="mx-auto mt-2 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          ) : (
-            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{totalChecked}</p>
-          )}
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">準拠</p>
-          {loading ? (
-            <div className="mx-auto mt-2 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          ) : (
-            <p className="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-              {compliantCount}
-            </p>
-          )}
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">違反</p>
-          {loading ? (
-            <div className="mx-auto mt-2 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          ) : (
-            <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
-              {nonCompliantCount}
-            </p>
-          )}
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">超過デプロイ合計</p>
-          {loading ? (
-            <div className="mx-auto mt-2 h-8 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          ) : (
-            <p className="mt-1 text-3xl font-bold text-amber-600 dark:text-amber-400">
-              {totalOverDeployed}
-            </p>
-          )}
-        </div>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">チェック総数</p><p className="stat-value">{COMPLIANCE_DATA.length}</p></div>
+        <div className="card card-center"><p className="stat-label">準拠</p><p className="stat-value text-green">{compliantCount}</p></div>
+        <div className="card card-center"><p className="stat-label">違反</p><p className="stat-value text-red">{nonCompliantCount}</p></div>
+        <div className="card card-center"><p className="stat-label">超過デプロイ合計</p><p className="stat-value text-amber">{totalOverDeployed}</p></div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-3 dark:border-aegis-border">
-        {[
-          { key: 'all', label: 'すべて', count: totalChecked },
-          { key: 'compliant', label: '準拠', count: compliantCount },
-          { key: 'non-compliant', label: '違反', count: nonCompliantCount },
-        ].map((tab) => (
+      <div className="card filter-row">
+        {([
+          { key: 'all',           label: 'すべて', count: COMPLIANCE_DATA.length },
+          { key: 'compliant',     label: '準拠',   count: compliantCount },
+          { key: 'non-compliant', label: '違反',   count: nonCompliantCount },
+        ] as { key: Filter; label: string; count: number }[]).map(tab => (
           <button
             key={tab.key}
-            onClick={() => setFilter(tab.key as typeof filter)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              filter === tab.key
-                ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-aegis-surface'
-            }`}
+            onClick={() => setFilter(tab.key)}
+            className={filter === tab.key ? 'btn-primary' : 'btn-secondary'}
+            style={{ fontSize: 13 }}
           >
-            {tab.label}
-            <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-gray-700">
-              {loading ? '…' : tab.count}
-            </span>
+            {tab.label} ({tab.count})
           </button>
         ))}
       </div>
 
-      {/* Compliance Table */}
-      <div className="aegis-card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ソフトウェア</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">購入数</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">インストール数</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">M365 割当</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">合計使用数</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">状態</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">超過数</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {loading ? (
-                <>
-                  <SkeletonRow cols={7} />
-                  <SkeletonRow cols={7} />
-                  <SkeletonRow cols={7} />
-                </>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-                    データなし
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['ソフトウェア', '購入数', 'インストール数', 'M365 割当', '合計使用数', '状態', '超過数'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.length > 0 ? filtered.map(d => (
+                <tr key={d.id} className="table-row-hover">
+                  <td><span className="text-main" style={{ fontWeight: 500 }}>{d.software}</span></td>
+                  <td className="text-sub">{d.purchased}</td>
+                  <td className="text-sub">{d.installed}</td>
+                  <td className="text-sub">{d.m365}</td>
+                  <td className={d.total > d.purchased ? 'text-red' : 'text-sub'} style={{ fontWeight: d.total > d.purchased ? 600 : 400 }}>
+                    {d.total}
+                  </td>
+                  <td><Badge variant={d.compliant ? 'success' : 'danger'}>{d.compliant ? '準拠' : '違反'}</Badge></td>
+                  <td className={d.overDeployed > 0 ? 'text-red' : 'text-sub'} style={{ fontWeight: d.overDeployed > 0 ? 600 : 400 }}>
+                    {d.overDeployed}
                   </td>
                 </tr>
-              ) : (
-                filtered.map((item) => (
-                  <tr
-                    key={item.license_id}
-                    className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {item.software_name}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                      {item.purchased_count}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                      {item.installed_count}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                      {item.m365_assigned}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                      {item.total_used}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      {item.is_compliant ? (
-                        <Badge variant="success">準拠</Badge>
-                      ) : (
-                        <Badge variant="danger">違反</Badge>
-                      )}
-                    </td>
-                    <td
-                      className={`whitespace-nowrap px-6 py-4 text-right text-sm font-semibold ${
-                        item.over_deployed > 0
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}
-                    >
-                      {item.over_deployed}
-                    </td>
-                  </tr>
-                ))
+              )) : (
+                <tr><td colSpan={7} className="table-empty">データなし</td></tr>
               )}
             </tbody>
           </table>
+        </div>
+        <div className="table-footer">
+          <span className="table-info">全 {COMPLIANCE_DATA.length} 件中 {filtered.length} 件を表示</span>
         </div>
       </div>
     </div>

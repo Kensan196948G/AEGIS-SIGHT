@@ -1,324 +1,129 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Modal } from '@/components/ui/modal';
-import { DonutChart, BarChart } from '@/components/ui/chart';
-import { fetchUsers, updateUser } from '@/lib/api';
-import type { BackendUser, UserRole } from '@/lib/api';
+import { useState } from 'react';
+import {
+  Badge, SearchInput, Modal,
+} from '@/components/ui/design-components';
 
-// ---------------------------------------------------------------------------
-// Dummy data (shown when API returns empty or errors)
-// ---------------------------------------------------------------------------
-
-const DUMMY_USERS: BackendUser[] = [
-  { id: 'usr-0001', email: 'yamamoto.kenji@aegis-corp.jp', full_name: '山本 健二', role: 'admin', is_active: true, created_at: '2024-04-01T09:00:00Z' },
-  { id: 'usr-0002', email: 'tanaka.hiroshi@aegis-corp.jp', full_name: '田中 浩', role: 'operator', is_active: true, created_at: '2024-04-05T10:30:00Z' },
-  { id: 'usr-0003', email: 'sato.naoko@aegis-corp.jp', full_name: '佐藤 直子', role: 'auditor', is_active: true, created_at: '2024-04-10T08:00:00Z' },
-  { id: 'usr-0004', email: 'nakamura.ryota@aegis-corp.jp', full_name: '中村 遼太', role: 'operator', is_active: true, created_at: '2024-05-01T09:15:00Z' },
-  { id: 'usr-0005', email: 'watanabe.yuki@aegis-corp.jp', full_name: '渡辺 雪', role: 'readonly', is_active: true, created_at: '2024-05-15T11:00:00Z' },
-  { id: 'usr-0006', email: 'kobayashi.emi@aegis-corp.jp', full_name: '小林 恵美', role: 'auditor', is_active: true, created_at: '2024-06-01T13:30:00Z' },
-  { id: 'usr-0007', email: 'yoshida.masato@aegis-corp.jp', full_name: '吉田 雅人', role: 'operator', is_active: false, created_at: '2024-06-15T09:00:00Z' },
-  { id: 'usr-0008', email: 'hayashi.akiko@aegis-corp.jp', full_name: '林 明子', role: 'readonly', is_active: true, created_at: '2024-07-01T08:30:00Z' },
-  { id: 'usr-0009', email: 'kato.shota@aegis-corp.jp', full_name: '加藤 翔太', role: 'operator', is_active: true, created_at: '2024-08-01T10:00:00Z' },
-  { id: 'usr-0010', email: 'ito.keiko@aegis-corp.jp', full_name: '伊藤 恵子', role: 'admin', is_active: true, created_at: '2024-08-15T09:00:00Z' },
-  { id: 'usr-0011', email: 'suzuki.taro@aegis-corp.jp', full_name: '鈴木 太郎', role: 'readonly', is_active: true, created_at: '2024-09-01T11:00:00Z' },
-  { id: 'usr-0012', email: 'inoue.satoshi@aegis-corp.jp', full_name: '井上 智', role: 'operator', is_active: false, created_at: '2024-09-15T14:00:00Z' },
-  { id: 'usr-0013', email: 'kimura.yuriko@aegis-corp.jp', full_name: '木村 百合子', role: 'auditor', is_active: true, created_at: '2024-10-01T09:30:00Z' },
-  { id: 'usr-0014', email: 'matsumoto.daiki@aegis-corp.jp', full_name: '松本 大輝', role: 'readonly', is_active: true, created_at: '2024-11-01T10:00:00Z' },
-  { id: 'usr-0015', email: 'fujiwara.misaki@aegis-corp.jp', full_name: '藤原 美咲', role: 'operator', is_active: true, created_at: '2025-01-15T09:00:00Z' },
+const USERS = [
+  { id: 'us-001', name: '田中 浩',         username: 'tanaka.hiroshi',  role: 'admin',    dept: 'セキュリティ',     status: 'active',   lastLogin: '2025-01-15 09:02', mfa: true  },
+  { id: 'us-002', name: '山本 健司',       username: 'yamamoto.kenji',  role: 'operator', dept: 'エンジニアリング', status: 'active',   lastLogin: '2025-01-15 08:55', mfa: true  },
+  { id: 'us-003', name: '佐藤 由紀',       username: 'sato.yuki',       role: 'operator', dept: 'コンプライアンス', status: 'active',   lastLogin: '2025-01-15 10:30', mfa: true  },
+  { id: 'us-004', name: '伊藤 勝',         username: 'ito.masaru',      role: 'operator', dept: 'インフラ',         status: 'active',   lastLogin: '2025-01-15 11:10', mfa: false },
+  { id: 'us-005', name: '鈴木 明',         username: 'suzuki.akira',    role: 'viewer',   dept: '営業',             status: 'active',   lastLogin: '2025-01-15 13:00', mfa: false },
+  { id: 'us-006', name: '渡辺 さくら',     username: 'watanabe.sakura', role: 'auditor',  dept: '内部監査',         status: 'active',   lastLogin: '2025-01-14 16:45', mfa: true  },
+  { id: 'us-007', name: '高橋 誠一',       username: 'takahashi.seiichi', role: 'viewer', dept: '人事',             status: 'inactive', lastLogin: '2024-12-20 09:00', mfa: false },
 ];
 
-// ---------------------------------------------------------------------------
+type RoleKey   = 'admin' | 'operator' | 'viewer' | 'auditor';
+type UserStatus = 'active' | 'inactive' | 'locked';
+type User = typeof USERS[number];
 
-const roleVariant: Record<UserRole, 'danger' | 'warning' | 'info' | 'default'> = {
-  admin: 'danger',
-  operator: 'warning',
-  auditor: 'info',
-  readonly: 'default',
+const ROLE_CFG: Record<RoleKey, { l: string; v: 'danger' | 'warning' | 'info' | 'success' }> = {
+  admin:    { l: '管理者',     v: 'danger'  },
+  operator: { l: 'オペレーター', v: 'warning' },
+  viewer:   { l: '閲覧者',     v: 'info'    },
+  auditor:  { l: '監査者',     v: 'success' },
 };
 
-const roleLabel: Record<UserRole, string> = {
-  admin: '管理者',
-  operator: 'オペレーター',
-  auditor: '監査者',
-  readonly: '閲覧者',
+const STATUS_CFG: Record<UserStatus, { l: string; v: 'success' | 'default' | 'danger' }> = {
+  active:   { l: '有効',   v: 'success' },
+  inactive: { l: '無効',   v: 'default' },
+  locked:   { l: 'ロック', v: 'danger'  },
 };
 
-export function getActiveRateColor(rate: number): string {
-  return rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
-}
+const getRole   = (r: string) => ROLE_CFG[r as RoleKey] ?? ROLE_CFG.viewer;
+const getStatus = (s: string) => STATUS_CFG[s as UserStatus] ?? STATUS_CFG.inactive;
+
+const activeCount = USERS.filter(u => u.status === 'active').length;
+const adminCount  = USERS.filter(u => u.role === 'admin').length;
+const mfaCount    = USERS.filter(u => u.mfa).length;
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<BackendUser[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [detail, setDetail] = useState<User | null>(null);
 
-  const [editUser, setEditUser] = useState<BackendUser | null>(null);
-  const [editRole, setEditRole] = useState<UserRole>('readonly');
-  const [editName, setEditName] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchUsers(0, 100);
-      // Fall back to dummy data when API returns empty results
-      if ((data.items || []).length === 0) {
-        setUsers(DUMMY_USERS);
-        setTotal(DUMMY_USERS.length);
-      } else {
-        setUsers(data.items);
-        setTotal(data.total);
-      }
-    } catch {
-      // Fallback to dummy data on error
-      setUsers(DUMMY_USERS);
-      setTotal(DUMMY_USERS.length);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const openEdit = (user: BackendUser) => {
-    setEditUser(user);
-    setEditRole(user.role);
-    setEditName(user.full_name);
-    setSaveError(null);
-  };
-
-  const closeEdit = () => {
-    setEditUser(null);
-    setSaveError(null);
-  };
-
-  const handleSave = async () => {
-    if (!editUser) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const updated = await updateUser(editUser.id, {
-        full_name: editName,
-        role: editRole,
-      });
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      closeEdit();
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : '保存に失敗しました');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const activeCount = users.filter((u) => u.is_active).length;
-  const activeRate = total > 0 ? Math.round((activeCount / total) * 100) : 0;
-  const activeColor = getActiveRateColor(activeRate);
-
-  const roleCounts: Record<string, number> = {};
-  users.forEach((u) => {
-    const label = roleLabel[u.role] ?? u.role;
-    roleCounts[label] = (roleCounts[label] || 0) + 1;
-  });
-  const roleBarData = Object.entries(roleCounts).map(([role, count], i) => ({
-    label: role,
-    value: count,
-    color: (['bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-400'] as const)[i] || 'bg-gray-400',
-  }));
+  const filtered = USERS.filter(u =>
+    !search ||
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.username.toLowerCase().includes(search.toLowerCase()) ||
+    u.dept.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      {/* ユーザー概要チャート */}
-      <div className="aegis-card">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ユーザー概要</h2>
-        {loading ? (
-          <div className="h-40 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ率</p>
-              <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeColor} label={`${activeRate}%`} />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                全 {total} ユーザー中 {activeCount} 名有効
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ロール別ユーザー数</p>
-              {roleBarData.length > 0 ? (
-                <BarChart
-                  data={roleBarData}
-                  maxValue={Math.max(...roleBarData.map((d) => d.value), 1)}
-                  height={160}
-                  showValues
-                />
-              ) : (
-                <div className="flex h-40 items-center justify-center text-sm text-gray-400">データなし</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ユーザー管理</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            ユーザーアカウントとロールの管理
-          </p>
+          <h1 className="page-title">ユーザー管理</h1>
+          <p className="page-subtitle">AEGIS-SIGHT 利用ユーザーの権限・アクセス管理</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <span>合計: {loading ? '—' : total}名</span>
-          <span>|</span>
-          <span>有効: {loading ? '—' : activeCount}名</span>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
+          <button className="btn-primary">ユーザーを追加</button>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="aegis-card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 dark:border-aegis-border dark:bg-aegis-darker">
-              <tr>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">名前</th>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">メール</th>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">ロール</th>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">状態</th>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">登録日</th>
-                <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {loading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    {[...Array(6)].map((__, j) => (
-                      <td key={j} className="px-6 py-4">
-                        <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
-                      </td>
-                    ))}
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">総ユーザー数</p><p className="stat-value">{USERS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">有効</p><p className="stat-value text-green">{activeCount}</p></div>
+        <div className="card card-center"><p className="stat-label">管理者</p><p className="stat-value text-red">{adminCount}</p></div>
+        <div className="card card-center"><p className="stat-label">MFA 有効</p><p className="stat-value text-green">{mfaCount}</p></div>
+      </div>
+
+      <div className="card filter-row">
+        <SearchInput placeholder="氏名・ユーザー名・部門で検索..." value={search} onChange={v => setSearch(v)} style={{ flex: 1, minWidth: 200 }} />
+      </div>
+
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['氏名', 'ユーザー名', 'ロール', '部門', 'MFA', '最終ログイン', 'ステータス'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.length > 0 ? filtered.map(u => {
+                const rl = getRole(u.role);
+                const st = getStatus(u.status);
+                return (
+                  <tr key={u.id} className="table-row-hover" onClick={() => setDetail(u)} style={{ cursor: 'pointer' }}>
+                    <td><span className="link-text">{u.name}</span></td>
+                    <td className="mono text-sub">{u.username}</td>
+                    <td><Badge variant={rl.v}>{rl.l}</Badge></td>
+                    <td className="text-sub">{u.dept}</td>
+                    <td>
+                      <Badge variant={u.mfa ? 'success' : 'danger'} dot>{u.mfa ? '有効' : '無効'}</Badge>
+                    </td>
+                    <td className="text-sub">{u.lastLogin}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
                   </tr>
-                ))
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    ユーザーが見つかりません
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
-                          {user.full_name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {user.full_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={roleVariant[user.role] ?? 'default'}>
-                        {roleLabel[user.role] ?? user.role}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={user.is_active ? 'success' : 'default'} dot>
-                        {user.is_active ? '有効' : '無効'}
-                      </Badge>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-gray-500 dark:text-gray-400">
-                      {new Date(user.created_at).toLocaleDateString('ja-JP')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => openEdit(user)}
-                        className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                      >
-                        編集
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                );
+              }) : (
+                <tr><td colSpan={7} className="table-empty">条件に一致するユーザーが見つかりません</td></tr>
               )}
             </tbody>
           </table>
         </div>
+        <div className="table-footer">
+          <span className="table-info">全 {USERS.length} 件中 {filtered.length} 件を表示</span>
+        </div>
       </div>
 
-      {/* Edit Modal */}
-      <Modal isOpen={!!editUser} onClose={closeEdit} title="ユーザー編集" size="sm">
-        {editUser && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                名前
-              </label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-aegis-border dark:bg-aegis-darker dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                メール
-              </label>
-              <input
-                type="email"
-                value={editUser.email}
-                disabled
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 dark:border-aegis-border dark:bg-aegis-darker dark:text-gray-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                ロール
-              </label>
-              <select
-                value={editRole}
-                onChange={(e) => setEditRole(e.target.value as UserRole)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-aegis-border dark:bg-aegis-darker dark:text-white"
-              >
-                <option value="admin">管理者</option>
-                <option value="operator">オペレーター</option>
-                <option value="auditor">監査者</option>
-                <option value="readonly">閲覧者</option>
-              </select>
-            </div>
-
-            {saveError && (
-              <p className="text-sm text-red-600 dark:text-red-400">{saveError}</p>
-            )}
-
-            <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-aegis-border">
-              <button
-                onClick={closeEdit}
-                disabled={saving}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60 dark:border-aegis-border dark:text-gray-300 dark:hover:bg-aegis-surface"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="aegis-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? '保存中...' : '保存'}
-              </button>
-            </div>
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? 'ユーザー詳細'} wide>
+        {detail && (
+          <div className="detail-grid">
+            {([
+              ['ユーザー名', detail.username],
+              ['ロール',     getRole(detail.role).l],
+              ['部門',       detail.dept],
+              ['MFA',        detail.mfa ? '有効' : '無効'],
+              ['最終ログイン', detail.lastLogin],
+              ['ステータス',  getStatus(detail.status).l],
+            ] as [string, string][]).map(([k, v]) => (
+              <div key={k} className="detail-item">
+                <span className="detail-label">{k}</span>
+                <span className="detail-value">{v}</span>
+              </div>
+            ))}
           </div>
         )}
       </Modal>

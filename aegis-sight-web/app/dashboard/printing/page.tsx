@@ -1,497 +1,148 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
-import {
-  fetchPrinters,
-  fetchPrintJobs,
-  fetchPrintStats,
-  fetchPrintPolicies,
-  type BackendPrinter,
-  type BackendPrintJob,
-  type BackendPrintStats,
-  type BackendPrintPolicy,
-} from '@/lib/api';
+import { Badge, SearchInput, DonutChart } from '@/components/ui/design-components';
+import { useState } from 'react';
 
-// ---------------------------------------------------------------------------
-// Dummy data (shown when API returns empty or errors)
-// ---------------------------------------------------------------------------
+const PRINTERS = [
+  { id: 'pr-001', name: '本社 3F 複合機-A', model: 'Canon imageRUNNER 2630i', location: '本社 3F', status: 'online', color: true,  jobs: 142, pages: 3840 },
+  { id: 'pr-002', name: '本社 3F 複合機-B', model: 'Canon imageRUNNER 2630i', location: '本社 3F', status: 'online', color: true,  jobs:  98, pages: 2210 },
+  { id: 'pr-003', name: '本社 5F モノクロ', model: 'HP LaserJet Pro M404',    location: '本社 5F', status: 'online', color: false, jobs:  67, pages: 1540 },
+  { id: 'pr-004', name: '大阪支社 複合機',  model: 'Fujifilm Apeos C5570',    location: '大阪支社', status: 'warning', color: true, jobs:  21, pages:  480 },
+  { id: 'pr-005', name: '名古屋支社 複合機', model: 'Ricoh IM C4510',         location: '名古屋支社', status: 'offline', color: true, jobs:  0, pages:    0 },
+];
 
-const DUMMY_PRINT_STATS: BackendPrintStats = {
-  total_pages: 18432,
-  total_jobs: 1247,
-  color_ratio: 0.34,
-  by_user: [
-    { user_name: 'tanaka.hiroshi', total_pages: 3210 },
-    { user_name: 'suzuki.yuki', total_pages: 2850 },
-    { user_name: 'yamamoto.kenji', total_pages: 2440 },
-    { user_name: 'sato.naoko', total_pages: 1980 },
-    { user_name: 'nakamura.ryota', total_pages: 1650 },
-  ],
-  by_printer: [
-    { printer_id: 'prn-0001', printer_name: '本社3F 複合機A', total_pages: 6240 },
-    { printer_id: 'prn-0002', printer_name: '本社3F 複合機B', total_pages: 4890 },
-    { printer_id: 'prn-0003', printer_name: '本社2F レーザープリンタ', total_pages: 3880 },
-    { printer_id: 'prn-0004', printer_name: '営業部 カラー複合機', total_pages: 2150 },
-    { printer_id: 'prn-0005', printer_name: '役員室 白黒プリンタ', total_pages: 1272 },
-  ],
-  by_department: [
-    { department: '営業部', total_pages: 5620 },
-    { department: '総務部', total_pages: 4210 },
-    { department: '開発部', total_pages: 3890 },
-    { department: '経理部', total_pages: 2880 },
-    { department: '人事部', total_pages: 1832 },
-  ],
-  monthly_trend: [
-    { month: '2025-12', total_pages: 14200 },
-    { month: '2026-01', total_pages: 16800 },
-    { month: '2026-02', total_pages: 15300 },
-    { month: '2026-03', total_pages: 17600 },
-    { month: '2026-04', total_pages: 19100 },
-    { month: '2026-05', total_pages: 18432 },
-  ],
+const PRINT_LOGS = [
+  { user: '田中 浩',     dept: 'セキュリティ', pages: 12, color: true,  printer: '本社 3F 複合機-A', time: '2025-01-15 14:22' },
+  { user: '山本 健司',   dept: 'エンジニアリング', pages: 4, color: false, printer: '本社 3F 複合機-B', time: '2025-01-15 13:55' },
+  { user: '佐藤 由紀',   dept: 'コンプライアンス', pages: 28, color: true, printer: '本社 3F 複合機-A', time: '2025-01-15 13:10' },
+  { user: '鈴木 明',     dept: '営業',         pages: 50, color: true,  printer: '本社 3F 複合機-A', time: '2025-01-15 12:45' },
+  { user: '渡辺 さくら', dept: '内部監査',     pages: 8,  color: false, printer: '本社 5F モノクロ',  time: '2025-01-15 11:30' },
+  { user: '伊藤 勝',     dept: 'インフラ',     pages: 3,  color: false, printer: '本社 5F モノクロ',  time: '2025-01-15 10:15' },
+];
+
+type PrinterStatus = 'online' | 'warning' | 'offline';
+const STATUS_CFG: Record<PrinterStatus, { l: string; v: 'success' | 'warning' | 'default' }> = {
+  online:  { l: 'オンライン', v: 'success' },
+  warning: { l: '警告',       v: 'warning' },
+  offline: { l: 'オフライン', v: 'default' },
 };
 
-const DUMMY_PRINTERS: BackendPrinter[] = [
-  { id: 'prn-0001', name: '本社3F 複合機A', location: '本社3Fコピーコーナー', ip_address: '192.168.1.101', model: 'Fujifilm Apeos C7070', is_network: true, is_active: true, department: null, created_at: '2024-04-01T09:00:00Z' },
-  { id: 'prn-0002', name: '本社3F 複合機B', location: '本社3Fコピーコーナー', ip_address: '192.168.1.102', model: 'Fujifilm Apeos C5570', is_network: true, is_active: true, department: null, created_at: '2024-04-01T09:00:00Z' },
-  { id: 'prn-0003', name: '本社2F レーザープリンタ', location: '本社2F事務スペース', ip_address: '192.168.1.110', model: 'HP LaserJet Enterprise M507dn', is_network: true, is_active: true, department: '総務部', created_at: '2024-06-15T09:00:00Z' },
-  { id: 'prn-0004', name: '営業部 カラー複合機', location: '営業フロア会議室横', ip_address: '192.168.2.201', model: 'Canon imageRUNNER ADVANCE C5560F', is_network: true, is_active: true, department: '営業部', created_at: '2024-08-01T09:00:00Z' },
-  { id: 'prn-0005', name: '役員室 白黒プリンタ', location: '役員室', ip_address: '192.168.10.50', model: 'HP LaserJet Pro M404n', is_network: false, is_active: false, department: '経営企画室', created_at: '2023-10-01T09:00:00Z' },
-];
-
-const DUMMY_PRINT_JOBS: BackendPrintJob[] = [
-  { id: 'job-0001', printer_id: 'prn-0001', device_id: 'dev-aabb1100-5678', user_name: 'tanaka.hiroshi', document_name: '2026年5月度 営業報告書.pdf', pages: 24, copies: 3, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T09:12:00Z' },
-  { id: 'job-0002', printer_id: 'prn-0004', device_id: 'dev-ccdd2200-1234', user_name: 'suzuki.yuki', document_name: '顧客提案資料_株式会社サンプル様v3.pptx', pages: 16, copies: 5, color: true, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T10:05:00Z' },
-  { id: 'job-0003', printer_id: 'prn-0002', device_id: 'dev-eeff3300-7890', user_name: 'yamamoto.kenji', document_name: '経費精算申請書_2026年4月分.xlsx', pages: 3, copies: 1, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T10:30:00Z' },
-  { id: 'job-0004', printer_id: 'prn-0003', device_id: null, user_name: 'sato.naoko', document_name: '就業規則改訂版_2026年度.pdf', pages: 48, copies: 10, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T11:00:00Z' },
-  { id: 'job-0005', printer_id: 'prn-0001', device_id: 'dev-aabb4400-3456', user_name: 'nakamura.ryota', document_name: '開発仕様書_v2.1.docx', pages: 35, copies: 2, color: false, duplex: true, paper_size: 'A4', status: 'failed', printed_at: '2026-05-07T11:45:00Z' },
-  { id: 'job-0006', printer_id: 'prn-0004', device_id: 'dev-ccdd5500-9012', user_name: 'kobayashi.emi', document_name: '製品カタログ2026春夏版.pdf', pages: 8, copies: 20, color: true, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T13:15:00Z' },
-  { id: 'job-0007', printer_id: 'prn-0002', device_id: 'dev-eeff6600-1234', user_name: 'watanabe.taro', document_name: '契約書_確認用.pdf', pages: 12, copies: 2, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T14:00:00Z' },
-  { id: 'job-0008', printer_id: 'prn-0001', device_id: 'dev-aabb7700-5678', user_name: 'ito.keiko', document_name: '人事評価シート_2026H1.xlsx', pages: 4, copies: 30, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T14:30:00Z' },
-  { id: 'job-0009', printer_id: 'prn-0003', device_id: null, user_name: 'hayashi.akiko', document_name: '社内通知_テレワーク制度改定について.pdf', pages: 2, copies: 50, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T15:00:00Z' },
-  { id: 'job-0010', printer_id: 'prn-0004', device_id: 'dev-ccdd8800-7890', user_name: 'yoshida.masato', document_name: '見積書_A00234様向け.pdf', pages: 6, copies: 1, color: true, duplex: false, paper_size: 'A4', status: 'cancelled', printed_at: '2026-05-07T15:45:00Z' },
-];
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type TabId = 'stats' | 'printers' | 'jobs' | 'policies';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function statusBadge(status: string) {
-  switch (status) {
-    case 'completed':
-      return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">完了</Badge>;
-    case 'failed':
-      return <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">失敗</Badge>;
-    case 'cancelled':
-      return <Badge variant="default" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">キャンセル</Badge>;
-    default:
-      return <Badge variant="default">{status}</Badge>;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function StatsCards({
-  stats,
-  printers,
-  jobs,
-}: {
-  stats: BackendPrintStats;
-  printers: BackendPrinter[];
-  jobs: BackendPrintJob[];
-}) {
-  const colorRatio = (stats.color_ratio * 100).toFixed(1);
-  const activePrinters = printers.filter((p) => p.is_active).length;
-
-  const completedJobs = jobs.filter((j) => j.status === 'completed').length;
-  const successRate = jobs.length > 0 ? Math.round((completedJobs / jobs.length) * 100) : 0;
-  const successColor = successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444';
-
-  const userBarData = stats.by_user.slice(0, 5).map((u, i) => ({
-    label: u.user_name.substring(0, 6),
-    value: u.total_pages,
-    color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500'][i] ?? 'bg-gray-400',
-  }));
-
-  return (
-    <div className="space-y-6">
-      {/* 印刷概要チャート */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">印刷概要</h2>
-        {stats.total_jobs === 0 ? (
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ジョブ成功率</p>
-              <DonutChart
-                value={successRate}
-                max={100}
-                size={140}
-                strokeWidth={14}
-                color={successColor}
-                label={`${successRate}%`}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                全 {jobs.length} ジョブ中 {completedJobs} 件成功
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ユーザー別印刷ページ数 Top 5</p>
-              {userBarData.length > 0 && (
-                <BarChart
-                  data={userBarData}
-                  maxValue={Math.max(...userBarData.map((d) => d.value), 1)}
-                  height={160}
-                  showValues
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">総印刷ページ数</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-            {stats.total_pages.toLocaleString()}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">今月</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">総ジョブ数</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total_jobs}</div>
-          <div className="text-xs text-gray-400 mt-1">今月</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">カラー率</div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{colorRatio}%</div>
-          <div className="text-xs text-gray-400 mt-1">完了ジョブ中</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">稼働プリンタ</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
-            {activePrinters} / {printers.length}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">アクティブ / 全台数</div>
-        </div>
-      </div>
-
-      {/* User Top 5 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">ユーザー別印刷トップ5</h3>
-        </div>
-        <div className="overflow-x-auto">
-          {stats.by_user.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">順位</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ユーザー名</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">総ページ数</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {stats.by_user.slice(0, 5).map((u, i) => (
-                  <tr key={u.user_name} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">{i + 1}</td>
-                    <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{u.user_name}</td>
-                    <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{u.total_pages.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PrintersTable({ printers }: { printers: BackendPrinter[] }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">プリンタ一覧</h3>
-      </div>
-      <div className="overflow-x-auto">
-        {printers.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">名前</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">設置場所</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">IPアドレス</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">機種</th>
-                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {printers.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{p.name}</td>
-                  <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{p.location}</td>
-                  <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{p.ip_address ?? '-'}</td>
-                  <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{p.model}</td>
-                  <td className="px-5 py-3 text-sm text-center">
-                    {p.is_active ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">稼働中</Badge>
-                    ) : (
-                      <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">停止</Badge>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function JobsTable({ jobs }: { jobs: BackendPrintJob[] }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">印刷ジョブ履歴</h3>
-      </div>
-      <div className="overflow-x-auto">
-        {jobs.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">日時</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ユーザー</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ドキュメント</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ページ</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">部数</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カラー</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">両面</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {jobs.map((j) => (
-                <tr key={j.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(j.printed_at)}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{j.user_name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate" title={j.document_name}>{j.document_name}</td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{j.pages}</td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{j.copies}</td>
-                  <td className="px-4 py-3 text-sm text-center">
-                    {j.color ? (
-                      <span className="inline-block w-3 h-3 rounded-full bg-blue-500" title="カラー" />
-                    ) : (
-                      <span className="inline-block w-3 h-3 rounded-full bg-gray-400" title="モノクロ" />
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-center text-gray-700 dark:text-gray-300">{j.duplex ? '両面' : '片面'}</td>
-                  <td className="px-4 py-3 text-sm text-center">{statusBadge(j.status)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PoliciesTable({ policies }: { policies: BackendPrintPolicy[] }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">印刷ポリシー管理</h3>
-      </div>
-      <div className="overflow-x-auto">
-        {policies.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ポリシー名</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">日次上限</th>
-                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カラー</th>
-                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">両面のみ</th>
-                <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {policies.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{p.name}</td>
-                  <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{p.max_pages_per_day?.toLocaleString() ?? '-'}</td>
-                  <td className="px-5 py-3 text-sm text-center">
-                    {p.allow_color ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">許可</Badge>
-                    ) : (
-                      <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">禁止</Badge>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-sm text-center">
-                    {p.allow_duplex_only ? (
-                      <Badge variant="default" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">必須</Badge>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-sm text-center">
-                    {p.is_enabled ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">有効</Badge>
-                    ) : (
-                      <Badge variant="default" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">無効</Badge>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main Page
-// ---------------------------------------------------------------------------
-
-const tabs: { id: TabId; label: string }[] = [
-  { id: 'stats', label: '統計' },
-  { id: 'printers', label: 'プリンタ' },
-  { id: 'jobs', label: 'ジョブ履歴' },
-  { id: 'policies', label: 'ポリシー' },
-];
+const totalPages = PRINTERS.reduce((s, p) => s + p.pages, 0);
+const onlineCount = PRINTERS.filter(p => p.status === 'online').length;
+const colorPages  = Math.round(totalPages * 0.68);
 
 export default function PrintingPage() {
-  const [printers, setPrinters] = useState<BackendPrinter[]>([]);
-  const [jobs, setJobs] = useState<BackendPrintJob[]>([]);
-  const [stats, setStats] = useState<BackendPrintStats | null>(null);
-  const [policies, setPolicies] = useState<BackendPrintPolicy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('stats');
+  const [search, setSearch] = useState('');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [printersRes, jobsRes, statsRes, policiesRes] = await Promise.all([
-        fetchPrinters(0, 100),
-        fetchPrintJobs(0, 100),
-        fetchPrintStats(),
-        fetchPrintPolicies(0, 100),
-      ]);
-      const hasPrinters = (printersRes.items || []).length > 0;
-      const hasJobs = (jobsRes.items || []).length > 0;
-      const hasStats = statsRes.total_jobs > 0 || statsRes.total_pages > 0;
-      setPrinters(hasPrinters ? printersRes.items : DUMMY_PRINTERS);
-      setJobs(hasJobs ? jobsRes.items : DUMMY_PRINT_JOBS);
-      setStats(hasStats ? statsRes : DUMMY_PRINT_STATS);
-      setPolicies(policiesRes.items);
-    } catch {
-      setPrinters(DUMMY_PRINTERS);
-      setJobs(DUMMY_PRINT_JOBS);
-      setStats(DUMMY_PRINT_STATS);
-      setPolicies([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // ── Loading skeleton ──────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="flex gap-6 border-b border-gray-200 dark:border-gray-700">
-          {tabs.map((t) => (
-            <div key={t.id} className="h-10 w-16 rounded bg-gray-200 dark:bg-gray-700" />
-          ))}
-        </div>
-        <div className="h-64 rounded-lg bg-gray-200 dark:bg-gray-700" />
-        <div className="grid grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 rounded-lg bg-gray-200 dark:bg-gray-700" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const filteredLogs = PRINT_LOGS.filter(l =>
+    !search ||
+    l.user.includes(search) ||
+    l.dept.includes(search) ||
+    l.printer.includes(search)
+  );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">印刷管理</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          プリンタ管理、印刷ジョブ監視、ポリシーによる印刷制御
-        </p>
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">印刷管理</h1>
+          <p className="page-subtitle">プリンターの稼働状況と印刷ジョブ・使用量の管理</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
+        </div>
       </div>
 
-      {/* Tab navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-6" aria-label="印刷管理タブ">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-300'
-              }`}
-              aria-current={activeTab === tab.id ? 'page' : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">プリンター数</p><p className="stat-value">{PRINTERS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">オンライン</p><p className="stat-value text-green">{onlineCount}</p></div>
+        <div className="card card-center"><p className="stat-label">本日総印刷枚数</p><p className="stat-value">{totalPages.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label">カラー印刷比率</p><p className="stat-value text-amber">{Math.round(colorPages / totalPages * 100)}%</p></div>
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'stats' && (
-        stats === null ? (
-          <p className="text-center py-12 text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <StatsCards stats={stats} printers={printers} jobs={jobs} />
-        )
-      )}
-      {activeTab === 'printers' && <PrintersTable printers={printers} />}
-      {activeTab === 'jobs' && <JobsTable jobs={jobs} />}
-      {activeTab === 'policies' && <PoliciesTable policies={policies} />}
+      <div className="card">
+        <h2 className="card-title">印刷量内訳</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">カラー vs モノクロ</p>
+            <DonutChart value={Math.round(colorPages / totalPages * 100)} max={100} size={130} strokeWidth={13} color="#f59e0b" />
+            <p className="chart-sublabel">カラー印刷率 {Math.round(colorPages / totalPages * 100)}%</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p className="chart-label" style={{ marginBottom: 8 }}>プリンター別印刷枚数（本日）</p>
+            {PRINTERS.filter(p => p.pages > 0).map(p => (
+              <div key={p.id} className="activity-item">
+                <div className="activity-dot" style={{ background: p.status === 'online' ? '#10b981' : '#f59e0b' }} />
+                <div className="activity-content">
+                  <p className="activity-text">
+                    <strong>{p.name}</strong>
+                    <span className="text-sub" style={{ marginLeft: 8 }}>{p.pages.toLocaleString()} 枚</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card table-card">
+        <h2 className="card-title">プリンター一覧</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['プリンター名', 'モデル', '設置場所', 'カラー', '本日ジョブ数', '本日印刷枚数', '状態'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {PRINTERS.map(p => {
+                const st = STATUS_CFG[p.status as PrinterStatus] ?? STATUS_CFG.offline;
+                return (
+                  <tr key={p.id} className="table-row-hover">
+                    <td><span className="text-main" style={{ fontWeight: 500 }}>{p.name}</span></td>
+                    <td className="text-sub">{p.model}</td>
+                    <td className="text-sub">{p.location}</td>
+                    <td><Badge variant={p.color ? 'info' : 'default'}>{p.color ? 'カラー' : 'モノクロ'}</Badge></td>
+                    <td className="text-sub">{p.jobs}</td>
+                    <td className="text-sub">{p.pages.toLocaleString()}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card filter-row">
+        <SearchInput placeholder="ユーザー・部門・プリンターで検索..." value={search} onChange={v => setSearch(v)} style={{ flex: 1, minWidth: 200 }} />
+      </div>
+
+      <div className="card table-card">
+        <h2 className="card-title">印刷ログ（本日）</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['ユーザー', '部門', '印刷枚数', '種別', 'プリンター', '時刻'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filteredLogs.length > 0 ? filteredLogs.map((l, i) => (
+                <tr key={i} className="table-row-hover">
+                  <td><span className="text-main">{l.user}</span></td>
+                  <td className="text-sub">{l.dept}</td>
+                  <td className="text-sub">{l.pages}</td>
+                  <td><Badge variant={l.color ? 'info' : 'default'}>{l.color ? 'カラー' : 'モノクロ'}</Badge></td>
+                  <td className="text-sub">{l.printer}</td>
+                  <td className="text-sub">{l.time}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} className="table-empty">条件に一致するログが見つかりません</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-footer">
+          <span className="table-info">全 {PRINT_LOGS.length} 件中 {filteredLogs.length} 件を表示</span>
+        </div>
+      </div>
     </div>
   );
 }

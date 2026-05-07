@@ -1,242 +1,87 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { downloadReport } from '@/lib/api';
-import { Badge } from '@/components/ui/badge';
+import {
+  Badge,
+} from '@/components/ui/design-components';
 
-// ---------------------------------------------------------------------------
-// Report card config
-// ---------------------------------------------------------------------------
-
-interface ReportCard {
-  type: 'sam' | 'assets' | 'security';
-  filename: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  lastGenerated: string;
-  size: string;
-}
-
-const REPORT_CARDS: ReportCard[] = [
-  {
-    type: 'sam',
-    filename: 'sam_report.csv',
-    title: 'SAMレポート',
-    description: 'ソフトウェア資産管理 — ライセンスコンプライアンス状況の一覧',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
-      </svg>
-    ),
-    lastGenerated: '2026-05-07 09:00',
-    size: '284 KB',
-  },
-  {
-    type: 'assets',
-    filename: 'asset_report.csv',
-    title: '資産インベントリレポート',
-    description: 'IT資産インベントリ — デバイス一覧と状態の全件出力',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-      </svg>
-    ),
-    lastGenerated: '2026-05-07 08:30',
-    size: '1.2 MB',
-  },
-  {
-    type: 'security',
-    filename: 'security_report.csv',
-    title: 'セキュリティレポート',
-    description: 'セキュリティポスチャ — Defender / BitLocker / パッチ状況の一覧',
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    ),
-    lastGenerated: '2026-05-07 09:15',
-    size: '542 KB',
-  },
+const REPORTS = [
+  { id: 'rp-001', name: '月次セキュリティサマリーレポート',      category: 'セキュリティ',   period: '2024年12月',  format: 'PDF',  size: '2.4 MB', created: '2025-01-05', status: 'ready'      },
+  { id: 'rp-002', name: 'パッチ適用状況レポート',                category: 'パッチ管理',     period: '2024年12月',  format: 'Excel', size: '1.1 MB', created: '2025-01-06', status: 'ready'      },
+  { id: 'rp-003', name: 'コンプライアンス準拠状況レポート',       category: 'コンプライアンス', period: 'Q4 2024',    format: 'PDF',  size: '5.8 MB', created: '2025-01-08', status: 'ready'      },
+  { id: 'rp-004', name: 'DLP インシデントレポート',              category: 'DLP',            period: '2024年12月',  format: 'PDF',  size: '0.9 MB', created: '2025-01-07', status: 'ready'      },
+  { id: 'rp-005', name: 'ライセンスコスト最適化提案',            category: 'SAM',            period: '2024 年次',   format: 'PDF',  size: '3.2 MB', created: '2025-01-10', status: 'ready'      },
+  { id: 'rp-006', name: '脆弱性スキャンレポート',                category: 'セキュリティ',   period: '2025年1月',   format: 'CSV',  size: '0.4 MB', created: '2025-01-15', status: 'ready'      },
+  { id: 'rp-007', name: '変更管理月次サマリー',                  category: '変更管理',       period: '2024年12月',  format: 'PDF',  size: '1.6 MB', created: '2025-01-09', status: 'ready'      },
+  { id: 'rp-008', name: 'SLA 達成状況レポート Q4 2024',         category: 'SLA',            period: 'Q4 2024',    format: 'PDF',  size: '2.0 MB', created: '2025-01-11', status: 'generating' },
 ];
 
-const SCHEDULED_REPORTS = [
-  { name: '月次SAMコンプライアンスレポート',   schedule: '毎月1日 09:00', next: '2026-06-01',  recipients: 3, status: 'active' },
-  { name: '週次資産変更差分レポート',           schedule: '毎週月曜 08:00', next: '2026-05-11', recipients: 5, status: 'active' },
-  { name: '四半期セキュリティポスチャ報告',     schedule: '毎四半期初日',   next: '2026-07-01', recipients: 8, status: 'active' },
-  { name: 'J-SOX準拠証跡レポート',             schedule: '毎年3月31日',   next: '2027-03-31', recipients: 4, status: 'paused' },
-];
+type ReportStatus = 'ready' | 'generating' | 'failed';
+const STATUS_CFG: Record<ReportStatus, { l: string; v: 'success' | 'warning' | 'danger' }> = {
+  ready:      { l: '準備完了',  v: 'success' },
+  generating: { l: '生成中',    v: 'warning' },
+  failed:     { l: '失敗',      v: 'danger'  },
+};
+const getStatus = (s: string) => STATUS_CFG[s as ReportStatus] ?? STATUS_CFG.ready;
 
-const RECENT_HISTORY = [
-  { name: 'SAMレポート',                     time: '2026-05-07 09:00', size: '284 KB', status: 'success', user: 'admin@aegis-sight.local' },
-  { name: '資産インベントリレポート',         time: '2026-05-07 08:30', size: '1.2 MB', status: 'success', user: 'admin@aegis-sight.local' },
-  { name: 'セキュリティレポート',             time: '2026-05-07 09:15', size: '542 KB', status: 'success', user: 'scheduler' },
-  { name: '月次SAMコンプライアンスレポート', time: '2026-05-01 09:01', size: '312 KB', status: 'success', user: 'scheduler' },
-  { name: '週次資産変更差分レポート',         time: '2026-04-28 08:00', size: '98 KB',  status: 'success', user: 'scheduler' },
-  { name: 'J-SOX準拠証跡レポート',           time: '2026-04-25 14:30', size: '—',      status: 'failed',  user: 'tanaka@corp.local' },
-];
-
-// ---------------------------------------------------------------------------
-// Download button with per-card state
-// ---------------------------------------------------------------------------
-
-function ReportDownloadCard({ card }: { card: ReportCard }) {
-  const [downloading, setDownloading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDownload = useCallback(async () => {
-    setDownloading(true);
-    setError(null);
-    try {
-      await downloadReport(card.type, card.filename);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'ダウンロードに失敗しました');
-    } finally {
-      setDownloading(false);
-    }
-  }, [card.type, card.filename]);
-
-  return (
-    <div className="aegis-card flex flex-col gap-4">
-      <div className="flex items-start gap-3">
-        <div className="rounded-xl bg-primary-100 p-3 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 shrink-0">
-          {card.icon}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">{card.title}</h2>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{card.description}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-        <span>最終生成: {card.lastGenerated}</span>
-        <span>{card.size}</span>
-      </div>
-
-      {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-          {error}
-        </p>
-      )}
-
-      <button
-        onClick={handleDownload}
-        disabled={downloading}
-        className="aegis-btn-primary self-start"
-      >
-        {downloading ? (
-          <>
-            <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            ダウンロード中...
-          </>
-        ) : (
-          <>
-            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            CSV ダウンロード
-          </>
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+const FORMAT_COLOR: Record<string, string> = {
+  PDF:   '#ef4444',
+  Excel: '#10b981',
+  CSV:   '#3b82f6',
+};
 
 export default function ReportsPage() {
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            各種レポートを CSV 形式でダウンロード / スケジュール生成
-          </p>
+          <h1 className="page-title">レポート</h1>
+          <p className="page-subtitle">セキュリティ・コンプライアンス・運用レポートの生成とダウンロード</p>
         </div>
-        <button className="aegis-btn-secondary">
-          <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          カスタムレポート作成
-        </button>
-      </div>
-
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: '今月生成数',   value: '18',   color: 'text-gray-900 dark:text-white' },
-          { label: '自動スケジュール', value: '4', color: 'text-primary-600 dark:text-primary-400' },
-          { label: '配信先合計',   value: '20 名', color: 'text-green-600 dark:text-green-400' },
-          { label: '失敗件数',     value: '1',    color: 'text-red-600 dark:text-red-400' },
-        ].map((s) => (
-          <div key={s.label} className="aegis-card text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{s.label}</p>
-            <p className={`mt-2 text-3xl font-bold ${s.color}`}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Report Cards */}
-      <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">即時ダウンロード</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {REPORT_CARDS.map((card) => (
-            <ReportDownloadCard key={card.type} card={card} />
-          ))}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-primary">レポートを生成</button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Scheduled Reports */}
-        <div className="aegis-card overflow-hidden p-0">
-          <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">スケジュールレポート</h2>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-aegis-border">
-            {SCHEDULED_REPORTS.map((r) => (
-              <div key={r.name} className="flex items-center gap-3 px-6 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{r.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {r.schedule} · 配信先 {r.recipients} 名 · 次回 {r.next}
-                  </p>
-                </div>
-                <Badge variant={r.status === 'active' ? 'success' : 'warning'} dot>
-                  {r.status === 'active' ? '有効' : '停止中'}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="grid-3">
+        <div className="card card-center"><p className="stat-label">レポート数</p><p className="stat-value">{REPORTS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">準備完了</p><p className="stat-value text-green">{REPORTS.filter(r => r.status === 'ready').length}</p></div>
+        <div className="card card-center"><p className="stat-label">生成中</p><p className="stat-value text-amber">{REPORTS.filter(r => r.status === 'generating').length}</p></div>
+      </div>
 
-        {/* Recent History */}
-        <div className="aegis-card overflow-hidden p-0">
-          <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">生成履歴</h2>
-          </div>
-          <div className="divide-y divide-gray-100 dark:divide-aegis-border">
-            {RECENT_HISTORY.map((h, i) => (
-              <div key={i} className="flex items-center gap-3 px-6 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
-                <div className={`h-2 w-2 shrink-0 rounded-full ${h.status === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{h.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {h.time} · {h.size} · {h.user}
-                  </p>
-                </div>
-                {h.status === 'failed' && (
-                  <Badge variant="danger">失敗</Badge>
-                )}
-              </div>
-            ))}
-          </div>
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['レポート名', 'カテゴリ', '対象期間', '形式', 'サイズ', '作成日', 'ステータス', '操作'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {REPORTS.map(r => {
+                const st = getStatus(r.status);
+                return (
+                  <tr key={r.id} className="table-row-hover">
+                    <td><span className="link-text">{r.name}</span></td>
+                    <td className="text-sub">{r.category}</td>
+                    <td className="text-sub">{r.period}</td>
+                    <td>
+                      <span className="mono" style={{ color: FORMAT_COLOR[r.format] ?? '#6b7280', fontWeight: 600, fontSize: 12 }}>
+                        {r.format}
+                      </span>
+                    </td>
+                    <td className="text-sub">{r.size}</td>
+                    <td className="text-sub">{r.created}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
+                    <td>
+                      {r.status === 'ready' && (
+                        <button className="btn-secondary" style={{ fontSize: 12, padding: '2px 10px' }}>
+                          ダウンロード
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -1,324 +1,191 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { StatCard } from '@/components/ui/stat-card';
-import { Badge } from '@/components/ui/badge';
-import { SecurityScoreWidget } from '@/components/widgets/security-score-widget';
-import { ActivityFeedWidget } from '@/components/widgets/activity-feed-widget';
-import { DeviceStatusWidget } from '@/components/widgets/device-status-widget';
-import { LicenseComplianceWidget } from '@/components/widgets/license-compliance-widget';
-import { ProcurementSummaryWidget } from '@/components/widgets/procurement-summary-widget';
-import { fetchDashboardStats, fetchRecentAlerts } from '@/lib/api';
-import type { BackendDashboardStats, BackendAlert } from '@/lib/api';
+import {
+  StatCard, DonutChart, MiniBarChart, ProgressBar, AlertItem,
+} from '@/components/ui/design-components';
 
-type AlertSeverity = 'critical' | 'warning' | 'info';
-
-const categoryLabel: Record<string, string> = {
-  security: 'セキュリティ',
-  license: 'ライセンス',
-  hardware: 'ハードウェア',
-  network: 'ネットワーク',
+const STATS = {
+  totalDevices: 1284, activeAlerts: 7, complianceRate: 94.2, pendingProcurements: 12,
+  devicesTrend: 3.2, alertsTrend: -15, complianceTrend: 1.5, procurementsTrend: 8,
 };
 
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}分前`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}時間前`;
-  return `${Math.floor(hours / 24)}日前`;
-}
-
-const severityStyles: Record<AlertSeverity, string> = {
-  critical: 'border-l-red-500 bg-red-50 dark:bg-red-900/10',
-  warning: 'border-l-amber-500 bg-amber-50 dark:bg-amber-900/10',
-  info: 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10',
-};
-
-const severityConfig: Record<AlertSeverity, { variant: 'danger' | 'warning' | 'info'; label: string }> = {
-  critical: { variant: 'danger',  label: '重大' },
-  warning:  { variant: 'warning', label: '警告' },
-  info:     { variant: 'info',    label: '情報' },
-};
-
-const DUMMY_STATS: BackendDashboardStats = {
-  total_devices: 1248,
-  online_devices: 1124,
-  total_licenses: 3872,
-  compliance_rate: 94.3,
-  pending_procurements: 7,
-  active_alerts: 23,
-};
-
-const DUMMY_ALERTS: BackendAlert[] = [
-  { id: 'al-0001', device_id: 'dev-aabb1100', severity: 'critical', category: 'security', title: 'マルウェア検知: Trojan.Win64.Agent', message: 'エンドポイント dev-aabb1100 で未知のマルウェアが検出されました。即時隔離を推奨します。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 12 * 60000).toISOString() },
-  { id: 'al-0002', device_id: 'dev-ccdd2200', severity: 'critical', category: 'security', title: '不正ログイン試行: 管理者アカウント', message: '過去1時間で15回の連続ログイン失敗が検出されました。ブルートフォース攻撃の可能性があります。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 28 * 60000).toISOString() },
-  { id: 'al-0003', device_id: null, severity: 'warning', category: 'license', title: 'ライセンス期限切れ間近: Adobe Creative Cloud', message: 'Adobe Creative Cloud (50シート) のライセンスが15日後に期限切れになります。更新手続きが必要です。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
-  { id: 'al-0004', device_id: 'dev-eeff3300', severity: 'warning', category: 'hardware', title: 'ディスク残量警告: 残り8%', message: 'サーバー dev-eeff3300 のシステムディスクの空き容量が8%を下回りました。', is_acknowledged: true, acknowledged_by: 'yamamoto.kenji', acknowledged_at: new Date(Date.now() - 30 * 60000).toISOString(), resolved_at: null, created_at: new Date(Date.now() - 3 * 3600000).toISOString() },
-  { id: 'al-0005', device_id: 'dev-aabb4400', severity: 'warning', category: 'network', title: '異常トラフィック: 外部送信量急増', message: '過去30分間で通常の5倍の外部送信トラフィックが検出されました。情報漏えいの可能性を確認してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 45 * 60000).toISOString() },
-  { id: 'al-0006', device_id: null, severity: 'info', category: 'security', title: 'セキュリティパッチ: Windows Update KB5034441', message: '72台のデバイスに重要なセキュリティアップデートが未適用です。パッチ管理から適用スケジュールを設定してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 5 * 3600000).toISOString() },
-  { id: 'al-0007', device_id: 'dev-ccdd5500', severity: 'info', category: 'hardware', title: 'デバイス長期オフライン: 7日経過', message: 'dev-ccdd5500 が7日間オフライン状態です。デバイスの状態を確認してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 24 * 3600000).toISOString() },
-  { id: 'al-0008', device_id: null, severity: 'info', category: 'license', title: 'ライセンス超過使用: Microsoft 365 E3', message: 'Microsoft 365 E3 のライセンス使用数が購入数を3シート超過しています。追加購入または割り当て見直しが必要です。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 6 * 3600000).toISOString() },
+const OS_DATA = [
+  { label: 'Win 11', value: 680, color: '#3b82f6' },
+  { label: 'Win 10', value: 420, color: '#60a5fa' },
+  { label: 'macOS',  value: 124, color: '#8b5cf6' },
+  { label: 'Linux',  value: 60,  color: '#f59e0b' },
 ];
 
-type ActivityEventType = 'alert' | 'deploy' | 'scan' | 'procurement' | 'user';
+const DEPT_DATA = [
+  { label: 'エンジニア', value: 280, color: '#2563eb' },
+  { label: '営業',       value: 240, color: '#10b981' },
+  { label: '管理',       value: 180, color: '#f59e0b' },
+  { label: '建設現場',   value: 340, color: '#8b5cf6' },
+  { label: 'その他',     value: 244, color: '#94a3b8' },
+];
 
-const categoryToActivityType: Record<string, ActivityEventType> = {
-  security: 'alert',
-  license: 'procurement',
-  hardware: 'deploy',
-  network: 'scan',
-};
+const RECENT_ALERTS = [
+  { severity: 'critical' as const, title: 'Adobe Creative Suite ライセンス超過', message: '購入数50に対し、インストール数58台検出', source: 'SAMスキャン', time: '15分前' },
+  { severity: 'warning'  as const, title: 'サーバー CPU 使用率 90% 超過', message: 'srv-prod-03 の CPU 使用率が継続的に高い状態', source: '監視エージェント', time: '32分前' },
+  { severity: 'warning'  as const, title: 'Windows 10 サポート終了まで 90日', message: '47台の端末が Windows 10 を使用中', source: '資産管理', time: '1時間前' },
+  { severity: 'info'     as const, title: '調達申請 #PR-2024-089 承認済み', message: 'Dell Latitude 5540 x 20台の調達が承認', source: '調達管理', time: '2時間前' },
+  { severity: 'info'     as const, title: '新規デバイス検出', message: '3台の新規デバイスがネットワークに接続', source: '資産スキャン', time: '3時間前' },
+];
 
-function alertsToActivityEvents(alerts: BackendAlert[]) {
-  return alerts.map((alert) => ({
-    id: String(alert.id),
-    type: categoryToActivityType[alert.category] ?? 'alert' as ActivityEventType,
-    title: alert.title,
-    description: alert.message,
-    time: formatRelativeTime(alert.created_at),
-  }));
-}
+const ACTIVITY_FEED = [
+  { user: '田中 一郎', action: 'PC-TANAKA-001 にパッチ KB5034765 を適用', time: '10分前' },
+  { user: 'システム',   action: 'SAMライセンス自動同期完了（M365 Graph API）', time: '25分前' },
+  { user: '佐藤 花子', action: '調達申請 #PR-2024-090 を提出', time: '45分前' },
+  { user: '管理者',     action: 'デバイスグループ「営業部-支社」を更新', time: '1時間前' },
+  { user: 'システム',   action: 'セキュリティスキャン完了（脆弱性: 0件）', time: '2時間前' },
+];
 
-export function getCompColor(rate: number): string {
-  return rate >= 90 ? '#10b981' : rate >= 70 ? '#f59e0b' : '#ef4444';
-}
+const SECURITY_METRICS = [
+  { label: 'Defender 有効率', score: 95 },
+  { label: 'BitLocker 暗号化率', score: 78 },
+  { label: 'パッチ適用率', score: 72 },
+  { label: 'ファイアウォール準拠率', score: 88 },
+];
 
-function StatsSkeleton() {
+function DeviceIcon() {
   return (
-    <div className="animate-pulse grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="aegis-card h-28 bg-gray-100 dark:bg-gray-800" />
-      ))}
-    </div>
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+    </svg>
   );
 }
-
-function WidgetSkeleton({ className }: { className?: string }) {
+function AlertIcon() {
   return (
-    <div className={`aegis-card animate-pulse ${className ?? ''}`}>
-      <div className="h-4 w-1/3 rounded bg-gray-200 dark:bg-gray-700 mb-4" />
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-3 rounded bg-gray-100 dark:bg-gray-700/50" />
-        ))}
-      </div>
-    </div>
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+    </svg>
+  );
+}
+function ShieldIcon() {
+  return (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    </svg>
+  );
+}
+function CartIcon() {
+  return (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+    </svg>
   );
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<BackendDashboardStats | null>(null);
-  const [alerts, setAlerts] = useState<BackendAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const [statsData, alertsData] = await Promise.all([
-          fetchDashboardStats(),
-          fetchRecentAlerts(8),
-        ]);
-        if (!mounted) return;
-        const hasStats = statsData.total_devices > 0 || statsData.active_alerts > 0;
-        setStats(hasStats ? statsData : DUMMY_STATS);
-        const alertItems = alertsData.items ?? [];
-        setAlerts(alertItems.length > 0 ? alertItems : DUMMY_ALERTS);
-      } catch {
-        if (mounted) {
-          setStats(DUMMY_STATS);
-          setAlerts(DUMMY_ALERTS);
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => { mounted = false; };
-  }, []);
-
-  const totalDevices = stats?.total_devices ?? 0;
-  const activeAlerts = stats?.active_alerts ?? 0;
-  const complianceRate = stats?.compliance_rate ?? 0;
-  const pendingProcurements = stats?.pending_procurements ?? 0;
-  const compRate = Math.round(complianceRate);
-
-  // Derive device status split from total (realistic 90/7/3 ratio when backend breaks)
-  const deviceStatusData = totalDevices > 0
-    ? {
-        online: Math.round(totalDevices * 0.90),
-        offline: Math.round(totalDevices * 0.07),
-        maintenance: totalDevices - Math.round(totalDevices * 0.90) - Math.round(totalDevices * 0.07),
-        lastChecked: new Date().toISOString(),
-      }
-    : undefined;
-
-  // License compliance from real rate
-  const licenseData = compRate > 0
-    ? {
-        complianceRate: compRate,
-        overDeployed: [
-          { name: 'Adobe Creative Cloud', total: 50, used: 58 },
-          { name: 'AutoCAD LT', total: 30, used: 33 },
-          { name: 'Figma Business', total: 25, used: 27 },
-        ],
-        expiring: [
-          { name: 'Norton 360', daysLeft: 15 },
-          { name: 'Jira Software Cloud', daysLeft: 30 },
-          { name: 'Windows Server 2022', daysLeft: 45 },
-        ],
-      }
-    : undefined;
-
-  const activityEvents = alertsToActivityEvents(alerts);
+  const compColor = STATS.complianceRate >= 90 ? '#10b981' : STATS.complianceRate >= 70 ? '#f59e0b' : '#ef4444';
+  const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          IT資産管理の概要とアラート
-        </p>
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">ダッシュボード</h1>
+          <p className="page-subtitle">IT資産管理の概要とアラート — {today}</p>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      {loading ? (
-        <StatsSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            title="管理端末数"
-            value={totalDevices.toLocaleString()}
-            iconColor="blue"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="アクティブアラート"
-            value={activeAlerts}
-            iconColor="red"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="ライセンス遵守率"
-            value={`${compRate}%`}
-            iconColor="green"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="調達申請数"
-            value={pendingProcurements}
-            iconColor="amber"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-              </svg>
-            }
-          />
-        </div>
-      )}
+      {/* Stats */}
+      <div className="grid-4">
+        <StatCard title="管理端末数" value={STATS.totalDevices.toLocaleString()} trend={STATS.devicesTrend}
+          icon={<DeviceIcon />} iconBg="#eff6ff" accentColor="#2563eb" />
+        <StatCard title="アクティブアラート" value={STATS.activeAlerts} trend={STATS.alertsTrend}
+          icon={<AlertIcon />} iconBg="#fef2f2" accentColor="#ef4444" />
+        <StatCard title="ライセンス遵守率" value={`${STATS.complianceRate}%`} trend={STATS.complianceTrend}
+          icon={<ShieldIcon />} iconBg="#ecfdf5" accentColor="#10b981" />
+        <StatCard title="調達申請数" value={STATS.pendingProcurements} trend={STATS.procurementsTrend}
+          icon={<CartIcon />} iconBg="#fffbeb" accentColor="#f59e0b" />
+      </div>
 
-      {/* Widget Grid — Row 1: SecurityScore | DeviceStatus | LicenseCompliance */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <WidgetSkeleton />
-          <WidgetSkeleton />
-          <WidgetSkeleton />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <SecurityScoreWidget />
-          <DeviceStatusWidget data={deviceStatusData} />
-          <LicenseComplianceWidget data={licenseData} />
-        </div>
-      )}
-
-      {/* Widget Grid — Row 2: ProcurementSummary | ActivityFeed */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <WidgetSkeleton />
-          <WidgetSkeleton className="lg:col-span-2" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <ProcurementSummaryWidget />
-          <div className="lg:col-span-2">
-            <ActivityFeedWidget
-              events={activityEvents.length > 0 ? activityEvents : undefined}
-              maxVisible={6}
-            />
+      {/* Charts */}
+      <div className="grid-2">
+        <div className="card">
+          <h2 className="card-title">システム概要</h2>
+          <div className="chart-row">
+            <div className="chart-center">
+              <p className="chart-label">ライセンスコンプライアンス率</p>
+              <DonutChart value={STATS.complianceRate} max={100} size={140} strokeWidth={14} color={compColor} />
+              <p className="chart-sublabel">{STATS.totalDevices} 管理端末 / {STATS.activeAlerts} アラート</p>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p className="chart-label">主要指標</p>
+              <MiniBarChart
+                data={[
+                  { label: '管理端末', value: STATS.totalDevices, color: '#2563eb' },
+                  { label: 'アラート', value: STATS.activeAlerts, color: '#ef4444' },
+                  { label: '調達待ち', value: STATS.pendingProcurements, color: '#f59e0b' },
+                ]}
+                maxValue={STATS.totalDevices}
+                height={160}
+              />
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Recent Alerts */}
-      <div className="aegis-card">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">最近のアラート</h2>
-          <a
-            href="/dashboard/alerts"
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-          >
-            すべて表示 &rarr;
-          </a>
-        </div>
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse h-16 rounded-lg bg-gray-100 dark:bg-gray-800" />
+        <div className="card">
+          <h2 className="card-title">セキュリティスコア</h2>
+          <div className="chart-center" style={{ marginBottom: 16 }}>
+            <DonutChart value={82} max={100} size={110} strokeWidth={10} color="#10b981" label="82" />
+          </div>
+          <div className="security-metrics">
+            {SECURITY_METRICS.map((m, i) => (
+              <div key={i} className="metric-row">
+                <div className="metric-header">
+                  <span className="metric-label">{m.label}</span>
+                  <span className={`metric-value ${m.score >= 90 ? 'text-green' : m.score >= 70 ? 'text-amber' : 'text-red'}`}>{m.score}%</span>
+                </div>
+                <ProgressBar value={m.score} color={m.score >= 90 ? '#10b981' : m.score >= 70 ? '#f59e0b' : '#ef4444'} label={false} />
+              </div>
             ))}
           </div>
-        ) : alerts.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">アラートはありません</p>
-        ) : (
-          <div className="space-y-3">
-            {alerts.slice(0, 5).map((alert) => {
-              const sev = (alert.severity as AlertSeverity) in severityStyles
-                ? (alert.severity as AlertSeverity)
-                : 'info';
-              return (
-                <div
-                  key={alert.id}
-                  className={`rounded-lg border-l-4 p-4 ${severityStyles[sev]}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={severityConfig[sev].variant} dot size="sm">
-                          {severityConfig[sev].label}
-                        </Badge>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {alert.title}
-                        </h3>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {alert.message}
-                      </p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                        <span>{categoryLabel[alert.category] ?? alert.category}</span>
-                        <span>&middot;</span>
-                        <span>{formatRelativeTime(alert.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        </div>
+      </div>
+
+      {/* OS + Dept */}
+      <div className="grid-2">
+        <div className="card">
+          <h2 className="card-title">OS別端末数</h2>
+          <MiniBarChart data={OS_DATA} height={180} />
+        </div>
+        <div className="card">
+          <h2 className="card-title">部門別端末数</h2>
+          <MiniBarChart data={DEPT_DATA} height={180} />
+        </div>
+      </div>
+
+      {/* Alerts + Activity */}
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header-row">
+            <h2 className="card-title">最近のアラート</h2>
+            <button className="link-btn">すべて表示 →</button>
           </div>
-        )}
+          <div className="alert-list">
+            {RECENT_ALERTS.map((a, i) => <AlertItem key={i} {...a} />)}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header-row">
+            <h2 className="card-title">アクティビティ</h2>
+            <button className="link-btn">すべて表示 →</button>
+          </div>
+          <div className="activity-list">
+            {ACTIVITY_FEED.map((a, i) => (
+              <div key={i} className="activity-item">
+                <div className="activity-dot" />
+                <div className="activity-content">
+                  <p className="activity-text"><strong>{a.user}</strong> {a.action}</p>
+                  <p className="activity-time">{a.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

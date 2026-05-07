@@ -1,374 +1,101 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
-import {
-  fetchNotificationChannels,
-  fetchNotificationRules,
-  testNotificationChannel,
-  deleteNotificationChannel,
-  deleteNotificationRule,
-  type BackendNotificationChannel,
-  type BackendNotificationRule,
-} from '@/lib/api';
+import { useState } from 'react';
+import { Badge, Select } from '@/components/ui/design-components';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const channelTypeLabel: Record<string, string> = {
-  email: 'Email',
-  webhook: 'Webhook',
-  slack: 'Slack',
-  teams: 'Teams',
-};
-
-const channelTypeVariant: Record<string, 'info' | 'success' | 'warning' | 'danger'> = {
-  email: 'info',
-  webhook: 'success',
-  slack: 'warning',
-  teams: 'info',
-};
-
-// ---------------------------------------------------------------------------
-// Dummy data (displayed when API returns empty or fails)
-// ---------------------------------------------------------------------------
-
-const DUMMY_CHANNELS: BackendNotificationChannel[] = [
-  { id: 'ch-0001', name: 'Slack #it-alerts', channel_type: 'slack', config: { webhook_url: 'https://hooks.slack.com/services/EXAMPLE' }, is_enabled: true, created_by: 'yamamoto.kenji', created_at: '2026-03-01T09:00:00Z', updated_at: '2026-04-15T10:30:00Z' },
-  { id: 'ch-0002', name: '管理者メール通知', channel_type: 'email', config: { to: 'it-admin@example.co.jp', smtp_host: 'smtp.example.co.jp' }, is_enabled: true, created_by: 'suzuki.taro', created_at: '2026-03-01T09:05:00Z', updated_at: '2026-03-01T09:05:00Z' },
-  { id: 'ch-0003', name: 'Teams - セキュリティチーム', channel_type: 'teams', config: { webhook_url: 'https://outlook.office.com/webhook/EXAMPLE' }, is_enabled: true, created_by: 'ito.keiko', created_at: '2026-03-10T14:00:00Z', updated_at: '2026-04-20T08:00:00Z' },
-  { id: 'ch-0004', name: 'Webhook - SIEM連携', channel_type: 'webhook', config: { url: 'https://siem.example.co.jp/api/ingest', secret: 'xxxxxxxx' }, is_enabled: false, created_by: 'nakamura.ryota', created_at: '2026-04-01T11:00:00Z', updated_at: '2026-04-01T11:00:00Z' },
+const NOTIFICATIONS = [
+  { id: 'nt-001', title: 'ランサムウェア試行を検知',         body: 'aegis-siem-01 でランサムウェアの試行が検知されました。即時対応が必要です。', severity: 'critical', category: 'セキュリティ', time: '2025-01-15 14:32', read: false },
+  { id: 'nt-002', title: 'SIEM サーバー CPU 使用率 88%',    body: 'aegis-siem-01 の CPU 使用率が閾値を超えました。パフォーマンスを確認してください。', severity: 'critical', category: '監視',         time: '2025-01-15 14:15', read: false },
+  { id: 'nt-003', title: '緊急パッチ適用待ち — 12 台',      body: 'CVE-2025-0145 の緊急パッチが 12 台のデバイスに未適用です。', severity: 'high',     category: 'パッチ',       time: '2025-01-15 12:00', read: false },
+  { id: 'nt-004', title: 'MFA 未適用ユーザー — 3 名',       body: '営業部の 3 名が MFA を設定していません。ポリシー強制を検討してください。', severity: 'high',     category: 'セキュリティ', time: '2025-01-15 10:45', read: true  },
+  { id: 'nt-005', title: 'データベースサーバー メモリ 85%', body: 'aegis-db-01 のメモリ使用率が 85% に達しました。', severity: 'warning',  category: '監視',         time: '2025-01-15 09:30', read: true  },
+  { id: 'nt-006', title: 'DLP 違反 21 件（本日）',          body: '本日 DLP ポリシー違反が 21 件発生しています。詳細を確認してください。', severity: 'warning',  category: 'コンプライアンス', time: '2025-01-15 08:00', read: true },
+  { id: 'nt-007', title: 'Sophos ライセンス有効期限 — 30 日', body: 'Sophos Intercept X ライセンスが 30 日後に期限切れになります。更新を検討してください。', severity: 'info',     category: 'SAM',          time: '2025-01-14 09:00', read: true  },
+  { id: 'nt-008', title: '週次セキュリティレポート生成完了', body: '2025年第2週のセキュリティレポートが生成されました。', severity: 'info',     category: 'レポート',     time: '2025-01-13 07:00', read: true  },
+  { id: 'nt-009', title: '調達申請 — 承認待ち 2 件',        body: 'Zoom Business ライセンス追加・iPad Pro の調達申請が承認待ちです。', severity: 'info',     category: '調達',         time: '2025-01-12 15:00', read: true  },
 ];
 
-const DUMMY_RULES: BackendNotificationRule[] = [
-  { id: 'rule-0001', name: 'クリティカルアラート即時通知', event_type: 'alert.critical', channel_id: 'ch-0001', conditions: { severity: 'critical' }, is_enabled: true, created_at: '2026-03-02T10:00:00Z' },
-  { id: 'rule-0002', name: 'ライセンス期限警告', event_type: 'license.expiry_warning', channel_id: 'ch-0002', conditions: { days_remaining: 30 }, is_enabled: true, created_at: '2026-03-02T10:05:00Z' },
-  { id: 'rule-0003', name: '廃棄申請承認待ち', event_type: 'disposal.pending_approval', channel_id: 'ch-0002', conditions: null, is_enabled: true, created_at: '2026-03-05T09:00:00Z' },
-  { id: 'rule-0004', name: 'セキュリティインシデント検知', event_type: 'incident.detected', channel_id: 'ch-0003', conditions: { severity: ['p1', 'p2'] }, is_enabled: true, created_at: '2026-03-10T15:00:00Z' },
-  { id: 'rule-0005', name: 'パッチ未適用デバイス週次レポート', event_type: 'patch.weekly_report', channel_id: 'ch-0002', conditions: { missing_critical: true }, is_enabled: true, created_at: '2026-03-15T09:00:00Z' },
-  { id: 'rule-0006', name: 'SIEM イベント転送', event_type: 'alert.any', channel_id: 'ch-0004', conditions: null, is_enabled: false, created_at: '2026-04-01T11:05:00Z' },
+const SEV_OPTS = [
+  { value: '', label: 'すべての重要度' },
+  { value: 'critical', label: '重大' },
+  { value: 'high',     label: '高'   },
+  { value: 'warning',  label: '警告' },
+  { value: 'info',     label: '情報' },
 ];
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+type Severity = 'critical' | 'high' | 'warning' | 'info';
+const SEV_CFG: Record<Severity, { l: string; v: 'danger' | 'warning' | 'info' | 'success'; dot: string }> = {
+  critical: { l: '重大', v: 'danger',  dot: '#ef4444' },
+  high:     { l: '高',   v: 'warning', dot: '#f59e0b' },
+  warning:  { l: '警告', v: 'warning', dot: '#f59e0b' },
+  info:     { l: '情報', v: 'info',    dot: '#3b82f6' },
+};
+
+const unreadCount   = NOTIFICATIONS.filter(n => !n.read).length;
+const criticalCount = NOTIFICATIONS.filter(n => n.severity === 'critical').length;
+const highCount     = NOTIFICATIONS.filter(n => n.severity === 'high').length;
 
 export default function NotificationsPage() {
-  const [channels, setChannels] = useState<BackendNotificationChannel[]>([]);
-  const [rules, setRules] = useState<BackendNotificationRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'channels' | 'rules'>('channels');
-  const [testingChannelId, setTestingChannelId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{ channelId: string; success: boolean; message: string } | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [channelsRes, rulesRes] = await Promise.all([
-        fetchNotificationChannels(0, 100),
-        fetchNotificationRules(0, 100),
-      ]);
-      setChannels(channelsRes.items.length > 0 ? channelsRes.items : DUMMY_CHANNELS);
-      setRules(rulesRes.items.length > 0 ? rulesRes.items : DUMMY_RULES);
-    } catch {
-      setChannels(DUMMY_CHANNELS);
-      setRules(DUMMY_RULES);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const handleTestChannel = async (channelId: string) => {
-    setTestingChannelId(channelId);
-    setTestResult(null);
-    try {
-      const result = await testNotificationChannel(channelId);
-      setTestResult({ channelId, success: result.success, message: result.message });
-    } catch {
-      setTestResult({ channelId, success: false, message: 'テスト送信に失敗しました' });
-    } finally {
-      setTestingChannelId(null);
-    }
-  };
-
-  const handleDeleteChannel = async (channelId: string) => {
-    if (!confirm('このチャネルを削除しますか？')) return;
-    try {
-      await deleteNotificationChannel(channelId);
-      await load();
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleDeleteRule = async (ruleId: string) => {
-    if (!confirm('このルールを削除しますか？')) return;
-    try {
-      await deleteNotificationRule(ruleId);
-      await load();
-    } catch {
-      // ignore
-    }
-  };
-
-  const getChannelName = (channelId: string) => {
-    const ch = channels.find((c) => c.id === channelId);
-    return ch ? ch.name : channelId.slice(0, 8) + '…';
-  };
-
-  // ── Loading skeleton ──────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="aegis-card h-48 bg-gray-200 dark:bg-aegis-surface" />
-        <div className="h-10 rounded-lg bg-gray-200 dark:bg-aegis-surface" />
-        <div className="aegis-card h-64 bg-gray-200 dark:bg-aegis-surface" />
-      </div>
-    );
-  }
-
-  // ── Summary chart values ──────────────────────────────────────────────────
-  const enabledChannels = channels.filter((c) => c.is_enabled).length;
-  const enabledRate = channels.length > 0 ? Math.round((enabledChannels / channels.length) * 100) : 0;
-  const enabledColor = enabledRate >= 80 ? '#10b981' : enabledRate >= 50 ? '#f59e0b' : '#ef4444';
-  const channelTypeCounts: Record<string, number> = {};
-  channels.forEach((c) => {
-    const label = channelTypeLabel[c.channel_type] ?? c.channel_type;
-    channelTypeCounts[label] = (channelTypeCounts[label] || 0) + 1;
-  });
-  const channelBarData = Object.entries(channelTypeCounts).map(([type, count], i) => ({
-    label: type,
-    value: count,
-    color: ['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500'][i] ?? 'bg-gray-400',
-  }));
+  const filtered = NOTIFICATIONS.filter(n => !filter || n.severity === filter);
 
   return (
-    <div className="space-y-6">
-      {/* 通知概要チャート */}
-      <div className="aegis-card">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">通知概要</h2>
-        {channels.length === 0 ? (
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">チャネル有効率</p>
-              <DonutChart value={enabledRate} max={100} size={140} strokeWidth={14} color={enabledColor} label={`${enabledRate}%`} />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                全 {channels.length} チャネル中 {enabledChannels} 有効 / ルール {rules.length} 件
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">チャネル種別別件数</p>
-              {channelBarData.length > 0 && (
-                <BarChart
-                  data={channelBarData}
-                  maxValue={Math.max(...channelBarData.map((d) => d.value), 1)}
-                  height={160}
-                  showValues
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Test result banner */}
-      {testResult && (
-        <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
-            testResult.success
-              ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
-              : 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-          }`}
-        >
-          {testResult.success ? '✓ ' : '✗ '}{testResult.message}
-        </div>
-      )}
-
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Notification Settings
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage notification channels and event routing rules
-          </p>
+          <h1 className="page-title">通知センター</h1>
+          <p className="page-subtitle">システムアラート・イベント・ポリシー違反の通知管理</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">すべて既読にする</button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-aegis-surface">
-        <button
-          onClick={() => setActiveTab('channels')}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'channels'
-              ? 'bg-white text-gray-900 shadow-sm dark:bg-aegis-darker dark:text-white'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          }`}
-        >
-          Channels
-        </button>
-        <button
-          onClick={() => setActiveTab('rules')}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'rules'
-              ? 'bg-white text-gray-900 shadow-sm dark:bg-aegis-darker dark:text-white'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          }`}
-        >
-          Rules
-        </button>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">未読</p><p className="stat-value text-red">{unreadCount}</p></div>
+        <div className="card card-center"><p className="stat-label">重大</p><p className="stat-value text-red">{criticalCount}</p></div>
+        <div className="card card-center"><p className="stat-label">高優先度</p><p className="stat-value text-amber">{highCount}</p></div>
+        <div className="card card-center"><p className="stat-label">総通知数</p><p className="stat-value">{NOTIFICATIONS.length}</p></div>
       </div>
 
-      {/* Channels Tab */}
-      {activeTab === 'channels' && (
-        <div className="space-y-4">
-          <div className="aegis-card overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50 dark:border-aegis-border dark:bg-aegis-darker">
-                  <tr>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Name</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Type</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Status</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Created</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-                  {channels.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                        データなし
-                      </td>
-                    </tr>
-                  ) : (
-                    channels.map((channel) => (
-                      <tr
-                        key={channel.id}
-                        className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                          {channel.name}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={channelTypeVariant[channel.channel_type] ?? 'info'}>
-                            {channelTypeLabel[channel.channel_type] ?? channel.channel_type}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={channel.is_enabled ? 'success' : 'danger'}>
-                            {channel.is_enabled ? 'Enabled' : 'Disabled'}
-                          </Badge>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-gray-500 dark:text-gray-400">
-                          {new Date(channel.created_at).toLocaleDateString('ja-JP')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleTestChannel(channel.id)}
-                              disabled={testingChannelId === channel.id}
-                              className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
-                            >
-                              {testingChannelId === channel.id ? 'Sending...' : 'Test'}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteChannel(channel.id)}
-                              className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="card filter-row">
+        <Select options={SEV_OPTS} value={filter} onChange={v => setFilter(v)} style={{ minWidth: 180 }} />
+      </div>
 
-      {/* Rules Tab */}
-      {activeTab === 'rules' && (
-        <div className="space-y-4">
-          <div className="aegis-card overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50 dark:border-aegis-border dark:bg-aegis-darker">
-                  <tr>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Rule Name</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Event Type</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Channel</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Status</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Created</th>
-                    <th className="px-6 py-3 font-semibold text-gray-600 dark:text-gray-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-                  {rules.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                        データなし
-                      </td>
-                    </tr>
-                  ) : (
-                    rules.map((rule) => (
-                      <tr
-                        key={rule.id}
-                        className="transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                          {rule.name}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {rule.event_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {getChannelName(rule.channel_id)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={rule.is_enabled ? 'success' : 'danger'}>
-                            {rule.is_enabled ? 'Enabled' : 'Disabled'}
-                          </Badge>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-gray-500 dark:text-gray-400">
-                          {new Date(rule.created_at).toLocaleDateString('ja-JP')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleDeleteRule(rule.id)}
-                              className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <div className="card">
+        <h2 className="card-title">通知一覧</h2>
+        <div className="activity-list">
+          {filtered.map(n => {
+            const sv = SEV_CFG[n.severity as Severity] ?? SEV_CFG.info;
+            return (
+              <div key={n.id} className="activity-item" style={{
+                opacity: n.read ? 0.75 : 1,
+                borderLeft: n.read ? 'none' : `3px solid ${sv.dot}`,
+                paddingLeft: n.read ? 0 : 10,
+                marginLeft: n.read ? 0 : -10,
+              }}>
+                <div className="activity-dot" style={{ background: sv.dot }} />
+                <div className="activity-content">
+                  <p className="activity-text">
+                    <strong>{n.title}</strong>
+                    {!n.read && <span style={{ marginLeft: 8, fontSize: 10, background: sv.dot, color: '#fff', borderRadius: 4, padding: '1px 6px' }}>新着</span>}
+                  </p>
+                  <p className="text-sub" style={{ fontSize: 12, marginTop: 2 }}>{n.body}</p>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6, alignItems: 'center' }}>
+                    <Badge variant={sv.v}>{sv.l}</Badge>
+                    <span className="text-sub" style={{ fontSize: 11 }}>{n.category}</span>
+                    <span className="activity-time">{n.time}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+        <div className="table-footer">
+          <span className="table-info">全 {NOTIFICATIONS.length} 件中 {filtered.length} 件を表示</span>
+        </div>
+      </div>
     </div>
   );
 }

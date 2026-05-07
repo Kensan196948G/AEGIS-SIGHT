@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({
+const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-noto',
 });
 
 export const metadata: Metadata = {
@@ -33,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" className={inter.variable}>
-      <body className={`${inter.className} min-h-screen`}>
+    <html lang="ja" className={notoSansJP.variable}>
+      <body className={`${notoSansJP.className} min-h-screen`}>
         <Providers>{children}</Providers>
       </body>
     </html>

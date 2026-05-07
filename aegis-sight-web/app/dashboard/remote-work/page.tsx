@@ -1,617 +1,125 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
-import {
-  fetchRemoteWorkAnalytics,
-  fetchActiveVPN,
-  fetchRemoteAccessPolicies,
-  type BackendRemoteWorkAnalytics,
-  type BackendVPNConnection,
-  type BackendRemoteAccessPolicy,
-} from '@/lib/api';
+import { Badge, SearchInput, DonutChart, ProgressBar } from '@/components/ui/design-components';
+import { useState } from 'react';
 
-// ---------------------------------------------------------------------------
-// Dummy data (shown when API returns empty or errors)
-// ---------------------------------------------------------------------------
-
-const DUMMY_VPN_CONNECTIONS: BackendVPNConnection[] = [
-  { id: 'vpn-0001', device_id: 'dev-aaaa1111', user_name: 'yamamoto.kenji',  vpn_server: 'vpn1.example.co.jp', client_ip: '203.0.113.10', assigned_ip: '10.8.0.2',  protocol: 'ipsec',     connected_at: '2026-05-07T08:12:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 52428800,  bytes_received: 314572800, is_active: true  },
-  { id: 'vpn-0002', device_id: 'dev-bbbb2222', user_name: 'tanaka.hiroshi',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.5', assigned_ip: '10.8.0.3',  protocol: 'ssl',       connected_at: '2026-05-07T09:00:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 10485760,  bytes_received: 73400320,  is_active: true  },
-  { id: 'vpn-0003', device_id: 'dev-cccc3333', user_name: 'sato.naoko',     vpn_server: 'vpn2.example.co.jp', client_ip: '192.0.2.88',   assigned_ip: '10.8.1.2',  protocol: 'wireguard', connected_at: '2026-05-07T07:45:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 83886080,  bytes_received: 524288000, is_active: true  },
-  { id: 'vpn-0004', device_id: 'dev-dddd4444', user_name: 'nakamura.ryota', vpn_server: 'vpn2.example.co.jp', client_ip: '203.0.113.42', assigned_ip: '10.8.1.3',  protocol: 'ipsec',     connected_at: '2026-05-07T10:05:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 5242880,   bytes_received: 31457280,  is_active: true  },
-  { id: 'vpn-0005', device_id: 'dev-eeee5555', user_name: 'kobayashi.emi',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.9', assigned_ip: '10.8.0.4',  protocol: 'ssl',       connected_at: '2026-05-07T08:30:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 20971520,  bytes_received: 167772160, is_active: true  },
-  { id: 'vpn-0006', device_id: 'dev-ffff6666', user_name: 'ito.keiko',      vpn_server: 'vpn1.example.co.jp', client_ip: '203.0.113.71', assigned_ip: '10.8.0.5',  protocol: 'wireguard', connected_at: '2026-05-07T09:15:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 31457280,  bytes_received: 209715200, is_active: true  },
-  { id: 'vpn-0007', device_id: 'dev-gggg7777', user_name: 'suzuki.taro',    vpn_server: 'vpn2.example.co.jp', client_ip: '192.0.2.55',   assigned_ip: '10.8.1.4',  protocol: 'l2tp',      connected_at: '2026-05-07T07:00:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 2097152,   bytes_received: 15728640,  is_active: true  },
-  { id: 'vpn-0008', device_id: 'dev-hhhh8888', user_name: 'watanabe.yuki',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.22',assigned_ip: '10.8.0.6',  protocol: 'ipsec',     connected_at: '2026-05-06T17:30:00Z', disconnected_at: '2026-05-06T19:15:00Z', duration_minutes: 105,  bytes_sent: 8388608,   bytes_received: 52428800,  is_active: false },
-  { id: 'vpn-0009', device_id: 'dev-iiii9999', user_name: 'hayashi.akiko',  vpn_server: 'vpn2.example.co.jp', client_ip: '203.0.113.90', assigned_ip: '10.8.1.5',  protocol: 'ssl',       connected_at: '2026-05-06T14:00:00Z', disconnected_at: '2026-05-06T17:45:00Z', duration_minutes: 225,  bytes_sent: 41943040,  bytes_received: 314572800, is_active: false },
-  { id: 'vpn-0010', device_id: 'dev-jjjj0000', user_name: 'yoshida.masato', vpn_server: 'vpn1.example.co.jp', client_ip: '192.0.2.11',   assigned_ip: '10.8.0.7',  protocol: 'wireguard', connected_at: '2026-05-06T09:00:00Z', disconnected_at: '2026-05-06T18:00:00Z', duration_minutes: 540,  bytes_sent: 104857600, bytes_received: 734003200, is_active: false },
+const REMOTE_USERS = [
+  { id: 'ru-001', name: '田中 浩',       dept: 'セキュリティ',     device: 'ThinkPad X1', vpn: true,  location: '東京（自宅）',     lastSeen: '2025-01-15 14:30', mfa: true,  risk: 'low'    },
+  { id: 'ru-002', name: '山本 健司',     dept: 'エンジニアリング', device: 'MacBook Pro',  vpn: true,  location: '大阪（自宅）',     lastSeen: '2025-01-15 14:15', mfa: true,  risk: 'low'    },
+  { id: 'ru-003', name: '伊藤 勝',       dept: 'インフラ',         device: 'ThinkPad E15', vpn: false, location: 'カフェ（公共Wi-Fi）', lastSeen: '2025-01-15 13:45', mfa: true,  risk: 'high'   },
+  { id: 'ru-004', name: '鈴木 明',       dept: '営業',             device: 'Surface Pro',  vpn: true,  location: '名古屋（客先）',   lastSeen: '2025-01-15 12:00', mfa: false, risk: 'medium' },
+  { id: 'ru-005', name: '渡辺 さくら',   dept: '内部監査',         device: 'ThinkPad X1', vpn: true,  location: '横浜（自宅）',     lastSeen: '2025-01-15 11:30', mfa: true,  risk: 'low'    },
+  { id: 'ru-006', name: '高橋 誠一',     dept: '人事',             device: 'VAIO SX14',   vpn: false, location: '不明',             lastSeen: '2025-01-15 09:10', mfa: false, risk: 'high'   },
+  { id: 'ru-007', name: '中村 大樹',     dept: '建設現場管理',     device: 'iPad Pro',     vpn: true,  location: '現場（神奈川）',   lastSeen: '2025-01-15 08:45', mfa: true,  risk: 'low'    },
 ];
 
-const DUMMY_REMOTE_ANALYTICS: BackendRemoteWorkAnalytics = {
-  total_connections: 2847,
-  active_connections: 7,
-  by_protocol: { ipsec: 1140, ssl: 854, wireguard: 712, l2tp: 141 },
-  total_bytes_sent:     9663676416,   // ~9 GB
-  total_bytes_received: 68719476736,  // ~64 GB
-  peak_hours: [
-    { hour: 0,  count: 8  }, { hour: 1,  count: 3  }, { hour: 2,  count: 1  },
-    { hour: 3,  count: 0  }, { hour: 4,  count: 2  }, { hour: 5,  count: 5  },
-    { hour: 6,  count: 18 }, { hour: 7,  count: 52 }, { hour: 8,  count: 134 },
-    { hour: 9,  count: 218 }, { hour: 10, count: 245 }, { hour: 11, count: 230 },
-    { hour: 12, count: 185 }, { hour: 13, count: 210 }, { hour: 14, count: 248 },
-    { hour: 15, count: 235 }, { hour: 16, count: 198 }, { hour: 17, count: 142 },
-    { hour: 18, count: 78 }, { hour: 19, count: 45 }, { hour: 20, count: 32 },
-    { hour: 21, count: 22 }, { hour: 22, count: 15 }, { hour: 23, count: 10 },
-  ],
-  utilization_rate: 0.68,
-  top_users: [
-    { user_name: 'yoshida.masato', connection_count: 142, total_minutes: 52080 },
-    { user_name: 'sato.naoko',     connection_count: 128, total_minutes: 38400 },
-    { user_name: 'yamamoto.kenji', connection_count: 115, total_minutes: 34500 },
-    { user_name: 'kobayashi.emi',  connection_count: 98,  total_minutes: 29400 },
-    { user_name: 'ito.keiko',      connection_count: 87,  total_minutes: 26100 },
-  ],
+const VPN_STATS = [
+  { label: '接続中', value: 5,  color: '#10b981' },
+  { label: '未接続', value: 2,  color: '#ef4444' },
+];
+
+type RiskLevel = 'low' | 'medium' | 'high';
+const RISK_CFG: Record<RiskLevel, { l: string; v: 'success' | 'warning' | 'danger' }> = {
+  low:    { l: '低',  v: 'success' },
+  medium: { l: '中',  v: 'warning' },
+  high:   { l: '高',  v: 'danger'  },
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-type VPNProtocol = string;
-
-const knownProtocols = ['ipsec', 'ssl', 'wireguard', 'l2tp'] as const;
-type KnownProtocol = typeof knownProtocols[number];
-
-const protocolConfig: Record<KnownProtocol, { label: string; color: string; bgColor: string }> = {
-  ipsec:     { label: 'IPsec',     color: 'text-blue-700 dark:text-blue-300',   bgColor: 'bg-blue-100 dark:bg-blue-900/40' },
-  ssl:       { label: 'SSL',       color: 'text-green-700 dark:text-green-300', bgColor: 'bg-green-100 dark:bg-green-900/40' },
-  wireguard: { label: 'WireGuard', color: 'text-purple-700 dark:text-purple-300', bgColor: 'bg-purple-100 dark:bg-purple-900/40' },
-  l2tp:      { label: 'L2TP',      color: 'text-orange-700 dark:text-orange-300', bgColor: 'bg-orange-100 dark:bg-orange-900/40' },
-};
-
-function getProtocolConfig(protocol: VPNProtocol) {
-  const key = protocol.toLowerCase() as KnownProtocol;
-  return protocolConfig[key] ?? { label: protocol.toUpperCase(), color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-100 dark:bg-gray-700/40' };
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatBytes(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-}
-
-function elapsedMinutes(startIso: string): number {
-  const start = new Date(startIso).getTime();
-  const now = Date.now();
-  return Math.floor((now - start) / 60000);
-}
-
-function formatDayName(day: string): string {
-  const map: Record<string, string> = {
-    monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
-    thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
-  };
-  return map[day.toLowerCase()] ?? day;
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-type Tab = 'active' | 'analytics' | 'policies';
-
-function ProtocolBadge({ protocol }: { protocol: VPNProtocol }) {
-  const cfg = getProtocolConfig(protocol);
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.color} ${cfg.bgColor}`}>
-      {cfg.label}
-    </span>
-  );
-}
-
-function StatCard({ title, value, sub }: { title: string; value: string | number; sub?: string }) {
-  return (
-    <div className="aegis-card">
-      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-      {sub && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{sub}</p>}
-    </div>
-  );
-}
-
-function PeakHoursChart({ data }: { data: { hour: number; count: number }[] }) {
-  const max = Math.max(...data.map((d) => d.count), 1);
-  return (
-    <div className="aegis-card">
-      <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">VPN Peak Hours</h3>
-      <div className="flex items-end gap-1.5" style={{ height: 160 }}>
-        {data.map((d) => (
-          <div key={d.hour} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className="w-full rounded-t bg-primary-500 dark:bg-primary-400 transition-all"
-              style={{ height: `${(d.count / max) * 140}px` }}
-              title={`${d.hour}:00 - ${d.count} connections`}
-            />
-            <span className="text-[10px] text-gray-500 dark:text-gray-400">{d.hour}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProtocolDistributionChart({ data }: { data: Record<string, number> }) {
-  const total = Object.values(data).reduce((s, v) => s + v, 0) || 1;
-  const protocols = Object.keys(data);
-  const colorPalette = ['#3b82f6', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
-  const colorMap: Record<string, string> = {};
-  protocols.forEach((p, i) => { colorMap[p] = colorPalette[i % colorPalette.length]; });
-
-  let cumulative = 0;
-  const stops = protocols.map((p) => {
-    const pct = (data[p] || 0) / total;
-    const start = cumulative;
-    cumulative += pct;
-    return `${colorMap[p]} ${start * 100}% ${cumulative * 100}%`;
-  });
-
-  return (
-    <div className="aegis-card">
-      <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Protocol Distribution</h3>
-      <div className="flex items-center gap-6">
-        <div
-          className="h-32 w-32 shrink-0 rounded-full"
-          style={{ background: stops.length ? `conic-gradient(${stops.join(', ')})` : '#e5e7eb' }}
-        />
-        <div className="space-y-2">
-          {protocols.map((p) => {
-            const pct = ((data[p] || 0) / total * 100).toFixed(1);
-            const cfg = getProtocolConfig(p);
-            return (
-              <div key={p} className="flex items-center gap-2 text-sm">
-                <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: colorMap[p] }} />
-                <span className="text-gray-700 dark:text-gray-300">
-                  {cfg.label}: {data[p] || 0} ({pct}%)
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BandwidthCard({ sent, received }: { sent: number; received: number }) {
-  return (
-    <div className="aegis-card">
-      <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Bandwidth Usage (Total)</h3>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Sent</p>
-          <p className="mt-1 text-xl font-bold text-blue-600 dark:text-blue-400">{formatBytes(sent)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Received</p>
-          <p className="mt-1 text-xl font-bold text-green-600 dark:text-green-400">{formatBytes(received)}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TopUsersTable({ data }: { data: { user_name: string; connection_count: number; total_minutes: number }[] }) {
-  return (
-    <div className="aegis-card">
-      <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Top VPN Users</h3>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 dark:border-aegis-border">
-            <th className="pb-2 text-left font-medium text-gray-500 dark:text-gray-400">User</th>
-            <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">Connections</th>
-            <th className="pb-2 text-right font-medium text-gray-500 dark:text-gray-400">Total Hours</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((u) => (
-            <tr key={u.user_name} className="border-b border-gray-100 dark:border-aegis-border/50">
-              <td className="py-2 text-gray-900 dark:text-white">{u.user_name}</td>
-              <td className="py-2 text-right text-gray-700 dark:text-gray-300">{u.connection_count}</td>
-              <td className="py-2 text-right text-gray-700 dark:text-gray-300">
-                {(u.total_minutes / 60).toFixed(1)}h
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// Loading skeleton
-function SkeletonCard() {
-  return (
-    <div className="aegis-card animate-pulse">
-      <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
-      <div className="mt-2 h-8 w-20 rounded bg-gray-200 dark:bg-gray-700" />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+const vpnCount   = REMOTE_USERS.filter(u => u.vpn).length;
+const mfaCount   = REMOTE_USERS.filter(u => u.mfa).length;
+const highRiskCount = REMOTE_USERS.filter(u => u.risk === 'high').length;
 
 export default function RemoteWorkPage() {
-  const [tab, setTab] = useState<Tab>('active');
-  const [analytics, setAnalytics] = useState<BackendRemoteWorkAnalytics | null>(null);
-  const [vpnSessions, setVpnSessions] = useState<BackendVPNConnection[]>([]);
-  const [policies, setPolicies] = useState<BackendRemoteAccessPolicy[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [analyticsRes, vpnRes, policiesRes] = await Promise.all([
-        fetchRemoteWorkAnalytics(),
-        fetchActiveVPN(0, 100),
-        fetchRemoteAccessPolicies(0, 50),
-      ]);
-      const hasVpn = (vpnRes.items || []).length > 0;
-      const hasAnalytics = analyticsRes.total_connections > 0 || analyticsRes.active_connections > 0;
-      setAnalytics(hasAnalytics ? analyticsRes : DUMMY_REMOTE_ANALYTICS);
-      setVpnSessions(hasVpn ? vpnRes.items : DUMMY_VPN_CONNECTIONS);
-      setPolicies(policiesRes.items);
-    } catch {
-      setAnalytics(DUMMY_REMOTE_ANALYTICS);
-      setVpnSessions(DUMMY_VPN_CONNECTIONS);
-      setPolicies([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'active', label: 'Active VPN' },
-    { key: 'analytics', label: 'Analytics' },
-    { key: 'policies', label: 'Policies' },
-  ];
-
-  const byProtocol = analytics?.by_protocol ?? {};
-  const protocolBarData = Object.entries(byProtocol)
-    .sort((a, b) => b[1] - a[1])
-    .map(([proto, count], i) => ({
-      label: proto.toUpperCase(),
-      value: count,
-      color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
-    }));
-
-  const maxActive = 50;
-  const activeConnections = analytics?.active_connections ?? 0;
-  const activeRate = Math.round((activeConnections / maxActive) * 100);
-  const activeColor = activeRate >= 80 ? '#ef4444' : activeRate >= 50 ? '#f59e0b' : '#10b981';
-  const utilizationRate = analytics?.utilization_rate ?? 0;
-  const totalConnections = analytics?.total_connections ?? 0;
-  const wireguardCount = byProtocol['wireguard'] ?? 0;
+  const filtered = REMOTE_USERS.filter(u =>
+    !search ||
+    u.name.includes(search) ||
+    u.dept.includes(search) ||
+    u.location.includes(search)
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Remote Work Management
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Monitor VPN connections, telework utilization, and remote access policies
-        </p>
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">リモートワーク管理</h1>
+          <p className="page-subtitle">テレワーク中のユーザー接続状況・VPN・セキュリティリスクの監視</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">更新</button>
+        </div>
       </div>
 
-      {/* Summary Chart */}
-      {loading ? (
-        <div className="aegis-card animate-pulse">
-          <div className="h-6 w-40 rounded bg-gray-200 dark:bg-gray-700 mb-4" />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
-              <div className="h-36 w-36 rounded-full bg-gray-200 dark:bg-gray-700" />
-            </div>
-            <div className="h-40 rounded bg-gray-200 dark:bg-gray-700" />
-          </div>
-        </div>
-      ) : (
-        <div className="aegis-card">
-          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">リモートワーク概要</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">VPN同時接続率</p>
-              <DonutChart
-                value={activeRate}
-                max={100}
-                size={140}
-                strokeWidth={14}
-                color={activeColor}
-                label={`${activeConnections}接続`}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                想定上限 {maxActive} に対して {activeRate}% 使用中
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">プロトコル別累計接続数</p>
-              {protocolBarData.length > 0 ? (
-                <BarChart
-                  data={protocolBarData}
-                  maxValue={Math.max(...protocolBarData.map((d) => d.value), 1)}
-                  height={160}
-                  showValues
-                />
-              ) : (
-                <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">データなし</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Summary Cards */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Total Connections"
-            value={totalConnections.toLocaleString()}
-            sub="All time"
-          />
-          <StatCard
-            title="Active VPN"
-            value={activeConnections}
-            sub="Currently connected"
-          />
-          <StatCard
-            title="Utilization Rate"
-            value={`${(utilizationRate * 100).toFixed(0)}%`}
-            sub="Active / unique users"
-          />
-          <StatCard
-            title="WireGuard"
-            value={wireguardCount}
-            sub={totalConnections > 0 ? `${((wireguardCount / totalConnections) * 100).toFixed(1)}% of total` : '—'}
-          />
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-aegis-border">
-        <nav className="-mb-px flex gap-6">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
-                tab === t.key
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">リモート接続中</p><p className="stat-value">{REMOTE_USERS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">VPN 接続済</p><p className="stat-value text-green">{vpnCount}</p></div>
+        <div className="card card-center"><p className="stat-label">MFA 有効</p><p className="stat-value text-green">{mfaCount}</p></div>
+        <div className="card card-center"><p className="stat-label">高リスクユーザー</p><p className="stat-value text-red">{highRiskCount}</p></div>
       </div>
 
-      {/* Tab Content */}
-      {tab === 'active' && (
-        loading ? (
-          <div className="aegis-card animate-pulse">
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-10 rounded bg-gray-200 dark:bg-gray-700" />
-              ))}
-            </div>
+      <div className="card">
+        <h2 className="card-title">接続状況サマリー</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">VPN 接続率</p>
+            <DonutChart value={Math.round(vpnCount / REMOTE_USERS.length * 100)} max={100} size={130} strokeWidth={13} color="#10b981" />
+            <p className="chart-sublabel">{vpnCount}/{REMOTE_USERS.length} 名が VPN 接続中</p>
           </div>
-        ) : vpnSessions.length === 0 ? (
-          <div className="flex items-center justify-center aegis-card py-16">
-            <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
+          <div style={{ flex: 1 }}>
+            <p className="chart-label" style={{ marginBottom: 8 }}>セキュリティ指標</p>
+            {[
+              { label: 'VPN 接続率',  value: Math.round(vpnCount / REMOTE_USERS.length * 100),   color: '#10b981' },
+              { label: 'MFA 適用率',  value: Math.round(mfaCount / REMOTE_USERS.length * 100),   color: '#10b981' },
+              { label: '高リスク率',  value: Math.round(highRiskCount / REMOTE_USERS.length * 100), color: '#ef4444' },
+            ].map(m => (
+              <div key={m.label} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <span className="text-sub" style={{ fontSize: 12 }}>{m.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: m.color }}>{m.value}%</span>
+                </div>
+                <ProgressBar value={m.value} max={100} color={m.color} size="sm" />
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="aegis-card">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-aegis-border">
-                    <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">User</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Protocol</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">VPN Server</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Client IP</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Connected</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Duration</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Status</th>
+        </div>
+      </div>
+
+      <div className="card filter-row">
+        <SearchInput placeholder="氏名・部門・接続場所で検索..." value={search} onChange={v => setSearch(v)} style={{ flex: 1, minWidth: 200 }} />
+      </div>
+
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['氏名', '部門', 'デバイス', 'VPN', 'MFA', '接続場所', '最終確認', 'リスク'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.length > 0 ? filtered.map(u => {
+                const rk = RISK_CFG[u.risk as RiskLevel] ?? RISK_CFG.low;
+                return (
+                  <tr key={u.id} className="table-row-hover">
+                    <td><span className="text-main">{u.name}</span></td>
+                    <td className="text-sub">{u.dept}</td>
+                    <td className="text-sub">{u.device}</td>
+                    <td><Badge variant={u.vpn ? 'success' : 'danger'} dot>{u.vpn ? '接続中' : '未接続'}</Badge></td>
+                    <td><Badge variant={u.mfa ? 'success' : 'danger'} dot>{u.mfa ? '有効' : '無効'}</Badge></td>
+                    <td className="text-sub">{u.location}</td>
+                    <td className="text-sub">{u.lastSeen}</td>
+                    <td><Badge variant={rk.v}>{rk.l}</Badge></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {vpnSessions.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="border-b border-gray-100 last:border-b-0 dark:border-aegis-border/50 hover:bg-gray-50 dark:hover:bg-aegis-darker/50"
-                    >
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{c.user_name}</td>
-                      <td className="px-4 py-3">
-                        <ProtocolBadge protocol={c.protocol} />
-                      </td>
-                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs">{c.vpn_server}</td>
-                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono text-xs">{c.client_ip}</td>
-                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{formatTime(c.connected_at)}</td>
-                      <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                        {c.duration_minutes !== null ? `${c.duration_minutes}min` : `${elapsedMinutes(c.connected_at)}min (接続中)`}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {c.is_active ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-xs text-green-700 dark:text-green-400">Active</span>
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Inactive</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      )}
-
-      {tab === 'analytics' && (
-        loading ? (
-          <div className="space-y-6 animate-pulse">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="h-56 rounded-xl bg-gray-200 dark:bg-gray-700" />
-              <div className="h-56 rounded-xl bg-gray-200 dark:bg-gray-700" />
-            </div>
-          </div>
-        ) : analytics === null ? (
-          <div className="flex items-center justify-center aegis-card py-16">
-            <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <PeakHoursChart data={analytics.peak_hours} />
-              <ProtocolDistributionChart data={analytics.by_protocol} />
-            </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <BandwidthCard
-                sent={analytics.total_bytes_sent}
-                received={analytics.total_bytes_received}
-              />
-              <div className="aegis-card">
-                <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Utilization</h3>
-                <div className="flex items-center gap-4">
-                  <div className="relative h-24 w-24">
-                    <svg viewBox="0 0 36 36" className="h-24 w-24 -rotate-90">
-                      <circle
-                        cx="18" cy="18" r="15.9155"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        className="text-gray-200 dark:text-gray-700"
-                      />
-                      <circle
-                        cx="18" cy="18" r="15.9155"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeDasharray={`${utilizationRate * 100} ${100 - utilizationRate * 100}`}
-                        className="text-primary-500 dark:text-primary-400"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        {(utilizationRate * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {activeConnections} active out of {totalConnections.toLocaleString()} total
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Remote work adoption rate across the organization
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <TopUsersTable data={analytics.top_users} />
-          </div>
-        )
-      )}
-
-      {tab === 'policies' && (
-        loading ? (
-          <div className="space-y-4 animate-pulse">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 rounded-xl bg-gray-200 dark:bg-gray-700" />
-            ))}
-          </div>
-        ) : policies.length === 0 ? (
-          <div className="flex items-center justify-center aegis-card py-16">
-            <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {policies.map((policy) => (
-              <div
-                key={policy.id}
-                className="aegis-card"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                        {policy.name}
-                      </h3>
-                      <Badge
-                        variant={policy.is_enabled ? 'default' : 'outline'}
-                        className={policy.is_enabled ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : ''}
-                      >
-                        {policy.is_enabled ? 'Enabled' : 'Disabled'}
-                      </Badge>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                      <div>
-                        <span className="text-gray-500 dark:text-gray-400">Allowed Hours: </span>
-                        <span className="text-gray-900 dark:text-white">
-                          {policy.allowed_hours_start} - {policy.allowed_hours_end}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 dark:text-gray-400">Max Session: </span>
-                        <span className="text-gray-900 dark:text-white">{policy.max_session_hours}h</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 dark:text-gray-400">Days: </span>
-                        <span className="text-gray-900 dark:text-white">
-                          {policy.allowed_days.map(formatDayName).join(', ')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 dark:text-gray-400">MFA Required: </span>
-                        <span className={policy.require_mfa ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                          {policy.require_mfa ? 'Yes' : 'No'}
-                        </span>
-                      </div>
-                      {policy.geo_restriction && (
-                        <div className="col-span-2">
-                          <span className="text-gray-500 dark:text-gray-400">Geo Restriction: </span>
-                          <span className="text-gray-900 dark:text-white">
-                            {(policy.geo_restriction['allowed_countries'] as string[] | undefined)?.join(', ') || 'None'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      )}
+                );
+              }) : (
+                <tr><td colSpan={8} className="table-empty">条件に一致するユーザーが見つかりません</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-footer">
+          <span className="table-info">全 {REMOTE_USERS.length} 件中 {filtered.length} 件を表示</span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,381 +1,181 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Modal } from '@/components/ui/modal';
-import {
-  fetchProcurementById,
-  submitProcurementRequest,
-  approveProcurementRequest,
-  rejectProcurementRequest,
-  orderProcurementRequest,
-  receiveProcurementRequest,
-} from '@/lib/api';
-import type { BackendProcurementResponse } from '@/lib/api';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Badge, Modal } from '@/components/ui/design-components';
 
-type FrontendStatus =
-  | 'draft'
-  | 'submitted'
-  | 'approved'
-  | 'rejected'
-  | 'ordered'
-  | 'delivered'
-  | 'completed';
-
-const statusMap: Record<string, FrontendStatus> = {
-  draft: 'draft',
-  submitted: 'submitted',
-  approved: 'approved',
-  rejected: 'rejected',
-  ordered: 'ordered',
-  received: 'delivered',
-  registered: 'completed',
-  active: 'completed',
-  disposal_requested: 'completed',
-  disposed: 'completed',
+const PROCUREMENT = {
+  id:         'PRQ-2025-0042',
+  item:       'Dell Latitude 5540 ×20 台',
+  status:     'approved' as const,
+  category:   'ハードウェア',
+  dept:       'エンジニアリング部',
+  purpose:    '2025年度新入社員向け開発用ノートPC調達。現行機材の老朽化（平均5年超）に伴う更新申請。\nスペック要件: Core i7-13th / 16GB RAM / 512GB SSD / Windows 11 Pro',
+  qty:        20,
+  unitPrice:  178000,
+  totalPrice: 3560000,
+  created:    '2025-01-10 09:30',
+  updated:    '2025-01-13 15:20',
 };
 
-const statusConfig: Record<FrontendStatus, {
-  label: string;
-  variant: 'default' | 'info' | 'success' | 'danger' | 'warning' | 'purple';
-}> = {
-  draft:     { label: '下書き', variant: 'default' },
-  submitted: { label: '申請中', variant: 'info' },
-  approved:  { label: '承認済', variant: 'success' },
-  rejected:  { label: '却下',   variant: 'danger' },
-  ordered:   { label: '発注済', variant: 'purple' },
-  delivered: { label: '納品済', variant: 'success' },
-  completed: { label: '完了',   variant: 'default' },
+type StatusKey = 'draft' | 'submitted' | 'approved' | 'ordered' | 'delivered' | 'completed';
+
+const STATUS_CFG: Record<StatusKey, { label: string; v: 'default' | 'info' | 'success' | 'warning' | 'danger' }> = {
+  draft:     { label: '下書き', v: 'default'  },
+  submitted: { label: '申請中', v: 'info'     },
+  approved:  { label: '承認済', v: 'success'  },
+  ordered:   { label: '発注済', v: 'warning'  },
+  delivered: { label: '納品済', v: 'success'  },
+  completed: { label: '完了',   v: 'default'  },
 };
 
-const allStatuses: FrontendStatus[] = [
-  'draft', 'submitted', 'approved', 'ordered', 'delivered', 'completed',
+const STEPS: StatusKey[] = ['draft', 'submitted', 'approved', 'ordered', 'delivered', 'completed'];
+const CURRENT_IDX = STEPS.indexOf(PROCUREMENT.status);
+
+const EVENTS = [
+  { label: '申請作成', date: '2025-01-10 09:30' },
+  { label: '申請提出', date: '2025-01-10 10:05' },
+  { label: '上長承認', date: '2025-01-13 15:20' },
 ];
 
-const categoryLabel: Record<string, string> = {
-  hardware:   'ハードウェア',
-  software:   'ソフトウェア',
-  service:    'サービス',
-  consumable: '消耗品',
-};
-
-type ActionType = 'submit' | 'approve' | 'reject' | 'order' | 'receive';
-
-interface ActionConfig {
-  label: string;
-  action: ActionType;
-  variant: 'primary' | 'danger' | 'secondary';
-}
-
-const nextActions: Record<FrontendStatus, ActionConfig[]> = {
-  draft:     [{ label: '申請提出', action: 'submit',  variant: 'primary' }],
-  submitted: [
-    { label: '承認する', action: 'approve', variant: 'primary' },
-    { label: '却下する', action: 'reject',  variant: 'danger' },
-  ],
-  approved:  [{ label: '発注済みにする', action: 'order',   variant: 'primary' }],
-  ordered:   [{ label: '納品済みにする', action: 'receive', variant: 'primary' }],
-  delivered: [],
-  rejected:  [],
-  completed: [],
-};
-
 export default function ProcurementDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : (params.id ?? '');
-
-  const [data, setData] = useState<BackendProcurementResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [actionInProgress, setActionInProgress] = useState(false);
-
-  const [modal, setModal] = useState<{ action: ActionType; label: string } | null>(null);
-  const [comment, setComment] = useState('');
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  async function load() {
-    setLoading(true);
-    try {
-      const res = await fetchProcurementById(id);
-      setData(res);
-    } catch {
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { load(); }, [id]);
-
-  async function executeAction(action: ActionType) {
-    if (!data) return;
-    setActionInProgress(true);
-    setActionError(null);
-    try {
-      switch (action) {
-        case 'submit':  await submitProcurementRequest(data.id);  break;
-        case 'approve': await approveProcurementRequest(data.id); break;
-        case 'reject':  await rejectProcurementRequest(data.id);  break;
-        case 'order':   await orderProcurementRequest(data.id);   break;
-        case 'receive': await receiveProcurementRequest(data.id); break;
-      }
-      await load();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : '操作に失敗しました');
-    } finally {
-      setActionInProgress(false);
-      setModal(null);
-      setComment('');
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="h-10 w-64 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="aegis-card animate-pulse space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (notFound || !data) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-aegis-surface dark:hover:text-gray-300"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">申請が見つかりません</h1>
-        </div>
-        <div className="aegis-card py-12 text-center">
-          <p className="text-gray-500 dark:text-gray-400">
-            申請ID <span className="font-mono font-semibold">{id}</span> は存在しません。
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const frontendStatus = statusMap[data.status] ?? 'draft';
-  const currentStepIndex = allStatuses.indexOf(frontendStatus);
-  const actions = nextActions[frontendStatus] ?? [];
-  const totalPrice = parseFloat(data.total_price);
+  const [modalAction, setModalAction] = useState<string | null>(null);
+  const [actionDone,  setActionDone]  = useState(false);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-aegis-surface dark:hover:text-gray-300"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-            </svg>
-          </button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {data.request_number}
-              </h1>
-              <Badge variant={statusConfig[frontendStatus].variant} size="md">
-                {statusConfig[frontendStatus].label}
-              </Badge>
-            </div>
-            <p className="mt-1 text-lg text-gray-700 dark:text-gray-300">
-              {data.item_name}
-            </p>
-          </div>
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <p className="text-sub" style={{ fontSize: 12, marginBottom: 4 }}>
+            <Link href="/dashboard/procurement" style={{ color: 'var(--primary)' }}>調達管理</Link>
+            {' / '}
+            <span>{PROCUREMENT.id}</span>
+          </p>
+          <h1 className="page-title">{PROCUREMENT.id}</h1>
+          <p className="page-subtitle">{PROCUREMENT.item}</p>
         </div>
-        <div className="flex gap-2">
-          {actions.map(({ label, action, variant }) => (
-            <button
-              key={action}
-              disabled={actionInProgress}
-              onClick={() => { setModal({ action, label }); setComment(''); }}
-              className={
-                variant === 'danger'
-                  ? 'aegis-btn-secondary text-red-600 disabled:opacity-50'
-                  : 'aegis-btn-primary disabled:opacity-50'
-              }
-            >
-              {label}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Badge variant={STATUS_CFG[PROCUREMENT.status].v}>{STATUS_CFG[PROCUREMENT.status].label}</Badge>
+          {!actionDone && (
+            <button className="btn-primary" onClick={() => setModalAction('発注済みにする')}>
+              発注済みにする
             </button>
-          ))}
+          )}
         </div>
       </div>
 
-      {actionError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-          {actionError}
-        </div>
-      )}
-
-      {/* Status Progress */}
-      <div className="aegis-card">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">ステータス進捗</h2>
-        <div className="flex items-center">
-          {allStatuses
-            .filter((s) => s !== 'rejected')
-            .map((status, index, arr) => {
-              const stepIndex = allStatuses.indexOf(status);
-              const isCompleted = stepIndex <= currentStepIndex;
-              const isCurrent = status === frontendStatus;
-              return (
-                <div key={status} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
-                        isCompleted
-                          ? 'border-primary-600 bg-primary-600 text-white'
-                          : isCurrent
-                          ? 'border-primary-600 bg-white text-primary-600 dark:bg-aegis-dark'
-                          : 'border-gray-300 bg-white text-gray-400 dark:border-gray-600 dark:bg-aegis-dark'
-                      }`}
-                    >
-                      {isCompleted && !isCurrent ? (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
-                      ) : (
-                        index + 1
-                      )}
-                    </div>
-                    <span className={`mt-1.5 text-[10px] font-medium ${
-                      isCompleted ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'
-                    }`}>
-                      {statusConfig[status].label}
-                    </span>
+      {/* Status stepper */}
+      <div className="card">
+        <h2 className="card-title">ステータス進捗</h2>
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: 12 }}>
+          {STEPS.map((step, i) => {
+            const cfg      = STATUS_CFG[step];
+            const past     = i <= CURRENT_IDX;
+            const isCurrent = i === CURRENT_IDX;
+            return (
+              <div key={step} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 700,
+                    background: past ? 'var(--primary)' : 'var(--bg-secondary)',
+                    color: past ? '#fff' : 'var(--text-sub)',
+                    border: isCurrent ? '3px solid var(--primary)' : '2px solid transparent',
+                    boxSizing: 'border-box',
+                  }}>
+                    {past && !isCurrent ? '✓' : i + 1}
                   </div>
-                  {index < arr.length - 1 && (
-                    <div
-                      className={`mx-1 h-0.5 flex-1 ${
-                        stepIndex < currentStepIndex
-                          ? 'bg-primary-600'
-                          : 'bg-gray-200 dark:bg-gray-700'
-                      }`}
-                    />
-                  )}
+                  <span style={{
+                    fontSize: 11, marginTop: 4,
+                    color: past ? 'var(--primary)' : 'var(--text-sub)',
+                    fontWeight: past ? 600 : 400,
+                  }}>
+                    {cfg.label}
+                  </span>
                 </div>
-              );
-            })}
+                {i < STEPS.length - 1 && (
+                  <div style={{
+                    flex: 1, height: 2,
+                    background: i < CURRENT_IDX ? 'var(--primary)' : 'var(--border)',
+                    margin: '0 4px', marginBottom: 20,
+                  }} />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left: Details */}
-        <div className="space-y-6 lg:col-span-2">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Purpose */}
-          <div className="aegis-card">
-            <h2 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">調達目的</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-              {data.purpose}
+          <div className="card">
+            <h2 className="card-title">調達目的</h2>
+            <p className="text-sub" style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap', marginTop: 8 }}>
+              {PROCUREMENT.purpose}
             </p>
           </div>
 
-          {/* Item Table */}
-          <div className="aegis-card overflow-hidden p-0">
-            <div className="border-b border-gray-200 px-6 py-3 dark:border-aegis-border">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">品目明細</h2>
+          {/* Item table */}
+          <div className="card table-card">
+            <h2 className="card-title">品目明細</h2>
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead><tr>
+                  {['品目', '数量', '単価', '小計'].map(h => <th key={h}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  <tr className="table-row-hover">
+                    <td><span className="text-main" style={{ fontWeight: 500 }}>{PROCUREMENT.item}</span></td>
+                    <td className="text-sub">{PROCUREMENT.qty}</td>
+                    <td className="mono text-sub">{PROCUREMENT.unitPrice.toLocaleString()} 円</td>
+                    <td className="mono text-main" style={{ fontWeight: 600 }}>{PROCUREMENT.totalPrice.toLocaleString()} 円</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: '2px solid var(--border)' }}>
+                    <td colSpan={3} style={{ textAlign: 'right', padding: '10px 16px', fontWeight: 600 }}>合計</td>
+                    <td className="mono" style={{ padding: '10px 16px', fontWeight: 700, fontSize: 16, color: 'var(--primary)' }}>
+                      {PROCUREMENT.totalPrice.toLocaleString()} 円
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">品目</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">数量</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">単価</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">小計</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-                <tr>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {data.item_name}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                    {data.quantity}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                    {parseFloat(data.unit_price).toLocaleString()}円
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
-                    {totalPrice.toLocaleString()}円
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-gray-200 dark:border-aegis-border">
-                  <td colSpan={3} className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                    合計
-                  </td>
-                  <td className="px-6 py-4 text-right text-lg font-bold text-primary-600 dark:text-primary-400">
-                    {totalPrice.toLocaleString()}円
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
           </div>
         </div>
 
-        {/* Right: Info */}
-        <div className="space-y-6">
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">申請情報</h2>
-            <dl className="space-y-3">
-              {[
-                { label: '申請番号', value: data.request_number },
-                { label: '部門', value: data.department },
-                { label: 'カテゴリ', value: categoryLabel[data.category] ?? data.category },
-                { label: '作成日時', value: new Date(data.created_at).toLocaleString('ja-JP') },
-                { label: '更新日時', value: new Date(data.updated_at).toLocaleString('ja-JP') },
-              ].map((info) => (
-                <div key={info.label} className="flex justify-between gap-4">
-                  <dt className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{info.label}</dt>
-                  <dd className="text-right text-sm font-medium text-gray-900 dark:text-white">{info.value}</dd>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* 申請情報 */}
+          <div className="card">
+            <h2 className="card-title">申請情報</h2>
+            <div className="detail-grid">
+              {([
+                ['申請番号', PROCUREMENT.id],
+                ['カテゴリ', PROCUREMENT.category],
+                ['申請部門', PROCUREMENT.dept],
+                ['作成日時', PROCUREMENT.created],
+                ['更新日時', PROCUREMENT.updated],
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="detail-item">
+                  <span className="detail-label">{k}</span>
+                  <span className="detail-value">{v}</span>
                 </div>
               ))}
-            </dl>
+            </div>
           </div>
 
-          {/* Quick Timeline derived from status */}
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">イベント</h2>
-            <div className="space-y-0">
-              {[
-                { event: '申請作成', date: data.created_at },
-                ...(data.status !== 'draft'
-                  ? [{ event: '申請提出', date: data.updated_at }]
-                  : []),
-                ...((['approved', 'rejected', 'ordered', 'received', 'registered', 'active'].includes(data.status))
-                  ? [{ event: statusConfig[frontendStatus].label, date: data.updated_at }]
-                  : []),
-              ].map((ev, i, arr) => (
-                <div key={i} className="relative flex gap-3 pb-6 last:pb-0">
-                  {i < arr.length - 1 && (
-                    <div className="absolute left-[11px] top-6 h-full w-0.5 bg-gray-200 dark:bg-gray-700" />
-                  )}
-                  <div className="relative z-10 mt-1 h-6 w-6 shrink-0">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary-500 bg-white dark:bg-aegis-dark">
-                      <div className="h-2 w-2 rounded-full bg-primary-500" />
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{ev.event}</p>
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      {new Date(ev.date).toLocaleString('ja-JP')}
-                    </p>
+          {/* Events */}
+          <div className="card">
+            <h2 className="card-title">イベント</h2>
+            <div className="activity-list">
+              {EVENTS.map((ev, i) => (
+                <div key={i} className="activity-item">
+                  <div className="activity-dot" />
+                  <div className="activity-content">
+                    <p className="activity-text">{ev.label}</p>
+                    <p className="activity-time">{ev.date}</p>
                   </div>
                 </div>
               ))}
@@ -384,44 +184,17 @@ export default function ProcurementDetailPage() {
         </div>
       </div>
 
-      {/* Action Confirmation Modal */}
-      <Modal
-        isOpen={modal !== null}
-        onClose={() => setModal(null)}
-        title="操作の確認"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <span className="font-semibold text-gray-900 dark:text-white">「{data.item_name}」</span>
-            に対して
-            <span className="mx-1 font-semibold text-primary-600 dark:text-primary-400">
-              {modal?.label}
-            </span>
+      {/* Action Modal */}
+      <Modal open={modalAction !== null} onClose={() => setModalAction(null)} title="操作の確認">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p className="text-sub" style={{ fontSize: 14 }}>
+            <strong className="text-main">「{PROCUREMENT.item}」</strong>に対して
+            <strong style={{ color: 'var(--primary)', marginLeft: 4 }}>{modalAction}</strong>
             を実行しますか?
           </p>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              コメント（任意）
-            </label>
-            <textarea
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="理由やコメントを入力"
-              className="aegis-input resize-none"
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setModal(null)} className="aegis-btn-secondary">
-              キャンセル
-            </button>
-            <button
-              disabled={actionInProgress}
-              onClick={() => modal && executeAction(modal.action)}
-              className="aegis-btn-primary disabled:opacity-50"
-            >
-              {actionInProgress ? '処理中...' : '確定'}
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <button className="btn-secondary" onClick={() => setModalAction(null)}>キャンセル</button>
+            <button className="btn-primary" onClick={() => { setActionDone(true); setModalAction(null); }}>確定</button>
           </div>
         </div>
       </Modal>

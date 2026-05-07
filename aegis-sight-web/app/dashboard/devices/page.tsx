@@ -1,317 +1,191 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useState, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
-import { fetchDevices } from '@/lib/api';
-import type { BackendDevice } from '@/lib/api';
+import { useState } from 'react';
+import {
+  Badge, DonutChart, MiniBarChart, ProgressBar,
+  SearchInput, Select, Modal, Tooltip,
+} from '@/components/ui/design-components';
 
-const DUMMY_DEVICES: BackendDevice[] = [
-  { id: 'dev-aabb1100-0001', hostname: 'PC-ENG-001',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.101', mac_address: 'AA:BB:11:00:00:01', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:55:00Z', created_at: '2024-04-01T09:00:00Z' },
-  { id: 'dev-ccdd2200-0002', hostname: 'PC-ENG-002',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.102', mac_address: 'CC:DD:22:00:00:02', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:50:00Z', created_at: '2024-04-01T09:00:00Z' },
-  { id: 'dev-eeff3300-0003', hostname: 'PC-SALES-042',  os_version: 'Windows 10 Pro 22H2',      ip_address: '192.168.2.142', mac_address: 'EE:FF:33:00:00:03', domain: 'corp.example.jp', status: 'maintenance', last_seen: '2026-05-07T06:42:00Z', created_at: '2022-10-15T09:00:00Z' },
-  { id: 'dev-aabb4400-0004', hostname: 'PC-HR-015',     os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.3.115', mac_address: 'AA:BB:44:00:00:04', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:48:00Z', created_at: '2023-04-01T09:00:00Z' },
-  { id: 'dev-ccdd5500-0005', hostname: 'PC-FIN-007',    os_version: 'Windows 11 Enterprise 23H2', ip_address: '192.168.4.107', mac_address: 'CC:DD:55:00:00:05', domain: 'corp.example.jp', status: 'active',  last_seen: '2026-05-07T08:45:00Z', created_at: '2023-07-10T09:00:00Z' },
-  { id: 'dev-eeff6600-0006', hostname: 'SRV-APP-02',    os_version: 'Windows Server 2022 Std',  ip_address: '192.168.10.12', mac_address: 'EE:FF:66:00:00:06', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:58:00Z', created_at: '2022-07-01T09:00:00Z' },
-  { id: 'dev-aabb7700-0007', hostname: 'SRV-DB-01',     os_version: 'Windows Server 2019 Std',  ip_address: '192.168.10.11', mac_address: 'AA:BB:77:00:00:07', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:59:00Z', created_at: '2021-06-01T09:00:00Z' },
-  { id: 'dev-ccdd8800-0008', hostname: 'PC-DESIGN-003', os_version: 'macOS Sonoma 14.4',        ip_address: '192.168.1.203', mac_address: 'CC:DD:88:00:00:08', domain: null,              status: 'active',      last_seen: '2026-05-07T08:40:00Z', created_at: '2024-01-15T09:00:00Z' },
-  { id: 'dev-eeff9900-0009', hostname: 'PC-MKT-022',    os_version: 'Windows 11 Pro 22H2',      ip_address: '192.168.5.122', mac_address: 'EE:FF:99:00:00:09', domain: 'corp.example.jp', status: 'inactive',    last_seen: '2026-05-06T17:30:00Z', created_at: '2023-01-20T09:00:00Z' },
-  { id: 'dev-aabb0010-0010', hostname: 'PC-ENG-015',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.115', mac_address: 'AA:BB:00:10:00:0A', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:52:00Z', created_at: '2024-03-01T09:00:00Z' },
-  { id: 'dev-ccdd0011-0011', hostname: 'PC-INFRA-001',  os_version: 'Ubuntu 22.04 LTS',         ip_address: '192.168.10.21', mac_address: 'CC:DD:00:11:00:0B', domain: null,              status: 'active',      last_seen: '2026-05-07T08:57:00Z', created_at: '2022-09-01T09:00:00Z' },
-  { id: 'dev-eeff0012-0012', hostname: 'PC-LEGAL-003',  os_version: 'Windows 11 Enterprise 23H2', ip_address: '192.168.6.103', mac_address: 'EE:FF:00:12:00:0C', domain: 'corp.example.jp', status: 'maintenance', last_seen: '2026-05-07T07:00:00Z', created_at: '2023-10-01T09:00:00Z' },
+const DEMO_DEVICES = [
+  { id: 'd001', hostname: 'PC-TANAKA-001',     os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.101', dept: 'エンジニアリング', status: 'online',      lastSeen: '2026-05-07 14:30', user: '田中 一郎',   cpu: 45, mem: 62, disk: 38 },
+  { id: 'd002', hostname: 'PC-SATO-002',       os: 'Windows', osVer: 'Windows 10 Pro 22H2',       ip: '192.168.1.102', dept: '営業',             status: 'online',      lastSeen: '2026-05-07 14:25', user: '佐藤 花子',   cpu: 32, mem: 55, disk: 71 },
+  { id: 'd003', hostname: 'MAC-YAMADA-001',    os: 'macOS',   osVer: 'macOS Sonoma 14.3',          ip: '192.168.1.103', dept: 'デザイン',         status: 'online',      lastSeen: '2026-05-07 14:28', user: '山田 次郎',   cpu: 78, mem: 81, disk: 45 },
+  { id: 'd004', hostname: 'SRV-WEB-001',       os: 'Linux',   osVer: 'Ubuntu 22.04 LTS',           ip: '192.168.2.10',  dept: 'インフラ',         status: 'online',      lastSeen: '2026-05-07 14:31', user: '（共有）',    cpu: 65, mem: 72, disk: 55 },
+  { id: 'd005', hostname: 'PC-SUZUKI-003',     os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.105', dept: '人事',             status: 'offline',     lastSeen: '2026-05-06 18:10', user: '鈴木 三郎',   cpu: 0,  mem: 0,  disk: 42 },
+  { id: 'd006', hostname: 'PC-ITO-004',        os: 'Windows', osVer: 'Windows 10 Pro 22H2',       ip: '192.168.1.106', dept: '経理',             status: 'warning',     lastSeen: '2026-05-07 13:45', user: '伊藤 四郎',   cpu: 92, mem: 88, disk: 85 },
+  { id: 'd007', hostname: 'MAC-KOBAYASHI-002', os: 'macOS',   osVer: 'macOS Ventura 13.6',         ip: '192.168.1.107', dept: 'エンジニアリング', status: 'warning',     lastSeen: '2026-05-07 12:00', user: '小林 五郎',   cpu: 55, mem: 90, disk: 78 },
+  { id: 'd008', hostname: 'SRV-DB-001',        os: 'Linux',   osVer: 'CentOS Stream 9',            ip: '192.168.2.20',  dept: 'インフラ',         status: 'maintenance', lastSeen: '2026-05-07 10:00', user: '（共有）',    cpu: 12, mem: 35, disk: 62 },
+  { id: 'd009', hostname: 'PC-NAKAMURA-005',   os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.109', dept: '営業',             status: 'online',      lastSeen: '2026-05-07 14:15', user: '中村 六郎',   cpu: 28, mem: 48, disk: 35 },
+  { id: 'd010', hostname: 'PC-KIMURA-006',     os: 'Windows', osVer: 'Windows 10 Home 22H2',      ip: '192.168.1.110', dept: '総務',             status: 'offline',     lastSeen: '2026-05-04 17:00', user: '木村 七子',   cpu: 0,  mem: 0,  disk: 58 },
+  { id: 'd011', hostname: 'PC-FIELD-A01',      os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '10.0.1.50',     dept: '建設現場A',        status: 'online',      lastSeen: '2026-05-07 13:50', user: '高橋 八郎',   cpu: 35, mem: 42, disk: 29 },
+  { id: 'd012', hostname: 'PC-FIELD-B01',      os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '10.0.2.51',     dept: '建設現場B',        status: 'online',      lastSeen: '2026-05-07 14:05', user: '渡辺 九子',   cpu: 41, mem: 50, disk: 33 },
 ];
 
-const DUMMY_STATUS_COUNTS = { active: 9, inactive: 1, maintenance: 2 };
+const DEVICE_STATS = { total: 1284, online: 1102, offline: 128, warning: 54 };
 
-type BackendStatus = 'active' | 'inactive' | 'maintenance';
+type DeviceStatus = 'online' | 'offline' | 'warning' | 'maintenance';
 
-const statusConfig: Record<BackendStatus, { label: string; variant: 'success' | 'danger' | 'info'; dot: string }> = {
-  active:      { label: 'アクティブ',  variant: 'success', dot: 'bg-green-500' },
-  inactive:    { label: 'オフライン',   variant: 'danger',  dot: 'bg-gray-400'  },
-  maintenance: { label: 'メンテナンス', variant: 'info',    dot: 'bg-blue-500'  },
+const STATUS_CFG: Record<DeviceStatus, { l: string; v: 'success' | 'danger' | 'warning' | 'info'; dot: string }> = {
+  online:      { l: 'オンライン',     v: 'success', dot: '#10b981' },
+  offline:     { l: 'オフライン',     v: 'danger',  dot: '#9ca3af' },
+  warning:     { l: '要注意',         v: 'warning', dot: '#f59e0b' },
+  maintenance: { l: 'メンテナンス',   v: 'info',    dot: '#3b82f6' },
 };
 
-function formatRelative(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}分前`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}時間前`;
-  return `${Math.floor(hours / 24)}日前`;
-}
+type Device = typeof DEMO_DEVICES[number];
 
-const PAGE_SIZE = 50;
+const getStatus = (s: string) => STATUS_CFG[s as DeviceStatus] ?? STATUS_CFG.offline;
 
 export default function DevicesPage() {
-  const [devices, setDevices] = useState<BackendDevice[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [search, setSearch]     = useState('');
+  const [osF, setOsF]           = useState('all');
+  const [statusF, setStatusF]   = useState('all');
+  const [deptF, setDeptF]       = useState('all');
+  const [selected, setSelected] = useState<Device | null>(null);
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BackendStatus | 'all'>('all');
-
-  const [statusCounts, setStatusCounts] = useState({ active: 0, inactive: 0, maintenance: 0 });
-
-  const load = useCallback(async (p: number) => {
-    setLoading(true);
-    try {
-      const data = await fetchDevices(
-        p * PAGE_SIZE,
-        PAGE_SIZE,
-        statusFilter !== 'all' ? statusFilter : undefined,
-      );
-      // Fall back to dummy data when the API returns no devices
-      if (data.items.length > 0) {
-        setDevices(data.items);
-        setTotal(data.total);
-      } else {
-        const filtered = statusFilter === 'all'
-          ? DUMMY_DEVICES
-          : DUMMY_DEVICES.filter(d => d.status === statusFilter);
-        setDevices(filtered);
-        setTotal(filtered.length);
-      }
-    } catch {
-      // Backend unavailable — show dummy data so the UI remains informative
-      const filtered = statusFilter === 'all'
-        ? DUMMY_DEVICES
-        : DUMMY_DEVICES.filter(d => d.status === statusFilter);
-      setDevices(filtered);
-      setTotal(filtered.length);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter]);
-
-  useEffect(() => { setPage(0); }, [statusFilter]);
-  useEffect(() => { load(page); }, [load, page]);
-
-  useEffect(() => {
-    Promise.all([
-      fetchDevices(0, 1, 'active'),
-      fetchDevices(0, 1, 'inactive'),
-      fetchDevices(0, 1, 'maintenance'),
-    ]).then(([a, i, m]) => {
-      const total = a.total + i.total + m.total;
-      if (total > 0) {
-        setStatusCounts({ active: a.total, inactive: i.total, maintenance: m.total });
-      } else {
-        setStatusCounts(DUMMY_STATUS_COUNTS);
-      }
-    }).catch(() => {
-      setStatusCounts(DUMMY_STATUS_COUNTS);
-    });
-  }, []);
-
-  const filtered = search
-    ? devices.filter(d =>
-        d.hostname.toLowerCase().includes(search.toLowerCase()) ||
-        (d.ip_address ?? '').includes(search)
-      )
-    : devices;
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const allTotal = statusCounts.active + statusCounts.inactive + statusCounts.maintenance;
-  const onlineRate = allTotal > 0 ? Math.round((statusCounts.active / allTotal) * 100) : 0;
-  const onlineRateColor = onlineRate >= 80 ? '#10b981' : onlineRate >= 60 ? '#f59e0b' : '#ef4444';
+  const onlineRate = Math.round((DEVICE_STATS.online / DEVICE_STATS.total) * 100);
   const statusBarData = [
-    { label: 'アクティブ',    value: statusCounts.active,      color: 'bg-emerald-500' },
-    { label: 'オフライン',    value: statusCounts.inactive,    color: 'bg-gray-400'    },
-    { label: 'メンテナンス',  value: statusCounts.maintenance, color: 'bg-blue-500'    },
+    { label: 'オンライン', value: DEVICE_STATS.online,  color: '#10b981' },
+    { label: 'オフライン', value: DEVICE_STATS.offline, color: '#9ca3af' },
+    { label: '要注意',     value: DEVICE_STATS.warning, color: '#f59e0b' },
   ];
 
+  const depts = [...new Set(DEMO_DEVICES.map(d => d.dept))].sort();
+
+  const filtered = DEMO_DEVICES.filter(d => {
+    if (search && !d.hostname.toLowerCase().includes(search.toLowerCase()) && !d.ip.includes(search) && !d.user.includes(search)) return false;
+    if (osF !== 'all' && d.os !== osF) return false;
+    if (statusF !== 'all' && d.status !== statusF) return false;
+    if (deptF !== 'all' && d.dept !== deptF) return false;
+    return true;
+  });
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">デバイス管理</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            管理対象エンドポイントのステータス・詳細情報
-          </p>
+          <h1 className="page-title">デバイス管理</h1>
+          <p className="page-subtitle">管理対象エンドポイントのステータス・詳細情報</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
+          <button className="btn-primary">デバイスを追加</button>
         </div>
       </div>
 
-      {/* Device Overview Charts */}
-      {allTotal > 0 && (
-        <div className="aegis-card">
-          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">デバイス概要</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ率</p>
-              <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRateColor} label={`${onlineRate}%`} />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                全 {allTotal.toLocaleString()} 台中 {statusCounts.active.toLocaleString()} 台アクティブ
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ステータス別台数</p>
-              <BarChart data={statusBarData} maxValue={allTotal} height={160} showValues />
-            </div>
+      {/* Overview */}
+      <div className="card">
+        <h2 className="card-title">デバイス概要</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">オンライン率</p>
+            <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRate >= 80 ? '#10b981' : '#f59e0b'} />
+            <p className="chart-sublabel">全 {DEVICE_STATS.total.toLocaleString()} 台中 {DEVICE_STATS.online.toLocaleString()} 台</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p className="chart-label">ステータス別台数</p>
+            <MiniBarChart data={statusBarData} maxValue={DEVICE_STATS.total} height={160} />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">合計</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {loading ? '—' : total.toLocaleString()}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400">アクティブ</p>
-          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-            {allTotal > 0 ? statusCounts.active.toLocaleString() : (loading ? '—' : '0')}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">オフライン</p>
-          <p className="mt-2 text-3xl font-bold text-gray-500 dark:text-gray-400">
-            {allTotal > 0 ? statusCounts.inactive.toLocaleString() : (loading ? '—' : '0')}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">メンテナンス</p>
-          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {allTotal > 0 ? statusCounts.maintenance.toLocaleString() : (loading ? '—' : '0')}
-          </p>
-        </div>
+      {/* Stats */}
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">合計</p><p className="stat-value">{DEVICE_STATS.total.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label" style={{ color: '#10b981' }}>オンライン</p><p className="stat-value text-green">{DEVICE_STATS.online.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label">オフライン</p><p className="stat-value" style={{ color: '#9ca3af' }}>{DEVICE_STATS.offline.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label" style={{ color: '#f59e0b' }}>要注意</p><p className="stat-value text-amber">{DEVICE_STATS.warning.toLocaleString()}</p></div>
       </div>
 
       {/* Filters */}
-      <div className="aegis-card">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="ホスト名・IPアドレスで検索..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="aegis-input w-full"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as BackendStatus | 'all')}
-            className="aegis-input w-auto"
-          >
-            <option value="all">すべてのステータス</option>
-            <option value="active">アクティブ</option>
-            <option value="inactive">オフライン</option>
-            <option value="maintenance">メンテナンス</option>
-          </select>
-        </div>
+      <div className="card filter-row">
+        <SearchInput placeholder="ホスト名・IPアドレス・ユーザー名で検索..." value={search} onChange={setSearch} style={{ flex: 1, minWidth: 200 }} />
+        <Select value={osF} onChange={setOsF} options={[{ value: 'all', label: 'すべてのOS' }, { value: 'Windows', label: 'Windows' }, { value: 'macOS', label: 'macOS' }, { value: 'Linux', label: 'Linux' }]} />
+        <Select value={statusF} onChange={setStatusF} options={[{ value: 'all', label: 'すべてのステータス' }, ...Object.entries(STATUS_CFG).map(([k, v]) => ({ value: k, label: v.l }))]} />
+        <Select value={deptF} onChange={setDeptF} options={[{ value: 'all', label: 'すべての部門' }, ...depts.map(d => ({ value: d, label: d }))]} />
       </div>
 
-      {/* Device Table */}
-      <div className="aegis-card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ホスト名
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  OSバージョン
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  IPアドレス
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ドメイン
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ステータス
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  最終確認
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {loading ? (
-                [...Array(8)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    {[...Array(6)].map((__, j) => (
-                      <td key={j} className="px-6 py-4">
-                        <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
-                      </td>
-                    ))}
+      {/* Table */}
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['ホスト名', 'OS', 'IPアドレス', '担当ユーザー', '部門', 'ステータス', '最終確認', 'リソース'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.map(d => {
+                const sc = getStatus(d.status);
+                return (
+                  <tr key={d.id} className="table-row-hover" onClick={() => setSelected(d)} style={{ cursor: 'pointer' }}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="status-dot" style={{ background: sc.dot }} />
+                        <span className="link-text">{d.hostname}</span>
+                      </div>
+                    </td>
+                    <td><div><span className="text-main">{d.os}</span><br /><span className="text-sub">{d.osVer}</span></div></td>
+                    <td className="mono">{d.ip}</td>
+                    <td>{d.user}</td>
+                    <td>{d.dept}</td>
+                    <td><Badge variant={sc.v} dot>{sc.l}</Badge></td>
+                    <td className="text-sub">{d.lastSeen}</td>
+                    <td>
+                      {d.status !== 'offline' ? (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Tooltip text={`CPU: ${d.cpu}%`}>
+                            <div className="mini-gauge"><div className="mini-gauge-fill" style={{ width: `${d.cpu}%`, background: d.cpu > 80 ? '#ef4444' : d.cpu > 60 ? '#f59e0b' : '#10b981' }} /></div>
+                          </Tooltip>
+                          <Tooltip text={`MEM: ${d.mem}%`}>
+                            <div className="mini-gauge"><div className="mini-gauge-fill" style={{ width: `${d.mem}%`, background: d.mem > 80 ? '#ef4444' : d.mem > 60 ? '#f59e0b' : '#3b82f6' }} /></div>
+                          </Tooltip>
+                        </div>
+                      ) : <span className="text-sub">—</span>}
+                    </td>
                   </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-                    条件に一致するデバイスがありません
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((device) => {
-                  const st = statusConfig[device.status as BackendStatus] ?? statusConfig.inactive;
-                  return (
-                    <tr
-                      key={String(device.id)}
-                      className="transition-colors hover:bg-gray-50/70 dark:hover:bg-aegis-dark/40"
-                    >
-                      <td className="px-6 py-4">
-                        <Link href={`/dashboard/devices/${device.id}`} className="flex items-center gap-2 hover:underline">
-                          <div className={`h-2 w-2 rounded-full flex-shrink-0 ${st.dot}`} />
-                          <span className="font-medium text-gray-900 dark:text-white">{device.hostname}</span>
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        {device.os_version ?? '—'}
-                      </td>
-                      <td className="px-6 py-4 font-mono text-sm text-gray-700 dark:text-gray-300">
-                        {device.ip_address ?? '—'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {device.domain ?? '—'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={st.variant}>{st.label}</Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {formatRelative(device.last_seen)}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-aegis-border">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            全 <span className="font-medium">{total.toLocaleString()}</span> 件中{' '}
-            <span className="font-medium">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)}</span> 件を表示
-          </p>
-          <div className="flex gap-2">
-            <button
-              className="aegis-btn-secondary"
-              disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
-            >
-              前へ
-            </button>
-            <button
-              className="aegis-btn-secondary"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage(p => p + 1)}
-            >
-              次へ
-            </button>
+        <div className="table-footer">
+          <span className="table-info">全 {DEVICE_STATS.total.toLocaleString()} 件中 {filtered.length} 件を表示</span>
+          <div className="table-pagination">
+            <button className="btn-secondary btn-sm" disabled>前へ</button>
+            <button className="btn-primary btn-sm">1</button>
+            <button className="btn-secondary btn-sm">2</button>
+            <button className="btn-secondary btn-sm">次へ</button>
           </div>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.hostname ?? 'デバイス詳細'} wide>
+        {selected && (
+          <div>
+            <div className="detail-grid">
+              {([['OS', selected.osVer], ['IPアドレス', selected.ip], ['担当ユーザー', selected.user], ['部門', selected.dept], ['ステータス', getStatus(selected.status).l], ['最終確認', selected.lastSeen]] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="detail-item"><span className="detail-label">{k}</span><span className="detail-value">{v}</span></div>
+              ))}
+            </div>
+            {selected.status !== 'offline' && (
+              <div style={{ marginTop: 20 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#374151' }}>リソース使用率</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {([['CPU', selected.cpu], ['メモリ', selected.mem], ['ディスク', selected.disk]] as [string, number][]).map(([l, v]) => (
+                    <div key={l}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span className="text-sub">{l}</span>
+                        <span className="text-main" style={{ fontWeight: 600 }}>{v}%</span>
+                      </div>
+                      <ProgressBar value={v} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
