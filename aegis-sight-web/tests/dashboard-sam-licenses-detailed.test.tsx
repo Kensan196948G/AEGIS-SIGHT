@@ -623,3 +623,92 @@ describe('SAM Licenses page - error state', () => {
     vi.doUnmock('@/lib/hooks/use-sam-licenses');
   });
 });
+
+// ─── 12. formatExpiry branch coverage (expiry date edge cases) ────────────────
+
+describe('SAM Licenses page - formatExpiry branch coverage', () => {
+  const TODAY = new Date().toISOString().slice(0, 10);
+  const addDays = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+
+  function makeLicensesWithExpiry(expiryDates: (string | null)[]) {
+    return expiryDates.map((expiry_date, i) => ({
+      id: `exp-${i}`,
+      software_name: `Exp Soft ${i}`,
+      vendor: 'TestVendor',
+      license_type: 'subscription' as const,
+      license_key: null,
+      purchased_count: 10,
+      installed_count: 5,
+      m365_assigned: 0,
+      cost_per_unit: i === 0 ? null : 500, // null cost_per_unit for first license → covers B11[1]
+      currency: 'JPY',
+      purchase_date: null,
+      expiry_date,
+      vendor_contract_id: null,
+      notes: null,
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    }));
+  }
+
+  it('covers if(!dateStr) TRUE (B0[0]) and if(!expiry_date) TRUE (B12[0]) with null expiry', async () => {
+    vi.resetModules();
+    const licenses = makeLicensesWithExpiry([null]); // expiry_date: null
+    vi.doMock('@/lib/hooks/use-sam-licenses', () => ({
+      useSamLicenses: () => ({ licenses, total: licenses.length, loading: false, error: null, refetch: vi.fn() }),
+    }));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/page');
+    render(<Page />);
+    await waitFor(() => expect(document.body.textContent).toContain('Exp Soft 0'));
+    // formatExpiry(null) → '—' text
+    expect(document.body.textContent).toContain('—');
+    vi.doUnmock('@/lib/hooks/use-sam-licenses');
+  });
+
+  it('covers if(days < 0) TRUE (B1[0]) with past expiry date', async () => {
+    vi.resetModules();
+    const licenses = makeLicensesWithExpiry(['2020-01-01']); // far past
+    vi.doMock('@/lib/hooks/use-sam-licenses', () => ({
+      useSamLicenses: () => ({ licenses, total: licenses.length, loading: false, error: null, refetch: vi.fn() }),
+    }));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/page');
+    render(<Page />);
+    await waitFor(() => expect(document.body.textContent).toContain('Exp Soft 0'));
+    // formatExpiry('2020-01-01') → days < 0 → '{abs}日超過'
+    expect(document.body.textContent).toContain('日超過');
+    vi.doUnmock('@/lib/hooks/use-sam-licenses');
+  });
+
+  it('covers if(days === 0) TRUE (B2[0]) with today as expiry date', async () => {
+    vi.resetModules();
+    const licenses = makeLicensesWithExpiry([TODAY]); // today
+    vi.doMock('@/lib/hooks/use-sam-licenses', () => ({
+      useSamLicenses: () => ({ licenses, total: licenses.length, loading: false, error: null, refetch: vi.fn() }),
+    }));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/page');
+    render(<Page />);
+    await waitFor(() => expect(document.body.textContent).toContain('Exp Soft 0'));
+    // formatExpiry(today) → days === 0 → '本日期限'
+    expect(document.body.textContent).toContain('本日期限');
+    vi.doUnmock('@/lib/hooks/use-sam-licenses');
+  });
+
+  it('covers if(days <= 90) TRUE (B4[0]) with 60-day expiry and cost_per_unit null (B11[1])', async () => {
+    vi.resetModules();
+    const licenses = makeLicensesWithExpiry([addDays(60)]); // 60 days out → days > 30 but <= 90
+    vi.doMock('@/lib/hooks/use-sam-licenses', () => ({
+      useSamLicenses: () => ({ licenses, total: licenses.length, loading: false, error: null, refetch: vi.fn() }),
+    }));
+    const { default: Page } = await import('@/app/dashboard/sam/licenses/page');
+    render(<Page />);
+    await waitFor(() => expect(document.body.textContent).toContain('Exp Soft 0'));
+    // formatExpiry(+60days) → days <= 90 but > 30 → '残60日' urgent=false
+    // cost_per_unit: null → (null ?? 0) * 10 = 0
+    expect(document.body.textContent).toContain('残');
+    vi.doUnmock('@/lib/hooks/use-sam-licenses');
+  });
+});

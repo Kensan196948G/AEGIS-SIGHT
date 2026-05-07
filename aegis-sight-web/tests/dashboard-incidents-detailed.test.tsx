@@ -443,3 +443,19 @@ describe('Incidents page - create form full coverage (functions)', () => {
     expect(document.body.textContent?.length).toBeGreaterThan(0);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Branch coverage: filtered.length === 0 empty state
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('Incidents page - branch coverage (filter empty state)', () => {
+  it('shows 該当するインシデントがありません when filters produce no results (branch 11[1] line=484)', async () => {
+    const { default: Page } = await import('@/app/dashboard/incidents/page');
+    render(<Page />);
+    const selects = document.querySelectorAll('select');
+    // severityFilter=P1_critical + statusFilter=resolved → no P1_critical incident has resolved status
+    fireEvent.change(selects[0], { target: { value: 'P1_critical' } });
+    fireEvent.change(selects[1], { target: { value: 'resolved' } });
+    expect(document.body.textContent).toContain('該当するインシデントがありません');
+  });
+});

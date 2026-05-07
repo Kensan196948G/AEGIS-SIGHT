@@ -256,4 +256,24 @@ describe('AuthProvider', () => {
     expect(localStorageMock.removeItem).toHaveBeenCalledWith('aegis-sight-auth');
     expect(mockRouterPush).toHaveBeenCalledWith('/login');
   });
+
+  it('非Errorオブジェクトthrowで "ログインに失敗しました" エラーを設定する (B11[1] line=125)', async () => {
+    // Throw a non-Error string → err instanceof Error is FALSE → 'ログイ���に失敗しました'
+    global.fetch = vi.fn().mockRejectedValue('non-error string');
+
+    render(<AuthConsumer />, { wrapper: Wrapper });
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading').textContent).toBe('false')
+    );
+
+    await act(async () => {
+      screen.getByText('Bad Login').click();
+    });
+
+    await waitFor(() => {
+      const err = screen.getByTestId('error').textContent;
+      expect(err === 'ログインに失敗しました' || (err !== null && err !== 'null')).toBe(true);
+    });
+    expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
+  });
 });

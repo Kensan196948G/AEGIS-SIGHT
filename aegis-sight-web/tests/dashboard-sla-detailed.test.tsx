@@ -636,3 +636,106 @@ describe('SLA page - measurements data with API data', () => {
     });
   });
 });
+
+// ─── Branch coverage: null values and duplicate month/missing definition ──────
+
+describe('SLA page - branch coverage (null values and fallbacks)', () => {
+  it('covers overall_achievement_rate??0 fallback (B19[1]) and achievement_rate null (B34[1])', async () => {
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('/sla/dashboard')) {
+        return {
+          ok: true,
+          json: async () => ({
+            overall_achievement_rate: null, // → ?? 0 fallback covers B19[1]
+            total_definitions: 1,
+            active_definitions: 1,
+            total_violations: 0,
+            items: [{
+              sla_id: 'null-1',
+              name: 'Null SLA',
+              metric_type: 'availability',
+              target_value: 99.9,
+              current_value: null, // → ?? 'N/A' fallback
+              achievement_rate: null, // → !== null ? ... : 'N/A' covers B34[1]
+              is_met: false,
+              measurement_period: 'monthly',
+              total_measurements: 0,
+              met_count: 0,
+              violation_count: 0,
+            }],
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({ items: [], total: 0 }) };
+    });
+    const { default: Page } = await import('@/app/dashboard/sla/page');
+    render(<Page />);
+    await waitFor(() => {
+      const spinner = document.querySelector('.animate-spin');
+      expect(spinner).toBeNull();
+    }, { timeout: 3000 });
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('covers duplicate month in TrendBar (B8[1]) and rate>=99 barColor (B11[0])', async () => {
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('/sla/measurements')) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [
+              // Two measurements for same month → B8[1] FALSE (month already exists)
+              { id: 'm1', sla_id: 's1', period_start: '2026-03-01', period_end: '2026-03-31', measured_value: 99, target_value: 95, is_met: true },
+              { id: 'm2', sla_id: 's1', period_start: '2026-03-15', period_end: '2026-04-14', measured_value: 99, target_value: 95, is_met: true },
+              // All met → rate=100 >= 99 → barColor 'bg-green-500' covers B11[0]
+            ],
+            total: 2,
+          }),
+        };
+      }
+      if (url.includes('/sla/dashboard')) {
+        return { ok: true, json: async () => ({ overall_achievement_rate: 87, total_definitions: 0, active_definitions: 0, total_violations: 0, items: [] }) };
+      }
+      return { ok: true, json: async () => ({ items: [], total: 0 }) };
+    });
+    const { default: Page } = await import('@/app/dashboard/sla/page');
+    render(<Page />);
+    await waitFor(() => {
+      const spinner = document.querySelector('.animate-spin');
+      expect(spinner).toBeNull();
+    }, { timeout: 3000 });
+    expect(document.body.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it('covers defn?.name?? sla_id fallback (B42[1]) when measurement sla_id has no matching definition', async () => {
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('/sla/dashboard')) {
+        return { ok: true, json: async () => ({ overall_achievement_rate: 87, total_definitions: 0, active_definitions: 0, total_violations: 0, items: [] }) };
+      }
+      if (url.includes('/sla/measurements')) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [{ id: 'mx1', sla_id: 'unknown-sla-id-xyz', period_start: '2026-01-01', period_end: '2026-01-31', measured_value: 95, target_value: 99, is_met: false }],
+            total: 1,
+          }),
+        };
+      }
+      if (url.includes('/sla/definitions')) {
+        return { ok: true, json: async () => ({ items: [], total: 0 }) }; // no definitions → defn=undefined → fallback
+      }
+      return { ok: true, json: async () => ({ items: [], total: 0 }) };
+    });
+    const { default: Page } = await import('@/app/dashboard/sla/page');
+    render(<Page />);
+    await waitFor(() => {
+      const spinner = document.querySelector('.animate-spin');
+      expect(spinner).toBeNull();
+    }, { timeout: 3000 });
+    fireEvent.click(screen.getByText('計測履歴'));
+    await waitFor(() => {
+      // No definition found → shows sla_id.substring(0,8) = 'unknown-'
+      expect(document.body.textContent).toContain('unknown-');
+    });
+  });
+});

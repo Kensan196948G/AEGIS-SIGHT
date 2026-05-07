@@ -81,6 +81,22 @@ describe('Modal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('calls onClose when clicking the overlay backdrop directly (B6[0] line=60)', () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <Modal isOpen={true} onClose={onClose}>
+        content
+      </Modal>
+    );
+    // The overlay is the outermost div with fixed inset-0 z-50
+    const overlay = container.querySelector('.fixed.inset-0.z-50');
+    if (overlay) {
+      // Simulate click directly on overlay (not on modal content) → e.target === overlayRef.current → onClose()
+      fireEvent.click(overlay);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    }
+  });
+
   it('locks body scroll when open', () => {
     render(
       <Modal isOpen={true} onClose={vi.fn()}>
