@@ -1,58 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ProgressBar, DonutChart, BarChart } from '@/components/ui/chart';
-
-// ---------------------------------------------------------------------------
-// Mock Data
-// ---------------------------------------------------------------------------
-
-const isoCategories = [
-  { name: 'A.5 情報セキュリティ方針', score: 92, maxScore: 100, status: 'compliant' },
-  { name: 'A.6 情報セキュリティの組織', score: 85, maxScore: 100, status: 'compliant' },
-  { name: 'A.7 人的資源セキュリティ', score: 78, maxScore: 100, status: 'partial' },
-  { name: 'A.8 資産管理', score: 88, maxScore: 100, status: 'compliant' },
-  { name: 'A.9 アクセス制御', score: 91, maxScore: 100, status: 'compliant' },
-  { name: 'A.10 暗号', score: 95, maxScore: 100, status: 'compliant' },
-  { name: 'A.11 物理的・環境的セキュリティ', score: 82, maxScore: 100, status: 'compliant' },
-  { name: 'A.12 運用セキュリティ', score: 76, maxScore: 100, status: 'partial' },
-  { name: 'A.13 通信セキュリティ', score: 89, maxScore: 100, status: 'compliant' },
-  { name: 'A.14 システム取得・開発・保守', score: 72, maxScore: 100, status: 'partial' },
-];
-
-const jsoxControls = [
-  { area: 'プログラム変更管理', status: 'effective', findings: 0, remediation: 100 },
-  { area: 'アクセス管理', status: 'partially_effective', findings: 2, remediation: 75 },
-  { area: 'コンピュータ運用', status: 'effective', findings: 0, remediation: 100 },
-  { area: 'プログラム開発', status: 'partially_effective', findings: 1, remediation: 60 },
-];
-
-const nistFunctions = [
-  { function: '識別 (Identify)', tier: 3, targetTier: 4, score: 75 },
-  { function: '防御 (Protect)', tier: 3, targetTier: 4, score: 80 },
-  { function: '検知 (Detect)', tier: 2, targetTier: 3, score: 65 },
-  { function: '対応 (Respond)', tier: 3, targetTier: 4, score: 70 },
-  { function: '復旧 (Recover)', tier: 2, targetTier: 3, score: 55 },
-  { function: '統治 (Govern)', tier: 2, targetTier: 3, score: 60 },
-];
-
-const complianceIssues = [
-  { id: 'CI-001', framework: 'ISO 27001', severity: 'high', title: 'A.12 運用セキュリティ: ログ監視の自動化不足', status: 'in_progress', dueDate: '2026-04-15' },
-  { id: 'CI-002', framework: 'J-SOX', severity: 'medium', title: 'アクセス権の定期レビュー未実施（Q1）', status: 'open', dueDate: '2026-04-30' },
-  { id: 'CI-003', framework: 'NIST CSF', severity: 'high', title: 'インシデント対応計画の更新遅延', status: 'in_progress', dueDate: '2026-04-10' },
-  { id: 'CI-004', framework: 'ISO 27001', severity: 'critical', title: 'A.14 開発環境と本番環境の分離不十分', status: 'open', dueDate: '2026-04-05' },
-  { id: 'CI-005', framework: 'J-SOX', severity: 'low', title: '変更管理チケットの承認記録不備', status: 'open', dueDate: '2026-05-01' },
-  { id: 'CI-006', framework: 'ISO 27001', severity: 'medium', title: 'A.9 アクセス制御: 特権アカウント棚卸し完了', status: 'resolved', dueDate: '2026-03-31' },
-];
-
-const auditEvents = [
-  { timestamp: '2026-03-27 10:30', type: 'assessment', description: 'ISO 27001 内部監査完了', actor: '監査チーム' },
-  { timestamp: '2026-03-25 14:00', type: 'remediation', description: 'アクセス制御ポリシー更新', actor: '情報セキュリティ部' },
-  { timestamp: '2026-03-22 09:15', type: 'finding', description: 'J-SOX ITGC テスト: アクセス管理に指摘事項', actor: '外部監査人' },
-  { timestamp: '2026-03-20 16:45', type: 'review', description: 'NIST CSF 成熟度評価レビュー会議', actor: 'CISO' },
-  { timestamp: '2026-03-18 11:00', type: 'training', description: 'セキュリティ意識向上トレーニング実施', actor: 'HR' },
-];
+import {
+  fetchComplianceOverview,
+  fetchComplianceISO27001,
+  fetchComplianceJSOX,
+  fetchComplianceNIST,
+} from '@/lib/api';
+import type {
+  BackendComplianceOverview,
+  BackendISO27001Response,
+  BackendJSOXResponse,
+  BackendNISTResponse,
+} from '@/lib/api';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,10 +80,10 @@ const eventTypeColors: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Radar-like visual for NIST CSF (pure CSS bar-based)
+// NIST CSF radar-like visual (pure CSS bar-based)
 // ---------------------------------------------------------------------------
 
-function NistRadarChart({ data }: { data: typeof nistFunctions }) {
+function NistRadarChart({ data }: { data: BackendNISTResponse['functions'] }) {
   const maxTier = 4;
   return (
     <div className="space-y-3">
@@ -130,20 +92,16 @@ function NistRadarChart({ data }: { data: typeof nistFunctions }) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-700 dark:text-gray-300 font-medium">{fn.function}</span>
             <span className="text-gray-500 dark:text-gray-400 text-xs">
-              Tier {fn.tier} / 目標 Tier {fn.targetTier}
+              Tier {fn.tier} / 目標 Tier {fn.target_tier}
             </span>
           </div>
           <div className="relative h-3 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-            {/* Target tier marker */}
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-blue-300 dark:bg-blue-500 z-10"
-              style={{ left: `${(fn.targetTier / maxTier) * 100}%` }}
+              style={{ left: `${(fn.target_tier / maxTier) * 100}%` }}
             />
-            {/* Current tier bar */}
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                getNistTierBarColor(fn.tier, fn.targetTier)
-              }`}
+              className={`h-full rounded-full transition-all duration-500 ${getNistTierBarColor(fn.tier, fn.target_tier)}`}
               style={{ width: `${(fn.tier / maxTier) * 100}%` }}
             />
           </div>
@@ -173,16 +131,40 @@ function NistRadarChart({ data }: { data: typeof nistFunctions }) {
 
 export default function CompliancePage() {
   const [activeTab, setActiveTab] = useState<'iso' | 'jsox' | 'nist'>('iso');
+  const [loading, setLoading] = useState(true);
 
-  const isoOverall = Math.round(
-    isoCategories.reduce((acc, c) => acc + c.score, 0) / isoCategories.length
-  );
+  const [overview, setOverview] = useState<BackendComplianceOverview | null>(null);
+  const [iso, setIso] = useState<BackendISO27001Response | null>(null);
+  const [jsox, setJsox] = useState<BackendJSOXResponse | null>(null);
+  const [nist, setNist] = useState<BackendNISTResponse | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchComplianceOverview(),
+      fetchComplianceISO27001(),
+      fetchComplianceJSOX(),
+      fetchComplianceNIST(),
+    ])
+      .then(([ov, iso27k, jsoxRes, nistRes]) => {
+        setOverview(ov);
+        setIso(iso27k);
+        setJsox(jsoxRes);
+        setNist(nistRes);
+      })
+      .catch(() => {/* retain null — UI shows skeleton/empty */})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const isoOverall = iso ? Math.round(iso.overall_score) : 0;
   const isoDonutColor = isoOverall >= 80 ? '#10b981' : isoOverall >= 60 ? '#f59e0b' : '#ef4444';
-  const nistBarData = nistFunctions.map(fn => ({
-    label: fn.function.split(' ')[0],
-    value: fn.score,
-    color: fn.score >= 75 ? 'bg-emerald-500' : fn.score >= 60 ? 'bg-blue-500' : 'bg-amber-500',
-  }));
+  const nistBarData = nist
+    ? nist.functions.map((fn) => ({
+        label: fn.function.split(' ')[0],
+        value: fn.score,
+        color: fn.score >= 75 ? 'bg-emerald-500' : fn.score >= 60 ? 'bg-blue-500' : 'bg-amber-500',
+      }))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -210,50 +192,84 @@ export default function CompliancePage() {
       {/* Compliance Overview Charts */}
       <div className="aegis-card">
         <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">コンプライアンス概要</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="flex flex-col items-center gap-3">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ISO 27001 総合スコア</p>
-            <DonutChart value={isoOverall} max={100} size={140} strokeWidth={14} color={isoDonutColor} label={`${isoOverall}%`} />
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              全 {isoCategories.length} カテゴリの平均スコア（目標: 85%以上）
-            </p>
+        {loading ? (
+          <div className="h-48 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ISO 27001 総合スコア</p>
+              <DonutChart value={isoOverall} max={100} size={140} strokeWidth={14} color={isoDonutColor} label={`${isoOverall}%`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                全 {iso?.categories.length ?? 0} カテゴリの平均スコア（目標: 85%以上）
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">NIST CSF スコア別</p>
+              {nistBarData.length > 0 ? (
+                <BarChart data={nistBarData} maxValue={100} height={160} showValues />
+              ) : (
+                <div className="flex h-40 items-center justify-center text-sm text-gray-400">データなし</div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">NIST CSF スコア別</p>
-            <BarChart data={nistBarData} maxValue={100} height={160} showValues />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="aegis-card">
           <p className="text-sm text-gray-500 dark:text-gray-400">ISO 27001 スコア</p>
-          <p className="mt-1 text-3xl font-bold text-blue-600 dark:text-blue-400">{isoOverall}%</p>
-          <ProgressBar value={isoOverall} max={100} color="blue" size="md" showLabel={false} className="mt-2" />
+          {loading ? (
+            <div className="mt-1 h-9 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          ) : (
+            <>
+              <p className="mt-1 text-3xl font-bold text-blue-600 dark:text-blue-400">{isoOverall}%</p>
+              <ProgressBar value={isoOverall} max={100} color="blue" size="md" showLabel={false} className="mt-2" />
+            </>
+          )}
         </div>
         <div className="aegis-card">
           <p className="text-sm text-gray-500 dark:text-gray-400">J-SOX ITGC</p>
-          <p className="mt-1 text-3xl font-bold text-amber-600 dark:text-amber-400">一部有効</p>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            有効: {jsoxControls.filter(c => c.status === 'effective').length} / {jsoxControls.length} 領域
-          </p>
+          {loading ? (
+            <div className="mt-1 h-9 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          ) : (
+            <>
+              <p className="mt-1 text-3xl font-bold text-amber-600 dark:text-amber-400">
+                {statusLabel(jsox?.overall_status ?? '')}
+              </p>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                有効: {jsox?.controls.filter((c) => c.status === 'effective').length ?? 0} / {jsox?.controls.length ?? 0} 領域
+              </p>
+            </>
+          )}
         </div>
         <div className="aegis-card">
           <p className="text-sm text-gray-500 dark:text-gray-400">NIST CSF 成熟度</p>
-          <p className="mt-1 text-3xl font-bold text-purple-600 dark:text-purple-400">
-            Tier {(nistFunctions.reduce((a, f) => a + f.tier, 0) / nistFunctions.length).toFixed(1)}
-          </p>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">6コア機能の平均</p>
+          {loading ? (
+            <div className="mt-1 h-9 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          ) : (
+            <>
+              <p className="mt-1 text-3xl font-bold text-purple-600 dark:text-purple-400">
+                Tier {nist?.overall_tier.toFixed(1) ?? '—'}
+              </p>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">6コア機能の平均</p>
+            </>
+          )}
         </div>
         <div className="aegis-card">
           <p className="text-sm text-gray-500 dark:text-gray-400">未解決課題</p>
-          <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
-            {complianceIssues.filter(i => i.status !== 'resolved').length}
-          </p>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            緊急: {complianceIssues.filter(i => i.severity === 'critical').length}件
-          </p>
+          {loading ? (
+            <div className="mt-1 h-9 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          ) : (
+            <>
+              <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">
+                {overview?.open_issues ?? 0}
+              </p>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                緊急: {overview?.issues.filter((i) => i.severity === 'critical').length ?? 0}件
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -279,87 +295,97 @@ export default function CompliancePage() {
           ))}
         </div>
 
-        {/* ISO 27001 Tab */}
-        {activeTab === 'iso' && (
+        {loading ? (
           <div className="space-y-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                ISO 27001 カテゴリ別スコア
-              </h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400">最終評価: 2026-03-27</span>
-            </div>
-            {isoCategories.map((cat) => (
-              <div key={cat.name} className="flex items-center gap-3">
-                <span className="w-64 text-sm text-gray-700 dark:text-gray-300 truncate shrink-0">
-                  {cat.name}
-                </span>
-                <div className="flex-1">
-                  <ProgressBar value={cat.score} max={cat.maxScore} color="blue" size="md" />
-                </div>
-                <Badge variant={statusBadgeVariant(cat.status)} dot>
-                  {statusLabel(cat.status)}
-                </Badge>
-              </div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-8 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
             ))}
           </div>
-        )}
-
-        {/* J-SOX ITGC Tab */}
-        {activeTab === 'jsox' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                ITGC 4領域の統制状態
-              </h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400">監査期間: 2025-04 ~ 2026-03</span>
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {jsoxControls.map((ctrl) => (
-                <div key={ctrl.area} className="rounded-lg border border-gray-200 dark:border-aegis-border p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{ctrl.area}</h4>
-                    <Badge variant={statusBadgeVariant(ctrl.status)} dot>
-                      {statusLabel(ctrl.status)}
+        ) : (
+          <>
+            {/* ISO 27001 Tab */}
+            {activeTab === 'iso' && iso && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    ISO 27001 カテゴリ別スコア
+                  </h3>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">最終評価: {iso.last_assessment}</span>
+                </div>
+                {iso.categories.map((cat) => (
+                  <div key={cat.name} className="flex items-center gap-3">
+                    <span className="w-64 text-sm text-gray-700 dark:text-gray-300 truncate shrink-0">
+                      {cat.name}
+                    </span>
+                    <div className="flex-1">
+                      <ProgressBar value={cat.score} max={cat.max_score} color="blue" size="md" />
+                    </div>
+                    <Badge variant={statusBadgeVariant(cat.status)} dot>
+                      {statusLabel(cat.status)}
                     </Badge>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">指摘事項</span>
-                      <span className={`font-medium ${ctrl.findings > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {ctrl.findings}件
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">是正進捗</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{ctrl.remediation}%</span>
-                      </div>
-                      <ProgressBar
-                        value={ctrl.remediation}
-                        max={100}
-                        color={ctrl.remediation === 100 ? 'green' : ctrl.remediation >= 70 ? 'blue' : 'amber'}
-                        size="sm"
-                        showLabel={false}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                ))}
+              </div>
+            )}
 
-        {/* NIST CSF Tab */}
-        {activeTab === 'nist' && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                NIST CSF 6コア機能 成熟度レベル
-              </h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400">最終評価: 2026-03-20</span>
-            </div>
-            <NistRadarChart data={nistFunctions} />
-          </div>
+            {/* J-SOX ITGC Tab */}
+            {activeTab === 'jsox' && jsox && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    ITGC 4領域の統制状態
+                  </h3>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">監査期間: {jsox.audit_period}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {jsox.controls.map((ctrl) => (
+                    <div key={ctrl.area} className="rounded-lg border border-gray-200 dark:border-aegis-border p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{ctrl.area}</h4>
+                        <Badge variant={statusBadgeVariant(ctrl.status)} dot>
+                          {statusLabel(ctrl.status)}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">指摘事項</span>
+                          <span className={`font-medium ${ctrl.findings > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            {ctrl.findings}件
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500 dark:text-gray-400">是正進捗</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{ctrl.remediation_progress}%</span>
+                          </div>
+                          <ProgressBar
+                            value={ctrl.remediation_progress}
+                            max={100}
+                            color={ctrl.remediation_progress === 100 ? 'green' : ctrl.remediation_progress >= 70 ? 'blue' : 'amber'}
+                            size="sm"
+                            showLabel={false}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* NIST CSF Tab */}
+            {activeTab === 'nist' && nist && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    NIST CSF 6コア機能 成熟度レベル
+                  </h3>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">最終評価: {nist.last_assessment}</span>
+                </div>
+                <NistRadarChart data={nist.functions} />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -373,26 +399,41 @@ export default function CompliancePage() {
             </h2>
           </div>
           <div className="divide-y divide-gray-100 dark:divide-aegis-border">
-            {complianceIssues.map((issue) => (
-              <div key={issue.id} className="flex items-start gap-3 px-6 py-3 hover:bg-gray-50 dark:hover:bg-aegis-surface/50 transition-colors">
-                <Badge variant={severityVariant(issue.severity)} dot>
-                  {severityLabel(issue.severity)}
-                </Badge>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                    {issue.title}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span>{issue.framework}</span>
-                    <span>|</span>
-                    <span>期限: {issue.dueDate}</span>
-                  </div>
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-6 py-3">
+                  <div className="h-5 w-10 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                  <div className="h-4 flex-1 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
                 </div>
-                <Badge variant={issue.status === 'in_progress' ? 'info' : issue.status === 'resolved' ? 'success' : 'warning'}>
-                  {issueStatusLabel(issue.status)}
-                </Badge>
-              </div>
-            ))}
+              ))
+            ) : (overview?.issues ?? []).length === 0 ? (
+              <div className="px-6 py-8 text-center text-sm text-gray-400">課題なし</div>
+            ) : (
+              (overview?.issues ?? []).map((issue) => (
+                <div key={issue.id} className="flex items-start gap-3 px-6 py-3 hover:bg-gray-50 dark:hover:bg-aegis-surface/50 transition-colors">
+                  <Badge variant={severityVariant(issue.severity)} dot>
+                    {severityLabel(issue.severity)}
+                  </Badge>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {issue.title}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span>{issue.framework}</span>
+                      {issue.due_date && (
+                        <>
+                          <span>|</span>
+                          <span>期限: {issue.due_date}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant={issue.status === 'in_progress' ? 'info' : issue.status === 'resolved' ? 'success' : 'warning'}>
+                    {issueStatusLabel(issue.status)}
+                  </Badge>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -404,28 +445,34 @@ export default function CompliancePage() {
             </h2>
           </div>
           <div className="px-6 py-4">
-            <div className="relative">
-              {/* Timeline line */}
-              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gray-200 dark:bg-gray-700" />
+            {loading ? (
               <div className="space-y-4">
-                {auditEvents.map((event, i) => (
-                  <div key={i} className="relative flex gap-4 pl-6">
-                    {/* Dot */}
-                    <div className={`absolute left-0 top-1.5 h-4 w-4 rounded-full border-2 border-white dark:border-aegis-dark ${eventTypeColors[event.type] || 'bg-gray-400'}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {event.description}
-                      </p>
-                      <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span>{event.actor}</span>
-                        <span>|</span>
-                        <span>{event.timestamp}</span>
-                      </div>
-                    </div>
-                  </div>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-10 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
                 ))}
               </div>
-            </div>
+            ) : (
+              <div className="relative">
+                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gray-200 dark:bg-gray-700" />
+                <div className="space-y-4">
+                  {(overview?.recent_events ?? []).map((event, i) => (
+                    <div key={i} className="relative flex gap-4 pl-6">
+                      <div className={`absolute left-0 top-1.5 h-4 w-4 rounded-full border-2 border-white dark:border-aegis-dark ${eventTypeColors[event.event_type] || 'bg-gray-400'}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {event.description}
+                        </p>
+                        <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span>{event.actor}</span>
+                          <span>|</span>
+                          <span>{new Date(event.timestamp).toLocaleString('ja-JP')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

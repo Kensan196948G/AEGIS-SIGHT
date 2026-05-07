@@ -452,3 +452,88 @@ export async function fetchAuditLogs(
   if (dateTo) params.set('date_to', dateTo);
   return api.get<PaginatedBackend<BackendAuditLog>>(`/api/v1/audit/logs?${params}`);
 }
+
+// ── Compliance ────────────────────────────────────────────────────────────────
+
+export interface BackendISO27001Category {
+  name: string;
+  score: number;
+  max_score: number;
+  status: string;
+}
+
+export interface BackendISO27001Response {
+  overall_score: number;
+  categories: BackendISO27001Category[];
+  last_assessment: string;
+  next_review: string;
+}
+
+export interface BackendJSOXControl {
+  area: string;
+  status: string;
+  findings: number;
+  remediation_progress: number;
+}
+
+export interface BackendJSOXResponse {
+  overall_status: string;
+  controls: BackendJSOXControl[];
+  audit_period: string;
+  last_tested: string;
+}
+
+export interface BackendNISTFunction {
+  function: string;
+  tier: number;
+  target_tier: number;
+  score: number;
+  max_score: number;
+}
+
+export interface BackendNISTResponse {
+  overall_tier: number;
+  functions: BackendNISTFunction[];
+  last_assessment: string;
+}
+
+export interface BackendComplianceIssue {
+  id: string;
+  framework: string;
+  severity: string;
+  title: string;
+  status: string;
+  due_date: string | null;
+}
+
+export interface BackendComplianceAuditEvent {
+  timestamp: string;
+  event_type: string;
+  description: string;
+  actor: string;
+}
+
+export interface BackendComplianceOverview {
+  iso27001_score: number;
+  jsox_status: string;
+  nist_tier: number;
+  open_issues: number;
+  recent_events: BackendComplianceAuditEvent[];
+  issues: BackendComplianceIssue[];
+}
+
+export async function fetchComplianceOverview(): Promise<BackendComplianceOverview> {
+  return api.get<BackendComplianceOverview>('/api/v1/compliance/overview');
+}
+
+export async function fetchComplianceISO27001(): Promise<BackendISO27001Response> {
+  return api.get<BackendISO27001Response>('/api/v1/compliance/iso27001');
+}
+
+export async function fetchComplianceJSOX(): Promise<BackendJSOXResponse> {
+  return api.get<BackendJSOXResponse>('/api/v1/compliance/jsox');
+}
+
+export async function fetchComplianceNIST(): Promise<BackendNISTResponse> {
+  return api.get<BackendNISTResponse>('/api/v1/compliance/nist');
+}
