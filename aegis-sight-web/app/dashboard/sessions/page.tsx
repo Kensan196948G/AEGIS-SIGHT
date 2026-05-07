@@ -1,229 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, BarChart } from '@/components/ui/chart';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type SessionType = 'local' | 'rdp' | 'vpn' | 'citrix';
-type ActivityType = 'app_launch' | 'web_access' | 'file_access' | 'print' | 'email';
-
-interface UserSessionItem {
-  id: string;
-  device_id: string | null;
-  user_name: string;
-  session_type: SessionType;
-  source_ip: string | null;
-  source_hostname: string | null;
-  started_at: string;
-  ended_at: string | null;
-  duration_minutes: number | null;
-  is_active: boolean;
-}
-
-interface UserActivityItem {
-  id: string;
-  device_id: string | null;
-  user_name: string;
-  activity_type: ActivityType;
-  detail: Record<string, unknown> | null;
-  occurred_at: string;
-}
-
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const mockActiveSessions: UserSessionItem[] = [
-  {
-    id: '1',
-    device_id: 'dev-001',
-    user_name: 'tanaka.taro',
-    session_type: 'rdp',
-    source_ip: '192.168.1.50',
-    source_hostname: 'REMOTE-PC-01',
-    started_at: '2026-03-27T08:30:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-  {
-    id: '2',
-    device_id: 'dev-002',
-    user_name: 'suzuki.hanako',
-    session_type: 'vpn',
-    source_ip: '10.0.0.15',
-    source_hostname: 'HOME-PC-SUZUKI',
-    started_at: '2026-03-27T09:00:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-  {
-    id: '3',
-    device_id: 'dev-003',
-    user_name: 'yamada.ichiro',
-    session_type: 'local',
-    source_ip: null,
-    source_hostname: null,
-    started_at: '2026-03-27T07:45:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-  {
-    id: '4',
-    device_id: 'dev-004',
-    user_name: 'sato.yuki',
-    session_type: 'citrix',
-    source_ip: '172.16.0.100',
-    source_hostname: 'CITRIX-GW-01',
-    started_at: '2026-03-27T08:15:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-  {
-    id: '5',
-    device_id: 'dev-005',
-    user_name: 'takahashi.mei',
-    session_type: 'rdp',
-    source_ip: '192.168.2.30',
-    source_hostname: 'REMOTE-PC-05',
-    started_at: '2026-03-27T09:30:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-  {
-    id: '6',
-    device_id: 'dev-006',
-    user_name: 'watanabe.ken',
-    session_type: 'vpn',
-    source_ip: '10.0.0.22',
-    source_hostname: 'HOME-PC-WATANABE',
-    started_at: '2026-03-27T10:00:00Z',
-    ended_at: null,
-    duration_minutes: null,
-    is_active: true,
-  },
-];
-
-const mockAnalytics = {
-  total_sessions: 1247,
-  active_sessions: 6,
-  by_type: { local: 523, rdp: 412, vpn: 198, citrix: 114 },
-  by_user: [
-    { user_name: 'tanaka.taro', session_count: 145, total_minutes: 43200 },
-    { user_name: 'suzuki.hanako', session_count: 132, total_minutes: 38400 },
-    { user_name: 'yamada.ichiro', session_count: 118, total_minutes: 35100 },
-    { user_name: 'sato.yuki', session_count: 105, total_minutes: 31200 },
-    { user_name: 'takahashi.mei', session_count: 98, total_minutes: 28800 },
-  ],
-  peak_hours: [
-    { hour: 7, count: 45 },
-    { hour: 8, count: 152 },
-    { hour: 9, count: 198 },
-    { hour: 10, count: 175 },
-    { hour: 11, count: 160 },
-    { hour: 12, count: 88 },
-    { hour: 13, count: 145 },
-    { hour: 14, count: 168 },
-    { hour: 15, count: 155 },
-    { hour: 16, count: 130 },
-    { hour: 17, count: 95 },
-    { hour: 18, count: 42 },
-  ],
-};
-
-const mockActivities: UserActivityItem[] = [
-  {
-    id: 'a1',
-    device_id: 'dev-001',
-    user_name: 'tanaka.taro',
-    activity_type: 'app_launch',
-    detail: { app_name: 'Microsoft Excel', path: 'C:\\Program Files\\Microsoft Office\\excel.exe' },
-    occurred_at: '2026-03-27T09:45:00Z',
-  },
-  {
-    id: 'a2',
-    device_id: 'dev-002',
-    user_name: 'suzuki.hanako',
-    activity_type: 'web_access',
-    detail: { url: 'https://sharepoint.company.com/sites/project', browser: 'Edge' },
-    occurred_at: '2026-03-27T09:40:00Z',
-  },
-  {
-    id: 'a3',
-    device_id: 'dev-001',
-    user_name: 'tanaka.taro',
-    activity_type: 'file_access',
-    detail: { file_path: '\\\\NAS01\\shared\\reports\\Q1_2026.xlsx', action: 'open' },
-    occurred_at: '2026-03-27T09:35:00Z',
-  },
-  {
-    id: 'a4',
-    device_id: 'dev-003',
-    user_name: 'yamada.ichiro',
-    activity_type: 'print',
-    detail: { printer: 'PRINTER-3F-01', document: 'invoice_2026_03.pdf', pages: 3 },
-    occurred_at: '2026-03-27T09:30:00Z',
-  },
-  {
-    id: 'a5',
-    device_id: 'dev-004',
-    user_name: 'sato.yuki',
-    activity_type: 'email',
-    detail: { subject: 'Monthly Report', recipients: 3, has_attachment: true },
-    occurred_at: '2026-03-27T09:25:00Z',
-  },
-  {
-    id: 'a6',
-    device_id: 'dev-005',
-    user_name: 'takahashi.mei',
-    activity_type: 'app_launch',
-    detail: { app_name: 'Visual Studio Code', path: 'C:\\Users\\takahashi\\AppData\\Local\\Programs\\VSCode\\code.exe' },
-    occurred_at: '2026-03-27T09:20:00Z',
-  },
-  {
-    id: 'a7',
-    device_id: 'dev-002',
-    user_name: 'suzuki.hanako',
-    activity_type: 'file_access',
-    detail: { file_path: '\\\\NAS01\\shared\\design\\mockup_v3.fig', action: 'download' },
-    occurred_at: '2026-03-27T09:15:00Z',
-  },
-  {
-    id: 'a8',
-    device_id: 'dev-006',
-    user_name: 'watanabe.ken',
-    activity_type: 'web_access',
-    detail: { url: 'https://jira.company.com/browse/PROJ-1234', browser: 'Chrome' },
-    occurred_at: '2026-03-27T09:10:00Z',
-  },
-];
+import {
+  fetchSessionAnalytics,
+  fetchActiveSessions,
+  fetchActivities,
+  type BackendSessionAnalytics,
+  type BackendSessionResponse,
+  type BackendActivityResponse,
+} from '@/lib/api';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const sessionTypeConfig: Record<SessionType, { label: string; color: string; bgColor: string }> = {
-  local: { label: 'Local', color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-100 dark:bg-gray-700' },
-  rdp: { label: 'RDP', color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-100 dark:bg-blue-900/40' },
-  vpn: { label: 'VPN', color: 'text-green-700 dark:text-green-300', bgColor: 'bg-green-100 dark:bg-green-900/40' },
-  citrix: { label: 'Citrix', color: 'text-purple-700 dark:text-purple-300', bgColor: 'bg-purple-100 dark:bg-purple-900/40' },
-};
-
-const activityTypeConfig: Record<ActivityType, { label: string; icon: string }> = {
-  app_launch: { label: 'App Launch', icon: 'rocket' },
-  web_access: { label: 'Web Access', icon: 'globe' },
-  file_access: { label: 'File Access', icon: 'folder' },
-  print: { label: 'Print', icon: 'printer' },
-  email: { label: 'Email', icon: 'mail' },
-};
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
@@ -246,14 +37,15 @@ function elapsedMinutes(startIso: string): number {
   return Math.floor((now - start) / 60000);
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
+const SESSION_TYPE_STYLE: Record<string, { label: string; color: string; bgColor: string }> = {
+  local: { label: 'Local', color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-100 dark:bg-gray-700' },
+  rdp: { label: 'RDP', color: 'text-blue-700 dark:text-blue-300', bgColor: 'bg-blue-100 dark:bg-blue-900/40' },
+  vpn: { label: 'VPN', color: 'text-green-700 dark:text-green-300', bgColor: 'bg-green-100 dark:bg-green-900/40' },
+  citrix: { label: 'Citrix', color: 'text-purple-700 dark:text-purple-300', bgColor: 'bg-purple-100 dark:bg-purple-900/40' },
+};
 
-type Tab = 'active' | 'analytics' | 'activities';
-
-function SessionTypeBadge({ type }: { type: SessionType }) {
-  const cfg = sessionTypeConfig[type];
+function SessionTypeBadge({ type }: { type: string }) {
+  const cfg = SESSION_TYPE_STYLE[type] ?? { label: type, color: 'text-gray-700 dark:text-gray-300', bgColor: 'bg-gray-100 dark:bg-gray-700' };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.color} ${cfg.bgColor}`}>
       {cfg.label}
@@ -273,7 +65,6 @@ function StatCard({ title, value, sub }: { title: string; value: string | number
 
 function PeakHoursChart({ data }: { data: { hour: number; count: number }[] }) {
   const max = Math.max(...data.map((d) => d.count), 1);
-
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Peak Hours (Sessions Started)</h3>
@@ -295,21 +86,22 @@ function PeakHoursChart({ data }: { data: { hour: number; count: number }[] }) {
 
 function TypeDistributionChart({ data }: { data: Record<string, number> }) {
   const total = Object.values(data).reduce((s, v) => s + v, 0) || 1;
-  const types: SessionType[] = ['local', 'rdp', 'vpn', 'citrix'];
-  const colors: Record<SessionType, string> = {
+  const types = Object.keys(data);
+  const colors: Record<string, string> = {
     local: '#6b7280',
     rdp: '#3b82f6',
     vpn: '#22c55e',
     citrix: '#a855f7',
   };
+  const fallbackColors = ['#6b7280', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ef4444'];
 
-  // Build conic gradient
   let cumulative = 0;
-  const stops = types.map((t) => {
+  const stops = types.map((t, i) => {
     const pct = (data[t] || 0) / total;
     const start = cumulative;
     cumulative += pct;
-    return `${colors[t]} ${start * 100}% ${cumulative * 100}%`;
+    const color = colors[t] ?? fallbackColors[i % fallbackColors.length];
+    return `${color} ${start * 100}% ${cumulative * 100}%`;
   });
 
   return (
@@ -321,13 +113,15 @@ function TypeDistributionChart({ data }: { data: Record<string, number> }) {
           style={{ background: `conic-gradient(${stops.join(', ')})` }}
         />
         <div className="space-y-2">
-          {types.map((t) => {
+          {types.map((t, i) => {
+            const color = colors[t] ?? fallbackColors[i % fallbackColors.length];
             const pct = ((data[t] || 0) / total * 100).toFixed(1);
+            const cfg = SESSION_TYPE_STYLE[t];
             return (
               <div key={t} className="flex items-center gap-2 text-sm">
-                <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: colors[t] }} />
+                <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
                 <span className="text-gray-700 dark:text-gray-300">
-                  {sessionTypeConfig[t].label}: {data[t] || 0} ({pct}%)
+                  {cfg?.label ?? t}: {data[t] || 0} ({pct}%)
                 </span>
               </div>
             );
@@ -351,15 +145,21 @@ function UserUsageTable({ data }: { data: { user_name: string; session_count: nu
           </tr>
         </thead>
         <tbody>
-          {data.map((u) => (
-            <tr key={u.user_name} className="border-b border-gray-100 dark:border-aegis-border/50">
-              <td className="py-2 text-gray-900 dark:text-white">{u.user_name}</td>
-              <td className="py-2 text-right text-gray-700 dark:text-gray-300">{u.session_count}</td>
-              <td className="py-2 text-right text-gray-700 dark:text-gray-300">
-                {(u.total_minutes / 60).toFixed(1)}h
-              </td>
+          {data.length === 0 ? (
+            <tr>
+              <td colSpan={3} className="py-6 text-center text-gray-400 dark:text-gray-500">データなし</td>
             </tr>
-          ))}
+          ) : (
+            data.map((u) => (
+              <tr key={u.user_name} className="border-b border-gray-100 dark:border-aegis-border/50">
+                <td className="py-2 text-gray-900 dark:text-white">{u.user_name}</td>
+                <td className="py-2 text-right text-gray-700 dark:text-gray-300">{u.session_count}</td>
+                <td className="py-2 text-right text-gray-700 dark:text-gray-300">
+                  {(u.total_minutes / 60).toFixed(1)}h
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
@@ -367,195 +167,33 @@ function UserUsageTable({ data }: { data: { user_name: string; session_count: nu
 }
 
 // ---------------------------------------------------------------------------
-// Page
+// Skeleton helpers
 // ---------------------------------------------------------------------------
-
-export default function SessionsPage() {
-  const [tab, setTab] = useState<Tab>('active');
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'active', label: 'Active Sessions' },
-    { key: 'analytics', label: 'Analytics' },
-    { key: 'activities', label: 'Activity Timeline' },
-  ];
-
+function SkeletonCard() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Session Management
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Monitor remote desktop sessions, VPN connections, and user behavior
-        </p>
-      </div>
-
-      {/* セッション概要チャート */}
-      {(() => {
-        const activeRate = Math.round((mockAnalytics.active_sessions / 50) * 100); // 50 = estimated max
-        const activeColor = activeRate >= 80 ? '#ef4444' : activeRate >= 50 ? '#f59e0b' : '#10b981';
-        const typeBarData = Object.entries(mockAnalytics.by_type).map(([type, count], i) => ({
-          label: type.toUpperCase(),
-          value: count,
-          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
-        }));
-        return (
-          <div className="aegis-card">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">セッション概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブセッション率</p>
-                <DonutChart value={activeRate} max={100} size={140} strokeWidth={14} color={activeColor} label={`${mockAnalytics.active_sessions}件`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  累計 {mockAnalytics.total_sessions.toLocaleString()} セッション
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">セッション種別別件数</p>
-                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map(d => d.value))} height={160} showValues />
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Sessions" value={mockAnalytics.total_sessions.toLocaleString()} sub="All time" />
-        <StatCard title="Active Sessions" value={mockAnalytics.active_sessions} sub="Currently connected" />
-        <StatCard title="RDP Sessions" value={mockAnalytics.by_type.rdp} sub={`${((mockAnalytics.by_type.rdp / mockAnalytics.total_sessions) * 100).toFixed(1)}% of total`} />
-        <StatCard title="VPN Sessions" value={mockAnalytics.by_type.vpn} sub={`${((mockAnalytics.by_type.vpn / mockAnalytics.total_sessions) * 100).toFixed(1)}% of total`} />
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-aegis-border">
-        <nav className="-mb-px flex gap-6">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
-                tab === t.key
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {tab === 'active' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-aegis-border">
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">User</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Source IP</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Hostname</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Started</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Duration</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockActiveSessions.map((s) => (
-                  <tr
-                    key={s.id}
-                    className="border-b border-gray-100 last:border-b-0 dark:border-aegis-border/50 hover:bg-gray-50 dark:hover:bg-aegis-darker/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{s.user_name}</td>
-                    <td className="px-4 py-3">
-                      <SessionTypeBadge type={s.session_type} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono text-xs">
-                      {s.source_ip || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{s.source_hostname || '-'}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{formatTime(s.started_at)}</td>
-                    <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                      {elapsedMinutes(s.started_at)}min
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-xs text-green-700 dark:text-green-400">Active</span>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'analytics' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <PeakHoursChart data={mockAnalytics.peak_hours} />
-            <TypeDistributionChart data={mockAnalytics.by_type} />
-          </div>
-          <UserUsageTable data={mockAnalytics.by_user} />
-        </div>
-      )}
-
-      {tab === 'activities' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
-          <div className="p-5">
-            <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Recent User Activities</h3>
-            <div className="space-y-0">
-              {mockActivities.map((a, idx) => (
-                <div
-                  key={a.id}
-                  className="relative flex gap-4 pb-6 last:pb-0"
-                >
-                  {/* Timeline line */}
-                  {idx < mockActivities.length - 1 && (
-                    <div className="absolute left-[15px] top-8 h-full w-px bg-gray-200 dark:bg-aegis-border" />
-                  )}
-                  {/* Icon */}
-                  <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
-                    <ActivityIcon type={a.activity_type} />
-                  </div>
-                  {/* Content */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{a.user_name}</span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {activityTypeConfig[a.activity_type].label}
-                      </Badge>
-                      <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                        {formatDateTime(a.occurred_at)}
-                      </span>
-                    </div>
-                    {a.detail && (
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {Object.entries(a.detail)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(' | ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface animate-pulse">
+      <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mt-2 h-8 w-16 rounded bg-gray-200 dark:bg-gray-700" />
     </div>
+  );
+}
+
+function SkeletonRow({ cols }: { cols: number }) {
+  return (
+    <tr className="border-b border-gray-100 dark:border-aegis-border/50 animate-pulse">
+      {Array.from({ length: cols }).map((_, i) => (
+        <td key={i} className="px-4 py-3">
+          <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" style={{ width: `${60 + (i % 3) * 20}%` }} />
+        </td>
+      ))}
+    </tr>
   );
 }
 
 // ---------------------------------------------------------------------------
 // Activity Icon
 // ---------------------------------------------------------------------------
-function ActivityIcon({ type }: { type: ActivityType }) {
+function ActivityIcon({ type }: { type: string }) {
   const cls = 'h-4 w-4 text-primary-600 dark:text-primary-400';
   switch (type) {
     case 'app_launch':
@@ -582,11 +220,308 @@ function ActivityIcon({ type }: { type: ActivityType }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
         </svg>
       );
-    case 'email':
+    default:
       return (
         <svg className={cls} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
         </svg>
       );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Tab type
+// ---------------------------------------------------------------------------
+type Tab = 'active' | 'analytics' | 'activities';
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+export default function SessionsPage() {
+  const [tab, setTab] = useState<Tab>('active');
+  const [analytics, setAnalytics] = useState<BackendSessionAnalytics | null>(null);
+  const [sessions, setSessions] = useState<BackendSessionResponse[]>([]);
+  const [activities, setActivities] = useState<BackendActivityResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [analyticsData, sessionsData, activitiesData] = await Promise.all([
+        fetchSessionAnalytics(),
+        fetchActiveSessions(0, 100),
+        fetchActivities(0, 100),
+      ]);
+      setAnalytics(analyticsData);
+      setSessions(sessionsData.items);
+      setActivities(activitiesData.items);
+    } catch {
+      setAnalytics(null);
+      setSessions([]);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'active', label: 'Active Sessions' },
+    { key: 'analytics', label: 'Analytics' },
+    { key: 'activities', label: 'Activity Timeline' },
+  ];
+
+  // Derived stats
+  const totalSessions = analytics?.total_sessions ?? 0;
+  const activeSessions = analytics?.active_sessions ?? 0;
+  const byType = analytics?.by_type ?? {};
+  const byUser = analytics?.by_user ?? [];
+  const peakHours = analytics?.peak_hours ?? [];
+
+  // Unique users from sessions
+  const uniqueUsers = new Set(sessions.map((s) => s.user_name)).size;
+
+  // Avg duration
+  const durSessions = sessions.filter((s) => s.duration_minutes != null);
+  const avgDuration = durSessions.length > 0
+    ? Math.round(durSessions.reduce((sum, s) => sum + (s.duration_minutes ?? 0), 0) / durSessions.length)
+    : null;
+
+  // Chart data
+  const typeBarData = Object.entries(byType).map(([type, count], i) => ({
+    label: (SESSION_TYPE_STYLE[type]?.label ?? type).toUpperCase(),
+    value: count,
+    color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'][i] || 'bg-gray-400',
+  }));
+  const activeRate = Math.round((activeSessions / Math.max(totalSessions, 1)) * 100);
+  const activeColor = activeRate >= 80 ? '#ef4444' : activeRate >= 50 ? '#f59e0b' : '#10b981';
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Session Management</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Monitor remote desktop sessions, VPN connections, and user behavior
+        </p>
+      </div>
+
+      {/* Overview chart */}
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">セッション概要</h2>
+        {loading ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 animate-pulse">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="h-36 w-36 rounded-full bg-gray-200 dark:bg-gray-700" />
+            </div>
+            <div className="space-y-3">
+              <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="h-40 w-full rounded bg-gray-200 dark:bg-gray-700" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブセッション数</p>
+              <DonutChart value={activeSessions} max={Math.max(totalSessions, 1)} size={140} strokeWidth={14} color={activeColor} label={`${activeSessions}件`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                累計 {totalSessions.toLocaleString()} セッション
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">セッション種別別件数</p>
+              {typeBarData.length > 0 ? (
+                <BarChart data={typeBarData} maxValue={Math.max(...typeBarData.map((d) => d.value), 1)} height={160} showValues />
+              ) : (
+                <div className="flex h-40 items-center justify-center text-sm text-gray-400">データなし</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            <StatCard title="Total Sessions" value={totalSessions.toLocaleString()} sub="All time" />
+            <StatCard title="Active Sessions" value={activeSessions} sub="Currently connected" />
+            <StatCard title="Unique Users" value={uniqueUsers} sub="In active sessions" />
+            <StatCard
+              title="Avg Duration"
+              value={avgDuration != null ? `${avgDuration}min` : 'N/A'}
+              sub="Completed sessions"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-aegis-border">
+        <nav className="-mb-px flex gap-6">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab: Active Sessions */}
+      {tab === 'active' && (
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-aegis-border">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">User</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Source IP</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Hostname</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Started</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Duration</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={7} />)
+                ) : sessions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                      データなし
+                    </td>
+                  </tr>
+                ) : (
+                  sessions.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="border-b border-gray-100 last:border-b-0 dark:border-aegis-border/50 hover:bg-gray-50 dark:hover:bg-aegis-darker/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{s.user_name}</td>
+                      <td className="px-4 py-3">
+                        <SessionTypeBadge type={s.session_type} />
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
+                        {s.source_ip || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{s.source_hostname || '-'}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{formatTime(s.started_at)}</td>
+                      <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                        {s.duration_minutes != null
+                          ? `${s.duration_minutes}min`
+                          : `${elapsedMinutes(s.started_at)}min`}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {s.is_active ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-xs text-green-700 dark:text-green-400">Active</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Inactive</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Analytics */}
+      {tab === 'analytics' && (
+        <div className="space-y-6">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 animate-pulse">
+              <div className="h-48 rounded-xl bg-gray-200 dark:bg-gray-700" />
+              <div className="h-48 rounded-xl bg-gray-200 dark:bg-gray-700" />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <PeakHoursChart data={peakHours} />
+                <TypeDistributionChart data={byType} />
+              </div>
+              <UserUsageTable data={byUser} />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Activity Timeline */}
+      {tab === 'activities' && (
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="p-5">
+            <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Recent User Activities</h3>
+            {loading ? (
+              <div className="space-y-4 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-48 rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-3 w-64 rounded bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activities.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">データなし</div>
+            ) : (
+              <div className="space-y-0">
+                {activities.map((a, idx) => (
+                  <div key={a.id} className="relative flex gap-4 pb-6 last:pb-0">
+                    {idx < activities.length - 1 && (
+                      <div className="absolute left-[15px] top-8 h-full w-px bg-gray-200 dark:bg-aegis-border" />
+                    )}
+                    <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+                      <ActivityIcon type={a.activity_type} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{a.user_name}</span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {a.activity_type.replace(/_/g, ' ')}
+                        </Badge>
+                        <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+                          {formatDateTime(a.occurred_at)}
+                        </span>
+                      </div>
+                      {a.detail && (
+                        <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">
+                          {Object.entries(a.detail)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(' | ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

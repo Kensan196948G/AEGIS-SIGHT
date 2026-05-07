@@ -673,3 +673,731 @@ export async function fetchThreatIndicators(
     `/api/v1/incidents/threats?offset=${offset}&limit=${limit}`,
   );
 }
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
+
+export interface BackendSessionResponse {
+  id: string;
+  device_id: string | null;
+  user_name: string;
+  session_type: string;
+  source_ip: string | null;
+  source_hostname: string | null;
+  started_at: string;
+  ended_at: string | null;
+  duration_minutes: number | null;
+  is_active: boolean;
+}
+
+export interface BackendSessionAnalytics {
+  total_sessions: number;
+  active_sessions: number;
+  by_type: Record<string, number>;
+  by_user: { user_name: string; session_count: number; total_minutes: number }[];
+  peak_hours: { hour: number; count: number }[];
+}
+
+export interface BackendActivityResponse {
+  id: string;
+  device_id: string | null;
+  user_name: string;
+  activity_type: string;
+  detail: Record<string, unknown> | null;
+  occurred_at: string;
+}
+
+export async function fetchSessions(
+  offset = 0,
+  limit = 50,
+  isActive?: boolean,
+): Promise<PaginatedBackend<BackendSessionResponse>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (isActive !== undefined) params.set('is_active', String(isActive));
+  return api.get<PaginatedBackend<BackendSessionResponse>>(`/api/v1/sessions?${params}`);
+}
+
+export async function fetchActiveSessions(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendSessionResponse>> {
+  return api.get<PaginatedBackend<BackendSessionResponse>>(
+    `/api/v1/sessions/active?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchSessionAnalytics(): Promise<BackendSessionAnalytics> {
+  return api.get<BackendSessionAnalytics>('/api/v1/sessions/analytics');
+}
+
+export async function fetchActivities(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendActivityResponse>> {
+  return api.get<PaginatedBackend<BackendActivityResponse>>(
+    `/api/v1/sessions/activities?offset=${offset}&limit=${limit}`,
+  );
+}
+
+// ── DLP ───────────────────────────────────────────────────────────────────────
+
+export interface BackendDLPRule {
+  id: string;
+  name: string;
+  description: string | null;
+  rule_type: string;
+  pattern: string;
+  action: string;
+  severity: string;
+  is_enabled: boolean;
+  created_at: string;
+}
+
+export interface BackendDLPEvent {
+  id: string;
+  rule_id: string;
+  device_id: string | null;
+  user_name: string;
+  file_path: string;
+  file_name: string;
+  file_size: number | null;
+  action_taken: string;
+  matched_pattern: string;
+  detected_at: string;
+}
+
+export interface BackendDLPEventSummary {
+  total_events: number;
+  blocked: number;
+  alerted: number;
+  logged: number;
+  by_severity: Record<string, number>;
+  by_rule_type: Record<string, number>;
+}
+
+export async function fetchDLPEventSummary(): Promise<BackendDLPEventSummary> {
+  return api.get<BackendDLPEventSummary>('/api/v1/dlp/events/summary');
+}
+
+export async function fetchDLPEvents(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendDLPEvent>> {
+  return api.get<PaginatedBackend<BackendDLPEvent>>(
+    `/api/v1/dlp/events?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchDLPRules(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendDLPRule>> {
+  return api.get<PaginatedBackend<BackendDLPRule>>(
+    `/api/v1/dlp/rules?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function createDLPRule(data: {
+  name: string;
+  rule_type: string;
+  pattern: string;
+  action: string;
+  severity: string;
+  description?: string;
+  is_enabled?: boolean;
+}): Promise<BackendDLPRule> {
+  return api.post<BackendDLPRule>('/api/v1/dlp/rules', data);
+}
+
+export async function updateDLPRule(
+  ruleId: string,
+  data: Partial<{ name: string; description: string; pattern: string; action: string; severity: string; is_enabled: boolean }>,
+): Promise<BackendDLPRule> {
+  return api.patch<BackendDLPRule>(`/api/v1/dlp/rules/${ruleId}`, data);
+}
+
+export async function deleteDLPRule(ruleId: string): Promise<void> {
+  return api.delete<void>(`/api/v1/dlp/rules/${ruleId}`);
+}
+
+// ── Knowledge Base ────────────────────────────────────────────────────────────
+
+export interface BackendKBArticle {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  tags: string[] | null;
+  status: string;
+  author_id: string | null;
+  view_count: number;
+  helpful_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendKBCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string | null;
+  sort_order: number;
+  parent_id: string | null;
+  article_count: number;
+}
+
+export async function fetchKBArticles(
+  offset = 0,
+  limit = 50,
+  category?: string,
+  status?: string,
+): Promise<PaginatedBackend<BackendKBArticle>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (category) params.set('category', category);
+  if (status) params.set('status', status);
+  return api.get<PaginatedBackend<BackendKBArticle>>(`/api/v1/knowledge/articles?${params}`);
+}
+
+export async function fetchKBCategories(): Promise<BackendKBCategory[]> {
+  return api.get<BackendKBCategory[]>('/api/v1/knowledge/categories');
+}
+
+export async function fetchKBPopular(limit = 10): Promise<BackendKBArticle[]> {
+  return api.get<BackendKBArticle[]>(`/api/v1/knowledge/popular?limit=${limit}`);
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export interface BackendNotificationChannel {
+  id: string;
+  name: string;
+  channel_type: string;
+  config: Record<string, unknown>;
+  is_enabled: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendNotificationRule {
+  id: string;
+  name: string;
+  event_type: string;
+  channel_id: string;
+  conditions: Record<string, unknown> | null;
+  is_enabled: boolean;
+  created_at: string;
+}
+
+export interface BackendNotificationChannelTestResult {
+  success: boolean;
+  message: string;
+}
+
+export async function fetchNotificationChannels(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendNotificationChannel>> {
+  return api.get<PaginatedBackend<BackendNotificationChannel>>(
+    `/api/v1/notifications/channels?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function createNotificationChannel(data: {
+  name: string;
+  channel_type: string;
+  config: Record<string, unknown>;
+  is_enabled?: boolean;
+}): Promise<BackendNotificationChannel> {
+  return api.post<BackendNotificationChannel>('/api/v1/notifications/channels', data);
+}
+
+export async function updateNotificationChannel(
+  channelId: string,
+  data: Partial<{ name: string; config: Record<string, unknown>; is_enabled: boolean }>,
+): Promise<BackendNotificationChannel> {
+  return api.patch<BackendNotificationChannel>(`/api/v1/notifications/channels/${channelId}`, data);
+}
+
+export async function deleteNotificationChannel(channelId: string): Promise<void> {
+  return api.delete<void>(`/api/v1/notifications/channels/${channelId}`);
+}
+
+export async function testNotificationChannel(
+  channelId: string,
+): Promise<BackendNotificationChannelTestResult> {
+  return api.post<BackendNotificationChannelTestResult>(
+    `/api/v1/notifications/channels/${channelId}/test`,
+  );
+}
+
+export async function fetchNotificationRules(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendNotificationRule>> {
+  return api.get<PaginatedBackend<BackendNotificationRule>>(
+    `/api/v1/notifications/rules?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function createNotificationRule(data: {
+  name: string;
+  event_type: string;
+  channel_id: string;
+  conditions?: Record<string, unknown>;
+  is_enabled?: boolean;
+}): Promise<BackendNotificationRule> {
+  return api.post<BackendNotificationRule>('/api/v1/notifications/rules', data);
+}
+
+export async function deleteNotificationRule(ruleId: string): Promise<void> {
+  return api.delete<void>(`/api/v1/notifications/rules/${ruleId}`);
+}
+
+// ── Policies ──────────────────────────────────────────────────────────────────
+
+export interface BackendDevicePolicy {
+  id: string;
+  name: string;
+  description: string | null;
+  policy_type: string;
+  rules: Record<string, unknown> | null;
+  target_groups: unknown[] | null;
+  is_enabled: boolean;
+  priority: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BackendPolicyViolation {
+  id: string;
+  policy_id: string;
+  device_id: string;
+  violation_type: string;
+  detail: Record<string, unknown> | null;
+  detected_at: string;
+  resolved_at: string | null;
+  is_resolved: boolean;
+}
+
+export interface BackendPolicyComplianceSummary {
+  total_policies: number;
+  enabled_policies: number;
+  total_violations: number;
+  unresolved_violations: number;
+  compliance_rate: number;
+  by_type: Record<string, number>;
+}
+
+export async function fetchPolicies(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendDevicePolicy>> {
+  return api.get<PaginatedBackend<BackendDevicePolicy>>(
+    `/api/v1/policies?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchPolicyViolations(
+  offset = 0,
+  limit = 50,
+  isResolved?: boolean,
+): Promise<PaginatedBackend<BackendPolicyViolation>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (isResolved !== undefined) params.set('is_resolved', String(isResolved));
+  return api.get<PaginatedBackend<BackendPolicyViolation>>(`/api/v1/policies/violations?${params}`);
+}
+
+export async function fetchPolicyCompliance(): Promise<BackendPolicyComplianceSummary> {
+  return api.get<BackendPolicyComplianceSummary>('/api/v1/policies/compliance');
+}
+
+export async function createPolicy(data: {
+  name: string;
+  policy_type: string;
+  description?: string;
+  rules?: Record<string, unknown>;
+  is_enabled?: boolean;
+  priority?: number;
+}): Promise<BackendDevicePolicy> {
+  return api.post<BackendDevicePolicy>('/api/v1/policies', data);
+}
+
+export async function updatePolicy(
+  policyId: string,
+  data: Partial<{ name: string; description: string; is_enabled: boolean; priority: number }>,
+): Promise<BackendDevicePolicy> {
+  return api.patch<BackendDevicePolicy>(`/api/v1/policies/${policyId}`, data);
+}
+
+export async function deletePolicy(policyId: string): Promise<void> {
+  return api.delete<void>(`/api/v1/policies/${policyId}`);
+}
+
+// ── Printing ──────────────────────────────────────────────────────────────────
+
+export interface BackendPrinter {
+  id: string;
+  name: string;
+  location: string;
+  ip_address: string | null;
+  model: string;
+  is_network: boolean;
+  is_active: boolean;
+  department: string | null;
+  created_at: string;
+}
+
+export interface BackendPrintJob {
+  id: string;
+  printer_id: string;
+  device_id: string | null;
+  user_name: string;
+  document_name: string;
+  pages: number;
+  copies: number;
+  color: boolean;
+  duplex: boolean;
+  paper_size: string;
+  status: string;
+  printed_at: string;
+}
+
+export interface BackendPrintStats {
+  total_pages: number;
+  total_jobs: number;
+  color_ratio: number;
+  by_user: { user_name: string; total_pages: number }[];
+  by_printer: { printer_id: string; printer_name: string; total_pages: number }[];
+  by_department: { department: string; total_pages: number }[];
+  monthly_trend: { month: string; total_pages: number }[];
+}
+
+export interface BackendPrintPolicy {
+  id: string;
+  name: string;
+  description: string | null;
+  max_pages_per_day: number | null;
+  max_pages_per_month: number | null;
+  allow_color: boolean;
+  allow_duplex_only: boolean;
+  target_departments: string[] | null;
+  is_enabled: boolean;
+  created_at: string;
+}
+
+export async function fetchPrinters(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendPrinter>> {
+  return api.get<PaginatedBackend<BackendPrinter>>(
+    `/api/v1/printing/printers?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchPrintJobs(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendPrintJob>> {
+  return api.get<PaginatedBackend<BackendPrintJob>>(
+    `/api/v1/printing/jobs?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchPrintStats(): Promise<BackendPrintStats> {
+  return api.get<BackendPrintStats>('/api/v1/printing/stats');
+}
+
+export async function fetchPrintPolicies(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendPrintPolicy>> {
+  return api.get<PaginatedBackend<BackendPrintPolicy>>(
+    `/api/v1/printing/policies?offset=${offset}&limit=${limit}`,
+  );
+}
+
+// ── Remote Work ───────────────────────────────────────────────────────────────
+
+export interface BackendVPNConnection {
+  id: string;
+  device_id: string | null;
+  user_name: string;
+  vpn_server: string;
+  client_ip: string;
+  assigned_ip: string;
+  protocol: string;
+  connected_at: string;
+  disconnected_at: string | null;
+  duration_minutes: number | null;
+  bytes_sent: number | null;
+  bytes_received: number | null;
+  is_active: boolean;
+}
+
+export interface BackendRemoteWorkAnalytics {
+  total_connections: number;
+  active_connections: number;
+  by_protocol: Record<string, number>;
+  total_bytes_sent: number;
+  total_bytes_received: number;
+  peak_hours: { hour: number; count: number }[];
+  utilization_rate: number;
+  top_users: { user_name: string; connection_count: number; total_minutes: number }[];
+}
+
+export interface BackendRemoteAccessPolicy {
+  id: string;
+  name: string;
+  allowed_hours_start: string;
+  allowed_hours_end: string;
+  allowed_days: string[];
+  require_mfa: boolean;
+  max_session_hours: number;
+  geo_restriction: Record<string, unknown> | null;
+  is_enabled: boolean;
+  created_at: string;
+}
+
+export async function fetchActiveVPN(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendVPNConnection>> {
+  return api.get<PaginatedBackend<BackendVPNConnection>>(
+    `/api/v1/remote/vpn/active?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchVPNConnections(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendVPNConnection>> {
+  return api.get<PaginatedBackend<BackendVPNConnection>>(
+    `/api/v1/remote/vpn?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchRemoteWorkAnalytics(): Promise<BackendRemoteWorkAnalytics> {
+  return api.get<BackendRemoteWorkAnalytics>('/api/v1/remote/analytics');
+}
+
+export async function fetchRemoteAccessPolicies(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendRemoteAccessPolicy>> {
+  return api.get<PaginatedBackend<BackendRemoteAccessPolicy>>(
+    `/api/v1/remote/policies?offset=${offset}&limit=${limit}`,
+  );
+}
+
+// ── Network Devices ───────────────────────────────────────────────────────────
+
+export interface BackendNetworkDevice {
+  id: string;
+  ip_address: string;
+  mac_address: string;
+  hostname: string | null;
+  device_type: string;
+  is_managed: boolean;
+  first_seen: string;
+  last_seen: string;
+  device_id: string | null;
+}
+
+export async function fetchNetworkDevices(
+  offset = 0,
+  limit = 50,
+  isManaged?: boolean,
+): Promise<PaginatedBackend<BackendNetworkDevice>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (isManaged !== undefined) params.set('is_managed', String(isManaged));
+  return api.get<PaginatedBackend<BackendNetworkDevice>>(`/api/v1/network/devices?${params}`);
+}
+
+// ── Asset Lifecycle ───────────────────────────────────────────────────────────
+
+export interface BackendDisposalRequest {
+  id: string;
+  device_id: string;
+  reason: string;
+  method: string;
+  requested_by: string | null;
+  approved_by: string | null;
+  status: string;
+  certificate_path: string | null;
+  certificate_number: string | null;
+  disposal_date: string | null;
+  created_at: string;
+}
+
+export interface BackendLifecycleSummary {
+  procured: number;
+  deployed: number;
+  maintenance: number;
+  disposed: number;
+  disposal_pending: number;
+  disposal_approved: number;
+  total_events: number;
+}
+
+export async function fetchDisposalRequests(
+  offset = 0,
+  limit = 50,
+  status?: string,
+): Promise<PaginatedBackend<BackendDisposalRequest>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (status) params.set('status', status);
+  return api.get<PaginatedBackend<BackendDisposalRequest>>(`/api/v1/lifecycle/disposals?${params}`);
+}
+
+export async function fetchLifecycleSummary(): Promise<BackendLifecycleSummary> {
+  return api.get<BackendLifecycleSummary>('/api/v1/lifecycle/summary');
+}
+
+export async function createDisposalRequest(data: {
+  device_id: string;
+  reason: string;
+  method: string;
+}): Promise<BackendDisposalRequest> {
+  return api.post<BackendDisposalRequest>('/api/v1/lifecycle/disposals', data);
+}
+
+export async function approveDisposalRequest(id: string): Promise<BackendDisposalRequest> {
+  return api.post<BackendDisposalRequest>(`/api/v1/lifecycle/disposals/${id}/approve`);
+}
+
+// ── SLA ───────────────────────────────────────────────────────────────────────
+
+export interface BackendSLADefinition {
+  id: string;
+  name: string;
+  description: string | null;
+  metric_type: string;
+  target_value: number;
+  unit: string;
+  measurement_period: string;
+  warning_threshold: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface BackendSLADashboardItem {
+  sla_id: string;
+  name: string;
+  metric_type: string;
+  target_value: number;
+  current_value: number | null;
+  achievement_rate: number | null;
+  is_met: boolean | null;
+  measurement_period: string;
+  total_measurements: number;
+  met_count: number;
+  violation_count: number;
+}
+
+export interface BackendSLADashboard {
+  overall_achievement_rate: number | null;
+  total_definitions: number;
+  active_definitions: number;
+  total_violations: number;
+  items: BackendSLADashboardItem[];
+}
+
+export interface BackendSLAViolation {
+  id: string;
+  sla_id: string;
+  measured_value: number;
+  target_value: number;
+  deviation: number;
+  period_start: string;
+  period_end: string;
+  is_acknowledged: boolean;
+  created_at: string;
+}
+
+export async function fetchSLADashboard(): Promise<BackendSLADashboard> {
+  return api.get<BackendSLADashboard>('/api/v1/sla/dashboard');
+}
+
+export async function fetchSLADefinitions(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendSLADefinition>> {
+  return api.get<PaginatedBackend<BackendSLADefinition>>(
+    `/api/v1/sla/definitions?offset=${offset}&limit=${limit}`,
+  );
+}
+
+export async function fetchSLAViolations(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendSLAViolation>> {
+  return api.get<PaginatedBackend<BackendSLAViolation>>(
+    `/api/v1/sla/violations?offset=${offset}&limit=${limit}`,
+  );
+}
+
+// ── SAM Compliance & Reports ──────────────────────────────────────────────────
+
+export interface BackendSAMComplianceCheck {
+  license_id: string;
+  software_name: string;
+  purchased_count: number;
+  installed_count: number;
+  m365_assigned: number;
+  total_used: number;
+  is_compliant: boolean;
+  over_deployed: number;
+}
+
+export interface BackendExpiringLicense {
+  id: string;
+  software_name: string;
+  vendor: string;
+  license_type: string;
+  expiry_date: string;
+  days_until_expiry: number;
+  purchased_count: number;
+  cost_per_unit: number | null;
+  currency: string;
+  vendor_contract_id: string | null;
+}
+
+export async function fetchSAMCompliance(): Promise<BackendSAMComplianceCheck[]> {
+  return api.get<BackendSAMComplianceCheck[]>('/api/v1/sam/compliance');
+}
+
+export async function fetchExpiringLicenses(daysAhead = 90): Promise<BackendExpiringLicense[]> {
+  return api.get<BackendExpiringLicense[]>(
+    `/api/v1/sam/licenses/expiring?days_ahead=${daysAhead}`,
+  );
+}
+
+// ── Reports (CSV download) ────────────────────────────────────────────────────
+
+export async function downloadReport(
+  reportType: 'sam' | 'assets' | 'security',
+  filename: string,
+): Promise<void> {
+  let authToken: string | null = null;
+  try {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem(AUTH_STORAGE_KEY) : null;
+    if (stored) {
+      const parsed = JSON.parse(stored) as { token?: string };
+      authToken = parsed.token ?? null;
+    }
+  } catch {
+    // ignore
+  }
+  const headers: Record<string, string> = {};
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+  const res = await fetch(`${API_BASE_URL}/api/v1/reports/${reportType}`, { headers });
+  if (!res.ok) throw new Error(`Download failed: ${res.statusText}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

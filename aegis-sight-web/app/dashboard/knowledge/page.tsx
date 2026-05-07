@@ -1,42 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import {
+  fetchKBArticles,
+  fetchKBCategories,
+  fetchKBPopular,
+  BackendKBArticle,
+  BackendKBCategory,
+} from '@/lib/api';
 
 // ---------------------------------------------------------------------------
-// Types
+// Style maps (open-string keys for backend compatibility)
 // ---------------------------------------------------------------------------
-type ArticleCategory = 'how_to' | 'troubleshooting' | 'policy' | 'faq' | 'best_practice';
-type ArticleStatus = 'draft' | 'published' | 'archived';
 
-interface KBArticle {
-  id: string;
-  title: string;
-  content: string;
-  category: ArticleCategory;
-  tags: string[] | null;
-  author_id: string;
-  status: ArticleStatus;
-  view_count: number;
-  helpful_count: number;
-  created_at: string;
-  updated_at: string;
-}
+type BadgeVariant = 'info' | 'warning' | 'danger' | 'success' | 'purple' | 'default';
 
-interface KBCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: string | null;
-  sort_order: number;
-  parent_id: string | null;
-  article_count: number;
-}
-
-// ---------------------------------------------------------------------------
-// Labels & styling
-// ---------------------------------------------------------------------------
-const categoryLabel: Record<ArticleCategory, string> = {
+const CATEGORY_LABEL: Record<string, string> = {
   how_to: 'ハウツー',
   troubleshooting: 'トラブルシューティング',
   policy: 'ポリシー',
@@ -44,7 +24,7 @@ const categoryLabel: Record<ArticleCategory, string> = {
   best_practice: 'ベストプラクティス',
 };
 
-const categoryVariant: Record<ArticleCategory, 'info' | 'warning' | 'danger' | 'success' | 'purple' | 'default'> = {
+const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
   how_to: 'info',
   troubleshooting: 'warning',
   policy: 'danger',
@@ -52,132 +32,107 @@ const categoryVariant: Record<ArticleCategory, 'info' | 'warning' | 'danger' | '
   best_practice: 'purple',
 };
 
-const statusLabel: Record<ArticleStatus, string> = {
+const STATUS_LABEL: Record<string, string> = {
   draft: '下書き',
   published: '公開中',
   archived: 'アーカイブ',
 };
 
-const statusVariant: Record<ArticleStatus, 'default' | 'success' | 'warning'> = {
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
   draft: 'default',
   published: 'success',
   archived: 'warning',
 };
 
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-const MOCK_ARTICLES: KBArticle[] = [
-  {
-    id: '1',
-    title: '新入社員向け PC セットアップガイド',
-    content: '# PC セットアップ手順\n\n## 1. 初期設定\n\nWindows の初期設定を行います。\n\n- Microsoft アカウントでサインイン\n- Windows Update を実行\n- 社内ネットワーク (VPN) に接続\n\n## 2. 必須ソフトウェア\n\n以下のソフトウェアをインストールしてください:\n\n1. Microsoft 365\n2. Teams\n3. 社内 VPN クライアント\n4. セキュリティソフト\n\n## 3. メール設定\n\nOutlook でメールアカウントを設定します。',
-    category: 'how_to',
-    tags: ['onboarding', 'setup', 'pc'],
-    author_id: 'user-1',
-    status: 'published',
-    view_count: 342,
-    helpful_count: 89,
-    created_at: '2026-03-01T09:00:00Z',
-    updated_at: '2026-03-20T14:30:00Z',
-  },
-  {
-    id: '2',
-    title: 'VPN 接続できない場合の対処法',
-    content: '# VPN 接続トラブルシューティング\n\n## 症状\nVPN クライアントで「接続に失敗しました」エラーが表示される\n\n## 対処手順\n\n1. インターネット接続を確認\n2. VPN クライアントを再起動\n3. 資格情報を再入力\n4. ファイアウォール設定を確認\n5. IT サポートに連絡',
-    category: 'troubleshooting',
-    tags: ['vpn', 'network', 'troubleshoot'],
-    author_id: 'user-1',
-    status: 'published',
-    view_count: 567,
-    helpful_count: 145,
-    created_at: '2026-02-15T10:00:00Z',
-    updated_at: '2026-03-18T11:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'USB デバイス使用ポリシー',
-    content: '# USB デバイス使用ポリシー\n\n## 概要\n情報セキュリティ確保のため、USB デバイスの使用には制限があります。\n\n## 許可デバイス\n- 会社支給の USB メモリ（暗号化済み）\n- キーボード・マウス\n\n## 禁止事項\n- 個人の USB メモリの使用\n- USB 経由での機密ファイルコピー',
-    category: 'policy',
-    tags: ['usb', 'security', 'policy'],
-    author_id: 'user-2',
-    status: 'published',
-    view_count: 234,
-    helpful_count: 56,
-    created_at: '2026-01-10T08:00:00Z',
-    updated_at: '2026-03-05T09:00:00Z',
-  },
-  {
-    id: '4',
-    title: 'パスワードリセット方法',
-    content: '# パスワードリセット\n\n## セルフサービスリセット\n1. ログイン画面で「パスワードを忘れた場合」をクリック\n2. 登録メールアドレスを入力\n3. 受信したリンクからリセット\n\n## IT サポートへの依頼\nセルフサービスが利用できない場合は、IT ヘルプデスクにお問い合わせください。',
-    category: 'faq',
-    tags: ['password', 'account', 'faq'],
-    author_id: 'user-1',
-    status: 'published',
-    view_count: 891,
-    helpful_count: 267,
-    created_at: '2026-01-05T09:00:00Z',
-    updated_at: '2026-03-22T16:00:00Z',
-  },
-  {
-    id: '5',
-    title: 'セキュアなリモートワーク環境の構築',
-    content: '# セキュアなリモートワーク環境\n\n## ベストプラクティス\n\n1. 常に VPN を使用\n2. パブリック Wi-Fi を避ける\n3. 画面ロックを有効化\n4. 定期的にソフトウェアを更新\n5. 機密情報は暗号化して送信',
-    category: 'best_practice',
-    tags: ['remote-work', 'security', 'best-practice'],
-    author_id: 'user-2',
-    status: 'published',
-    view_count: 178,
-    helpful_count: 42,
-    created_at: '2026-02-20T11:00:00Z',
-    updated_at: '2026-03-15T10:00:00Z',
-  },
-  {
-    id: '6',
-    title: 'プリンタードライバーのインストール手順',
-    content: '# プリンタードライバーのインストール\n\n下書き状態の記事です。',
-    category: 'how_to',
-    tags: ['printer', 'driver'],
-    author_id: 'user-1',
-    status: 'draft',
-    view_count: 12,
-    helpful_count: 0,
-    created_at: '2026-03-25T14:00:00Z',
-    updated_at: '2026-03-25T14:00:00Z',
-  },
-];
+function getCategoryLabel(cat: string) { return CATEGORY_LABEL[cat] ?? cat; }
+function getCategoryVariant(cat: string): BadgeVariant { return CATEGORY_VARIANT[cat] ?? 'default'; }
+function getStatusLabel(s: string) { return STATUS_LABEL[s] ?? s; }
+function getStatusVariant(s: string): BadgeVariant { return STATUS_VARIANT[s] ?? 'default'; }
 
-const MOCK_CATEGORIES: KBCategory[] = [
-  { id: 'cat-1', name: 'IT 基本操作', description: 'PC やソフトウェアの基本的な使い方', icon: null, sort_order: 1, parent_id: null, article_count: 15 },
-  { id: 'cat-2', name: 'セキュリティ', description: 'セキュリティポリシーとガイドライン', icon: null, sort_order: 2, parent_id: null, article_count: 8 },
-  { id: 'cat-3', name: 'ネットワーク', description: 'VPN、Wi-Fi、ネットワーク関連', icon: null, sort_order: 3, parent_id: null, article_count: 12 },
-  { id: 'cat-4', name: 'アカウント管理', description: 'パスワード、アカウント設定', icon: null, sort_order: 4, parent_id: null, article_count: 6 },
-  { id: 'cat-5', name: 'ハードウェア', description: 'プリンター、周辺機器', icon: null, sort_order: 5, parent_id: null, article_count: 9 },
-];
+// Known enum values for filter dropdowns
+const KNOWN_CATEGORIES = Object.keys(CATEGORY_LABEL);
+const KNOWN_STATUSES = Object.keys(STATUS_LABEL);
+
+// ---------------------------------------------------------------------------
+// Skeleton components
+// ---------------------------------------------------------------------------
+
+function SkeletonArticleCard() {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-aegis-border dark:bg-aegis-darker animate-pulse">
+      <div className="mb-2 flex gap-2">
+        <div className="h-5 w-16 rounded-full bg-gray-200 dark:bg-aegis-border" />
+        <div className="h-5 w-12 rounded-full bg-gray-200 dark:bg-aegis-border" />
+      </div>
+      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-aegis-border" />
+      <div className="mt-2 h-3 w-full rounded bg-gray-200 dark:bg-aegis-border" />
+      <div className="mt-1 h-3 w-2/3 rounded bg-gray-200 dark:bg-aegis-border" />
+    </div>
+  );
+}
+
+function SkeletonRow({ cols }: { cols: number }) {
+  return (
+    <tr className="animate-pulse">
+      {Array.from({ length: cols }).map((_, i) => (
+        <td key={i} className="px-4 py-3">
+          <div className="h-4 rounded bg-gray-200 dark:bg-aegis-border" />
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
 export default function KnowledgeBasePage() {
   const [activeTab, setActiveTab] = useState<'browse' | 'popular' | 'create'>('browse');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | 'all'>('all');
-  const [selectedStatus, setSelectedStatus] = useState<ArticleStatus | 'all'>('all');
-  const [selectedArticle, setSelectedArticle] = useState<KBArticle | null>(null);
-  const [showEditor, setShowEditor] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedArticle, setSelectedArticle] = useState<BackendKBArticle | null>(null);
 
-  // Editor state
+  // API state
+  const [articles, setArticles] = useState<BackendKBArticle[]>([]);
+  const [categories, setCategories] = useState<BackendKBCategory[]>([]);
+  const [popularArticles, setPopularArticles] = useState<BackendKBArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Editor state (local only — no backend create/edit in scope)
   const [editorTitle, setEditorTitle] = useState('');
   const [editorContent, setEditorContent] = useState('');
-  const [editorCategory, setEditorCategory] = useState<ArticleCategory>('how_to');
+  const [editorCategory, setEditorCategory] = useState('how_to');
   const [editorTags, setEditorTags] = useState('');
-  const [editorStatus, setEditorStatus] = useState<ArticleStatus>('draft');
+  const [editorStatus, setEditorStatus] = useState('draft');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [articlesData, catsData, popularData] = await Promise.all([
+        fetchKBArticles(0, 100),
+        fetchKBCategories(),
+        fetchKBPopular(10),
+      ]);
+      setArticles(articlesData.items);
+      setCategories(catsData);
+      setPopularArticles(popularData);
+    } catch (err) {
+      console.error('Knowledge base data fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // ---------------------------------------------------------------------------
-  // Filtering
+  // Filtering (client-side after fetch)
   // ---------------------------------------------------------------------------
-  const filteredArticles = MOCK_ARTICLES.filter((a) => {
+  const filteredArticles = articles.filter((a) => {
     if (selectedCategory !== 'all' && a.category !== selectedCategory) return false;
     if (selectedStatus !== 'all' && a.status !== selectedStatus) return false;
     if (searchQuery) {
@@ -187,30 +142,24 @@ export default function KnowledgeBasePage() {
     return true;
   });
 
-  const popularArticles = [...MOCK_ARTICLES]
-    .filter((a) => a.status === 'published')
-    .sort((a, b) => b.view_count - a.view_count)
-    .slice(0, 10);
-
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
-  const handleViewArticle = (article: KBArticle) => {
+  const handleViewArticle = (article: BackendKBArticle) => {
     setSelectedArticle(article);
   };
 
   const handleHelpful = (articleId: string) => {
-    // In production this would call POST /api/v1/knowledge/articles/{id}/helpful
+    // In production: POST /api/v1/knowledge/articles/{id}/helpful
     alert(`記事 ${articleId} を「役に立った」としてマークしました`);
   };
 
-  const handleEditArticle = (article: KBArticle) => {
+  const handleEditArticle = (article: BackendKBArticle) => {
     setEditorTitle(article.title);
     setEditorContent(article.content);
     setEditorCategory(article.category);
     setEditorTags(article.tags?.join(', ') ?? '');
     setEditorStatus(article.status);
-    setShowEditor(true);
     setActiveTab('create');
   };
 
@@ -220,14 +169,12 @@ export default function KnowledgeBasePage() {
     setEditorCategory('how_to');
     setEditorTags('');
     setEditorStatus('draft');
-    setShowEditor(true);
     setActiveTab('create');
   };
 
   const handleSaveArticle = () => {
-    // In production this would call POST or PATCH /api/v1/knowledge/articles
+    // In production: POST or PATCH /api/v1/knowledge/articles
     alert('記事を保存しました（デモ）');
-    setShowEditor(false);
     setActiveTab('browse');
   };
 
@@ -235,7 +182,6 @@ export default function KnowledgeBasePage() {
   // Render helpers
   // ---------------------------------------------------------------------------
   const renderSimpleMarkdown = (md: string) => {
-    // Very simple markdown-ish rendering for demo
     return md.split('\n').map((line, i) => {
       if (line.startsWith('# ')) return <h2 key={i} className="text-xl font-bold mt-4 mb-2 text-gray-900 dark:text-white">{line.slice(2)}</h2>;
       if (line.startsWith('## ')) return <h3 key={i} className="text-lg font-semibold mt-3 mb-1 text-gray-800 dark:text-gray-200">{line.slice(3)}</h3>;
@@ -247,7 +193,7 @@ export default function KnowledgeBasePage() {
   };
 
   // ---------------------------------------------------------------------------
-  // Article detail modal
+  // Article detail view
   // ---------------------------------------------------------------------------
   if (selectedArticle) {
     return (
@@ -266,11 +212,11 @@ export default function KnowledgeBasePage() {
         {/* Article header */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-aegis-border dark:bg-aegis-darker">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Badge variant={categoryVariant[selectedArticle.category]}>
-              {categoryLabel[selectedArticle.category]}
+            <Badge variant={getCategoryVariant(selectedArticle.category)}>
+              {getCategoryLabel(selectedArticle.category)}
             </Badge>
-            <Badge variant={statusVariant[selectedArticle.status]}>
-              {statusLabel[selectedArticle.status]}
+            <Badge variant={getStatusVariant(selectedArticle.status)}>
+              {getStatusLabel(selectedArticle.status)}
             </Badge>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedArticle.title}</h1>
@@ -386,22 +332,22 @@ export default function KnowledgeBasePage() {
             </div>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as ArticleCategory | 'all')}
+              onChange={(e) => setSelectedCategory(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-dark dark:text-white"
             >
               <option value="all">全カテゴリ</option>
-              {(Object.keys(categoryLabel) as ArticleCategory[]).map((cat) => (
-                <option key={cat} value={cat}>{categoryLabel[cat]}</option>
+              {KNOWN_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
               ))}
             </select>
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as ArticleStatus | 'all')}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-dark dark:text-white"
             >
               <option value="all">全ステータス</option>
-              {(Object.keys(statusLabel) as ArticleStatus[]).map((s) => (
-                <option key={s} value={s}>{statusLabel[s]}</option>
+              {KNOWN_STATUSES.map((s) => (
+                <option key={s} value={s}>{getStatusLabel(s)}</option>
               ))}
             </select>
           </div>
@@ -424,83 +370,98 @@ export default function KnowledgeBasePage() {
                     全カテゴリ
                   </button>
                 </li>
-                {MOCK_CATEGORIES.map((cat) => (
-                  <li key={cat.id}>
-                    <button
-                      onClick={() => {
-                        // Map category name to enum value (simplified for demo)
-                        setSelectedCategory('all');
-                      }}
-                      className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-600 transition hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-aegis-dark"
-                    >
-                      <span>{cat.name}</span>
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-aegis-dark dark:text-gray-500">
-                        {cat.article_count}
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <li key={i} className="animate-pulse">
+                      <div className="mx-3 my-2 h-4 rounded bg-gray-200 dark:bg-aegis-border" />
+                    </li>
+                  ))
+                ) : (
+                  categories.map((cat) => (
+                    <li key={cat.id}>
+                      <button
+                        onClick={() => setSelectedCategory('all')}
+                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-600 transition hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-aegis-dark"
+                      >
+                        <span>{cat.name}</span>
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-aegis-dark dark:text-gray-500">
+                          {cat.article_count}
+                        </span>
+                      </button>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
             {/* Articles list */}
             <div className="space-y-3 lg:col-span-3">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredArticles.length} 件の記事
-              </p>
-              {filteredArticles.length === 0 && (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center dark:border-aegis-border dark:bg-aegis-darker">
-                  <p className="text-gray-500 dark:text-gray-400">該当する記事が見つかりません</p>
-                </div>
-              )}
-              {filteredArticles.map((article) => (
-                <div
-                  key={article.id}
-                  className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition hover:border-aegis-accent/50 hover:shadow-sm dark:border-aegis-border dark:bg-aegis-darker dark:hover:border-aegis-accent/50"
-                  onClick={() => handleViewArticle(article)}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <Badge variant={categoryVariant[article.category]}>
-                          {categoryLabel[article.category]}
-                        </Badge>
-                        <Badge variant={statusVariant[article.status]}>
-                          {statusLabel[article.status]}
-                        </Badge>
-                      </div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">{article.title}</h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                        {article.content.replace(/[#\-*]/g, '').slice(0, 120)}...
-                      </p>
-                      {article.tags && article.tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {article.tags.map((tag) => (
-                            <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-aegis-dark dark:text-gray-500">
-                              {tag}
+              {loading ? (
+                <>
+                  <div className="h-4 w-16 rounded bg-gray-200 dark:bg-aegis-border animate-pulse" />
+                  {Array.from({ length: 4 }).map((_, i) => <SkeletonArticleCard key={i} />)}
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {filteredArticles.length} 件の記事
+                  </p>
+                  {filteredArticles.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center dark:border-aegis-border dark:bg-aegis-darker">
+                      <p className="text-gray-500 dark:text-gray-400">データなし</p>
+                    </div>
+                  ) : (
+                    filteredArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition hover:border-aegis-accent/50 hover:shadow-sm dark:border-aegis-border dark:bg-aegis-darker dark:hover:border-aegis-accent/50"
+                        onClick={() => handleViewArticle(article)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                              <Badge variant={getCategoryVariant(article.category)}>
+                                {getCategoryLabel(article.category)}
+                              </Badge>
+                              <Badge variant={getStatusVariant(article.status)}>
+                                {getStatusLabel(article.status)}
+                              </Badge>
+                            </div>
+                            <h3 className="font-medium text-gray-900 dark:text-white">{article.title}</h3>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                              {article.content.replace(/[#\-*]/g, '').slice(0, 120)}...
+                            </p>
+                            {article.tags && article.tags.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {article.tags.map((tag) => (
+                                  <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-aegis-dark dark:text-gray-500">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1 text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                              </svg>
+                              {article.view_count}
                             </span>
-                          ))}
+                            <span className="flex items-center gap-1">
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V3a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m7.723-9.752h0" />
+                              </svg>
+                              {article.helpful_count}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-1 text-xs text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                        {article.view_count}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V3a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m7.723-9.752h0" />
-                        </svg>
-                        {article.helpful_count}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      </div>
+                    ))
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -522,29 +483,39 @@ export default function KnowledgeBasePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-                {popularArticles.map((article, index) => (
-                  <tr
-                    key={article.id}
-                    className="cursor-pointer transition hover:bg-gray-50 dark:hover:bg-aegis-dark"
-                    onClick={() => handleViewArticle(article)}
-                  >
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                        index < 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-500 dark:bg-aegis-dark dark:text-gray-400'
-                      }`}>
-                        {index + 1}
-                      </span>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
+                ) : popularArticles.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                      データなし
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{article.title}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={categoryVariant[article.category]}>
-                        {categoryLabel[article.category]}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{article.view_count.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{article.helpful_count.toLocaleString()}</td>
                   </tr>
-                ))}
+                ) : (
+                  popularArticles.map((article, index) => (
+                    <tr
+                      key={article.id}
+                      className="cursor-pointer transition hover:bg-gray-50 dark:hover:bg-aegis-dark"
+                      onClick={() => handleViewArticle(article)}
+                    >
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                          index < 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-500 dark:bg-aegis-dark dark:text-gray-400'
+                        }`}>
+                          {index + 1}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{article.title}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant={getCategoryVariant(article.category)}>
+                          {getCategoryLabel(article.category)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{article.view_count.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{article.helpful_count.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -555,7 +526,7 @@ export default function KnowledgeBasePage() {
       {activeTab === 'create' && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {showEditor ? '記事を編集' : '新規記事を作成'}
+            記事を作成/編集
           </h2>
           <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-aegis-border dark:bg-aegis-darker">
             <div className="space-y-4">
@@ -577,11 +548,11 @@ export default function KnowledgeBasePage() {
                   <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ</label>
                   <select
                     value={editorCategory}
-                    onChange={(e) => setEditorCategory(e.target.value as ArticleCategory)}
+                    onChange={(e) => setEditorCategory(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-dark dark:text-white"
                   >
-                    {(Object.keys(categoryLabel) as ArticleCategory[]).map((cat) => (
-                      <option key={cat} value={cat}>{categoryLabel[cat]}</option>
+                    {KNOWN_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
                     ))}
                   </select>
                 </div>
@@ -589,11 +560,11 @@ export default function KnowledgeBasePage() {
                   <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">ステータス</label>
                   <select
                     value={editorStatus}
-                    onChange={(e) => setEditorStatus(e.target.value as ArticleStatus)}
+                    onChange={(e) => setEditorStatus(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-aegis-border dark:bg-aegis-dark dark:text-white"
                   >
-                    {(Object.keys(statusLabel) as ArticleStatus[]).map((s) => (
-                      <option key={s} value={s}>{statusLabel[s]}</option>
+                    {KNOWN_STATUSES.map((s) => (
+                      <option key={s} value={s}>{getStatusLabel(s)}</option>
                     ))}
                   </select>
                 </div>
@@ -690,10 +661,7 @@ export default function KnowledgeBasePage() {
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-2">
                 <button
-                  onClick={() => {
-                    setShowEditor(false);
-                    setActiveTab('browse');
-                  }}
+                  onClick={() => setActiveTab('browse')}
                   className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-aegis-border dark:bg-aegis-dark dark:text-gray-300"
                 >
                   キャンセル
