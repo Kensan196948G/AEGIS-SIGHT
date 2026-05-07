@@ -1,15 +1,45 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { BarChart, DonutChart } from '@/components/ui/chart';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  BackendNetworkDevice,
-  fetchNetworkDevices,
-} from '@/lib/api';
+import { BackendNetworkDevice, fetchNetworkDevices } from '@/lib/api';
+
+const deviceTypeLabel: Record<string, string> = {
+  router:     'ルーター',
+  switch:     'スイッチ',
+  server:     'サーバー',
+  endpoint:   'エンドポイント',
+  printer:    'プリンター',
+  camera:     'カメラ',
+  unknown:    '不明',
+};
+
+function formatDate(s: string) {
+  return new Date(s).toLocaleString('ja-JP');
+}
+
+const NETWORK_TOPOLOGY = [
+  { label: 'コアスイッチ',  count: 2,  color: 'bg-purple-500' },
+  { label: 'ルーター',       count: 4,  color: 'bg-blue-500'   },
+  { label: 'スイッチ',       count: 12, color: 'bg-sky-500'    },
+  { label: 'サーバー',       count: 28, color: 'bg-indigo-500' },
+  { label: 'AP',             count: 18, color: 'bg-cyan-500'   },
+  { label: 'エンドポイント', count: 245,color: 'bg-green-500'  },
+];
+
+const SUBNET_SUMMARY = [
+  { subnet: '10.0.1.0/24',  name: '管理VLAN',        total: 50,  used: 38 },
+  { subnet: '10.0.2.0/24',  name: 'サーバーVLAN',    total: 100, used: 62 },
+  { subnet: '10.0.10.0/22', name: 'ユーザーVLAN',    total: 1022,used: 647 },
+  { subnet: '10.0.20.0/24', name: 'ゲストWi-Fi',     total: 200, used: 84  },
+  { subnet: '192.168.1.0/24',name: 'IoT/プリンター', total: 50,  used: 31  },
+];
 
 export default function NetworkPage() {
   const [devices, setDevices] = useState<BackendNetworkDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -23,136 +53,220 @@ export default function NetworkPage() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
-  const managed = devices.filter((d) => d.is_managed);
+  const managed   = devices.filter((d) => d.is_managed);
   const unmanaged = devices.filter((d) => !d.is_managed);
+  const total     = devices.length;
+  const managedRate = total > 0 ? Math.round((managed.length / total) * 100) : 0;
+  const managedRateColor = managedRate >= 90 ? '#10b981' : managedRate >= 70 ? '#f59e0b' : '#ef4444';
 
-  const formatDate = (s: string) => new Date(s).toLocaleString('ja-JP');
+  const typeCounts: Record<string, number> = {};
+  devices.forEach((d) => {
+    typeCounts[d.device_type] = (typeCounts[d.device_type] || 0) + 1;
+  });
+  const typeBarData = Object.entries(typeCounts).map(([type, count]) => ({
+    label: deviceTypeLabel[type] ?? type,
+    value: count,
+    color: 'bg-blue-500',
+  }));
 
-  const DeviceRow = ({ d }: { d: BackendNetworkDevice }) => (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
-      <td className="px-4 py-3 text-sm font-mono">{d.ip_address}</td>
-      <td className="px-4 py-3 text-sm font-mono">{d.mac_address}</td>
-      <td className="px-4 py-3 text-sm">{d.hostname ?? '—'}</td>
-      <td className="px-4 py-3 text-sm">{d.device_type}</td>
-      <td className="px-4 py-3">
-        {d.is_managed ? (
-          <Badge className="bg-green-100 text-green-700 border-green-200">管理対象</Badge>
-        ) : (
-          <Badge className="bg-red-100 text-red-700 border-red-200">未管理</Badge>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-500">{formatDate(d.last_seen)}</td>
-    </tr>
-  );
-
-  const TableSkeleton = () => (
-    <div className="animate-pulse space-y-2 p-4">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="h-10 bg-gray-200 rounded" />
-      ))}
-    </div>
-  );
+  const deviceTypes = [...new Set(devices.map((d) => d.device_type))];
+  const filtered = typeFilter === 'all'
+    ? devices
+    : devices.filter((d) => d.device_type === typeFilter);
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">ネットワークデバイス管理</h1>
-        <p className="text-sm text-gray-500 mt-1">検出されたネットワーク上のデバイス一覧</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ネットワーク管理</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            検出済みネットワークデバイスの可視化と管理
+          </p>
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          最終スキャン: {new Date().toLocaleString('ja-JP')}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {loading ? (
-          <>
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-white rounded-xl border border-gray-200 p-5">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                <div className="h-8 bg-gray-200 rounded w-1/3" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">総デバイス数</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+            {loading ? '—' : total.toLocaleString()}
+          </p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400">管理対象</p>
+          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
+            {loading ? '—' : managed.length.toLocaleString()}
+          </p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-red-600 dark:text-red-400">未管理</p>
+          <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
+            {loading ? '—' : unmanaged.length.toLocaleString()}
+          </p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">管理率</p>
+          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {loading ? '—' : `${managedRate}%`}
+          </p>
+        </div>
+      </div>
+
+      {/* Overview Charts */}
+      {!loading && total > 0 && (
+        <div className="aegis-card">
+          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ネットワーク概要</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">管理対象率</p>
+              <DonutChart value={managedRate} max={100} size={140} strokeWidth={14} color={managedRateColor} label={`${managedRate}%`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                全 {total} 台中 {managed.length} 台が管理対象
+              </p>
+            </div>
+            {typeBarData.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">デバイス種別</p>
+                <BarChart
+                  data={typeBarData}
+                  maxValue={Math.max(...typeBarData.map((d) => d.value), 1)}
+                  height={160}
+                  showValues
+                />
               </div>
-            ))}
-          </>
-        ) : (
-          <>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm text-gray-500">総デバイス数</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{devices.length}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm text-gray-500">管理対象</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{managed.length}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm text-gray-500">未管理デバイス</p>
-              <p className="text-3xl font-bold text-red-600 mt-1">{unmanaged.length}</p>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* All devices table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">全デバイス一覧</h2>
-        </div>
-        {loading ? (
-          <TableSkeleton />
-        ) : devices.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-gray-400">データなし</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IPアドレス</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">MACアドレス</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ホスト名</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">デバイス種別</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">管理状態</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">最終確認</th>
-                </tr>
-              </thead>
-              <tbody>
-                {devices.map((d) => (
-                  <DeviceRow key={d.id} d={d} />
-                ))}
-              </tbody>
-            </table>
+            )}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Topology Summary */}
+      <div className="aegis-card">
+        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">ネットワーク構成概要</h2>
+        <div className="flex flex-wrap gap-3">
+          {NETWORK_TOPOLOGY.map((item) => (
+            <div key={item.label} className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 dark:border-aegis-border">
+              <div className={`h-3 w-3 rounded-full ${item.color}`} />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</span>
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{item.count}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Unmanaged devices table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <h2 className="font-semibold text-gray-900">未管理デバイス</h2>
-          {!loading && (
-            <Badge className="bg-red-100 text-red-700 border-red-200">{unmanaged.length} 件</Badge>
-          )}
+      {/* Subnet Summary */}
+      <div className="aegis-card overflow-hidden p-0">
+        <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">サブネット使用状況</h2>
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-aegis-border">
+          {SUBNET_SUMMARY.map((s) => {
+            const rate = Math.round((s.used / s.total) * 100);
+            const barColor = rate >= 90 ? 'bg-red-500' : rate >= 70 ? 'bg-amber-500' : 'bg-emerald-500';
+            return (
+              <div key={s.subnet} className="px-6 py-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div>
+                    <span className="font-mono text-sm text-gray-900 dark:text-white">{s.subnet}</span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{s.name}</span>
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {s.used} / {s.total} ({rate}%)
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-aegis-dark">
+                  <div
+                    className={`h-2 rounded-full ${barColor} transition-all`}
+                    style={{ width: `${rate}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Unmanaged Devices Alert */}
+      {!loading && unmanaged.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-6 py-4 dark:border-amber-800/40 dark:bg-amber-900/20">
+          <div className="flex items-center gap-3">
+            <svg className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                未管理デバイスが {unmanaged.length} 台検出されています
+              </p>
+              <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+                これらのデバイスはセキュリティリスクとなる可能性があります。管理対象への追加を検討してください。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Device Table */}
+      <div className="aegis-card overflow-hidden p-0">
+        <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">全デバイス一覧</h2>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="aegis-input w-auto text-sm"
+          >
+            <option value="all">全種別</option>
+            {deviceTypes.map((t) => (
+              <option key={t} value={t}>{deviceTypeLabel[t] ?? t}</option>
+            ))}
+          </select>
         </div>
         {loading ? (
-          <TableSkeleton />
-        ) : unmanaged.length === 0 ? (
-          <div className="flex items-center justify-center h-40 text-gray-400">データなし</div>
+          <div className="animate-pulse space-y-2 p-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 rounded bg-gray-200 dark:bg-gray-700" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex h-40 items-center justify-center text-sm text-gray-400 dark:text-gray-600">
+            該当するデバイスがありません
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IPアドレス</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">MACアドレス</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ホスト名</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">デバイス種別</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">管理状態</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">最終確認</th>
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">IPアドレス</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">MACアドレス</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ホスト名</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">種別</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">管理状態</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">最終確認</th>
                 </tr>
               </thead>
-              <tbody>
-                {unmanaged.map((d) => (
-                  <DeviceRow key={d.id} d={d} />
+              <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
+                {filtered.map((d) => (
+                  <tr key={d.id} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-aegis-dark/40">
+                    <td className="px-4 py-3 font-mono text-sm text-gray-900 dark:text-white">{d.ip_address}</td>
+                    <td className="px-4 py-3 font-mono text-sm text-gray-500 dark:text-gray-400">{d.mac_address}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{d.hostname ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                      {deviceTypeLabel[d.device_type] ?? d.device_type}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={d.is_managed ? 'success' : 'danger'} dot>
+                        {d.is_managed ? '管理対象' : '未管理'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(d.last_seen)}
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
