@@ -260,7 +260,7 @@ export default function DepartmentsPage() {
             color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] || 'bg-gray-400',
           }));
         return (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-aegis-border dark:bg-aegis-dark">
+          <div className="aegis-card">
             <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">部門概要</h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="flex flex-col items-center gap-3">

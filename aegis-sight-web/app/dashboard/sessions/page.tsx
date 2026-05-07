@@ -55,7 +55,7 @@ function SessionTypeBadge({ type }: { type: string }) {
 
 function StatCard({ title, value, sub }: { title: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
       {sub && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{sub}</p>}
@@ -66,7 +66,7 @@ function StatCard({ title, value, sub }: { title: string; value: string | number
 function PeakHoursChart({ data }: { data: { hour: number; count: number }[] }) {
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Peak Hours (Sessions Started)</h3>
       <div className="flex items-end gap-1.5" style={{ height: 160 }}>
         {data.map((d) => (
@@ -105,7 +105,7 @@ function TypeDistributionChart({ data }: { data: Record<string, number> }) {
   });
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Session Type Distribution</h3>
       <div className="flex items-center gap-6">
         <div
@@ -134,7 +134,7 @@ function TypeDistributionChart({ data }: { data: Record<string, number> }) {
 
 function UserUsageTable({ data }: { data: { user_name: string; session_count: number; total_minutes: number }[] }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Top Users by Session Count</h3>
       <table className="w-full text-sm">
         <thead>
@@ -171,7 +171,7 @@ function UserUsageTable({ data }: { data: { user_name: string; session_count: nu
 // ---------------------------------------------------------------------------
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface animate-pulse">
+    <div className="aegis-card animate-pulse">
       <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
       <div className="mt-2 h-8 w-16 rounded bg-gray-200 dark:bg-gray-700" />
     </div>
@@ -386,7 +386,7 @@ export default function SessionsPage() {
 
       {/* Tab: Active Sessions */}
       {tab === 'active' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
+        <div className="aegis-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -470,7 +470,7 @@ export default function SessionsPage() {
 
       {/* Tab: Activity Timeline */}
       {tab === 'activities' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
+        <div className="aegis-card">
           <div className="p-5">
             <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Recent User Activities</h3>
             {loading ? (

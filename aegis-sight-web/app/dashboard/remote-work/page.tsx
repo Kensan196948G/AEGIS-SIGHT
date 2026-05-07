@@ -76,7 +76,7 @@ function ProtocolBadge({ protocol }: { protocol: VPNProtocol }) {
 
 function StatCard({ title, value, sub }: { title: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
       <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
       {sub && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{sub}</p>}
@@ -87,7 +87,7 @@ function StatCard({ title, value, sub }: { title: string; value: string | number
 function PeakHoursChart({ data }: { data: { hour: number; count: number }[] }) {
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">VPN Peak Hours</h3>
       <div className="flex items-end gap-1.5" style={{ height: 160 }}>
         {data.map((d) => (
@@ -121,7 +121,7 @@ function ProtocolDistributionChart({ data }: { data: Record<string, number> }) {
   });
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Protocol Distribution</h3>
       <div className="flex items-center gap-6">
         <div
@@ -149,7 +149,7 @@ function ProtocolDistributionChart({ data }: { data: Record<string, number> }) {
 
 function BandwidthCard({ sent, received }: { sent: number; received: number }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Bandwidth Usage (Total)</h3>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -167,7 +167,7 @@ function BandwidthCard({ sent, received }: { sent: number; received: number }) {
 
 function TopUsersTable({ data }: { data: { user_name: string; connection_count: number; total_minutes: number }[] }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+    <div className="aegis-card">
       <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Top VPN Users</h3>
       <table className="w-full text-sm">
         <thead>
@@ -196,7 +196,7 @@ function TopUsersTable({ data }: { data: { user_name: string; connection_count: 
 // Loading skeleton
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface animate-pulse">
+    <div className="aegis-card animate-pulse">
       <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
       <div className="mt-2 h-8 w-20 rounded bg-gray-200 dark:bg-gray-700" />
     </div>
@@ -370,7 +370,7 @@ export default function RemoteWorkPage() {
       {/* Tab Content */}
       {tab === 'active' && (
         loading ? (
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface animate-pulse p-6">
+          <div className="aegis-card animate-pulse">
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-10 rounded bg-gray-200 dark:bg-gray-700" />
@@ -378,11 +378,11 @@ export default function RemoteWorkPage() {
             </div>
           </div>
         ) : vpnSessions.length === 0 ? (
-          <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-16 dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="flex items-center justify-center aegis-card py-16">
             <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="aegis-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -440,7 +440,7 @@ export default function RemoteWorkPage() {
             </div>
           </div>
         ) : analytics === null ? (
-          <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-16 dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="flex items-center justify-center aegis-card py-16">
             <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
           </div>
         ) : (
@@ -454,7 +454,7 @@ export default function RemoteWorkPage() {
                 sent={analytics.total_bytes_sent}
                 received={analytics.total_bytes_received}
               />
-              <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface">
+              <div className="aegis-card">
                 <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Utilization</h3>
                 <div className="flex items-center gap-4">
                   <div className="relative h-24 w-24">
@@ -505,7 +505,7 @@ export default function RemoteWorkPage() {
             ))}
           </div>
         ) : policies.length === 0 ? (
-          <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-16 dark:border-aegis-border dark:bg-aegis-surface">
+          <div className="flex items-center justify-center aegis-card py-16">
             <p className="text-sm text-gray-500 dark:text-gray-400">データなし</p>
           </div>
         ) : (
@@ -513,7 +513,7 @@ export default function RemoteWorkPage() {
             {policies.map((policy) => (
               <div
                 key={policy.id}
-                className="rounded-xl border border-gray-200 bg-white p-5 dark:border-aegis-border dark:bg-aegis-surface"
+                className="aegis-card"
               >
                 <div className="flex items-start justify-between">
                   <div>
