@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { clsx } from 'clsx';
 
 interface NavItem {
@@ -96,23 +96,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of navigationGroups) {
-      initial[group.title] = groupContainsActive(group, pathname);
+      initial[group.title] = true;
     }
     return initial;
   });
-
-  // Auto-expand the group for the current page when the path changes
-  useEffect(() => {
-    setOpenGroups((prev) => {
-      const next = { ...prev };
-      for (const group of navigationGroups) {
-        if (groupContainsActive(group, pathname)) {
-          next[group.title] = true;
-        }
-      }
-      return next;
-    });
-  }, [pathname]);
 
   function toggleGroup(title: string) {
     setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -142,8 +129,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3">
         {navigationGroups.map((group) => {
-          const isOpen = openGroups[group.title] ?? false;
           const hasActive = groupContainsActive(group, pathname);
+          const isOpen = (openGroups[group.title] ?? true) || hasActive;
 
           return (
             <div key={group.title} className="mb-1">
