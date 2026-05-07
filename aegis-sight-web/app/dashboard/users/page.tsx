@@ -7,6 +7,30 @@ import { DonutChart, BarChart } from '@/components/ui/chart';
 import { fetchUsers, updateUser } from '@/lib/api';
 import type { BackendUser, UserRole } from '@/lib/api';
 
+// ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+
+const DUMMY_USERS: BackendUser[] = [
+  { id: 'usr-0001', email: 'yamamoto.kenji@aegis-corp.jp', full_name: '山本 健二', role: 'admin', is_active: true, created_at: '2024-04-01T09:00:00Z' },
+  { id: 'usr-0002', email: 'tanaka.hiroshi@aegis-corp.jp', full_name: '田中 浩', role: 'operator', is_active: true, created_at: '2024-04-05T10:30:00Z' },
+  { id: 'usr-0003', email: 'sato.naoko@aegis-corp.jp', full_name: '佐藤 直子', role: 'auditor', is_active: true, created_at: '2024-04-10T08:00:00Z' },
+  { id: 'usr-0004', email: 'nakamura.ryota@aegis-corp.jp', full_name: '中村 遼太', role: 'operator', is_active: true, created_at: '2024-05-01T09:15:00Z' },
+  { id: 'usr-0005', email: 'watanabe.yuki@aegis-corp.jp', full_name: '渡辺 雪', role: 'readonly', is_active: true, created_at: '2024-05-15T11:00:00Z' },
+  { id: 'usr-0006', email: 'kobayashi.emi@aegis-corp.jp', full_name: '小林 恵美', role: 'auditor', is_active: true, created_at: '2024-06-01T13:30:00Z' },
+  { id: 'usr-0007', email: 'yoshida.masato@aegis-corp.jp', full_name: '吉田 雅人', role: 'operator', is_active: false, created_at: '2024-06-15T09:00:00Z' },
+  { id: 'usr-0008', email: 'hayashi.akiko@aegis-corp.jp', full_name: '林 明子', role: 'readonly', is_active: true, created_at: '2024-07-01T08:30:00Z' },
+  { id: 'usr-0009', email: 'kato.shota@aegis-corp.jp', full_name: '加藤 翔太', role: 'operator', is_active: true, created_at: '2024-08-01T10:00:00Z' },
+  { id: 'usr-0010', email: 'ito.keiko@aegis-corp.jp', full_name: '伊藤 恵子', role: 'admin', is_active: true, created_at: '2024-08-15T09:00:00Z' },
+  { id: 'usr-0011', email: 'suzuki.taro@aegis-corp.jp', full_name: '鈴木 太郎', role: 'readonly', is_active: true, created_at: '2024-09-01T11:00:00Z' },
+  { id: 'usr-0012', email: 'inoue.satoshi@aegis-corp.jp', full_name: '井上 智', role: 'operator', is_active: false, created_at: '2024-09-15T14:00:00Z' },
+  { id: 'usr-0013', email: 'kimura.yuriko@aegis-corp.jp', full_name: '木村 百合子', role: 'auditor', is_active: true, created_at: '2024-10-01T09:30:00Z' },
+  { id: 'usr-0014', email: 'matsumoto.daiki@aegis-corp.jp', full_name: '松本 大輝', role: 'readonly', is_active: true, created_at: '2024-11-01T10:00:00Z' },
+  { id: 'usr-0015', email: 'fujiwara.misaki@aegis-corp.jp', full_name: '藤原 美咲', role: 'operator', is_active: true, created_at: '2025-01-15T09:00:00Z' },
+];
+
+// ---------------------------------------------------------------------------
+
 const roleVariant: Record<UserRole, 'danger' | 'warning' | 'info' | 'default'> = {
   admin: 'danger',
   operator: 'warning',
@@ -40,10 +64,18 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const data = await fetchUsers(0, 100);
-      setUsers(data.items);
-      setTotal(data.total);
+      // Fall back to dummy data when API returns empty results
+      if ((data.items || []).length === 0) {
+        setUsers(DUMMY_USERS);
+        setTotal(DUMMY_USERS.length);
+      } else {
+        setUsers(data.items);
+        setTotal(data.total);
+      }
     } catch {
-      setUsers([]);
+      // Fallback to dummy data on error
+      setUsers(DUMMY_USERS);
+      setTotal(DUMMY_USERS.length);
     } finally {
       setLoading(false);
     }

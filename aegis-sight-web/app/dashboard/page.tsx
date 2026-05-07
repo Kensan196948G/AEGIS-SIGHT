@@ -41,6 +41,26 @@ const severityConfig: Record<AlertSeverity, { variant: 'danger' | 'warning' | 'i
   info:     { variant: 'info',    label: '情報' },
 };
 
+const DUMMY_STATS: BackendDashboardStats = {
+  total_devices: 1248,
+  online_devices: 1124,
+  total_licenses: 3872,
+  compliance_rate: 94.3,
+  pending_procurements: 7,
+  active_alerts: 23,
+};
+
+const DUMMY_ALERTS: BackendAlert[] = [
+  { id: 'al-0001', device_id: 'dev-aabb1100', severity: 'critical', category: 'security', title: 'マルウェア検知: Trojan.Win64.Agent', message: 'エンドポイント dev-aabb1100 で未知のマルウェアが検出されました。即時隔離を推奨します。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 12 * 60000).toISOString() },
+  { id: 'al-0002', device_id: 'dev-ccdd2200', severity: 'critical', category: 'security', title: '不正ログイン試行: 管理者アカウント', message: '過去1時間で15回の連続ログイン失敗が検出されました。ブルートフォース攻撃の可能性があります。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 28 * 60000).toISOString() },
+  { id: 'al-0003', device_id: null, severity: 'warning', category: 'license', title: 'ライセンス期限切れ間近: Adobe Creative Cloud', message: 'Adobe Creative Cloud (50シート) のライセンスが15日後に期限切れになります。更新手続きが必要です。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+  { id: 'al-0004', device_id: 'dev-eeff3300', severity: 'warning', category: 'hardware', title: 'ディスク残量警告: 残り8%', message: 'サーバー dev-eeff3300 のシステムディスクの空き容量が8%を下回りました。', is_acknowledged: true, acknowledged_by: 'yamamoto.kenji', acknowledged_at: new Date(Date.now() - 30 * 60000).toISOString(), resolved_at: null, created_at: new Date(Date.now() - 3 * 3600000).toISOString() },
+  { id: 'al-0005', device_id: 'dev-aabb4400', severity: 'warning', category: 'network', title: '異常トラフィック: 外部送信量急増', message: '過去30分間で通常の5倍の外部送信トラフィックが検出されました。情報漏えいの可能性を確認してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 45 * 60000).toISOString() },
+  { id: 'al-0006', device_id: null, severity: 'info', category: 'security', title: 'セキュリティパッチ: Windows Update KB5034441', message: '72台のデバイスに重要なセキュリティアップデートが未適用です。パッチ管理から適用スケジュールを設定してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 5 * 3600000).toISOString() },
+  { id: 'al-0007', device_id: 'dev-ccdd5500', severity: 'info', category: 'hardware', title: 'デバイス長期オフライン: 7日経過', message: 'dev-ccdd5500 が7日間オフライン状態です。デバイスの状態を確認してください。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 24 * 3600000).toISOString() },
+  { id: 'al-0008', device_id: null, severity: 'info', category: 'license', title: 'ライセンス超過使用: Microsoft 365 E3', message: 'Microsoft 365 E3 のライセンス使用数が購入数を3シート超過しています。追加購入または割り当て見直しが必要です。', is_acknowledged: false, acknowledged_by: null, acknowledged_at: null, resolved_at: null, created_at: new Date(Date.now() - 6 * 3600000).toISOString() },
+];
+
 type ActivityEventType = 'alert' | 'deploy' | 'scan' | 'procurement' | 'user';
 
 const categoryToActivityType: Record<string, ActivityEventType> = {
@@ -101,10 +121,15 @@ export default function DashboardPage() {
           fetchRecentAlerts(8),
         ]);
         if (!mounted) return;
-        setStats(statsData);
-        setAlerts(alertsData.items);
+        const hasStats = statsData.total_devices > 0 || statsData.active_alerts > 0;
+        setStats(hasStats ? statsData : DUMMY_STATS);
+        const alertItems = alertsData.items ?? [];
+        setAlerts(alertItems.length > 0 ? alertItems : DUMMY_ALERTS);
       } catch {
-        // leave nulls; UI shows fallback zeros / widget defaults
+        if (mounted) {
+          setStats(DUMMY_STATS);
+          setAlerts(DUMMY_ALERTS);
+        }
       } finally {
         if (mounted) setLoading(false);
       }

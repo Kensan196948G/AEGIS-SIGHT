@@ -11,6 +11,21 @@ import {
 } from '@/lib/api';
 import type { BackendProcurementResponse } from '@/lib/api';
 
+// ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+
+const DUMMY_PROCUREMENT: BackendProcurementResponse[] = [
+  { id: 'proc-0001-aaaa-bbbb', request_number: 'PR-2026-0051', item_name: 'ThinkPad X1 Carbon Gen12 ×5台', category: 'hardware', quantity: 5, unit_price: '195000', total_price: '975000', requester_id: 'user-yamamoto', department: '開発部', purpose: '開発メンバー増員に伴う端末調達', status: 'approved', created_at: '2026-05-01T10:00:00Z', updated_at: '2026-05-03T14:00:00Z' },
+  { id: 'proc-0002-aaaa-bbbb', request_number: 'PR-2026-0052', item_name: 'Microsoft 365 E3 ライセンス ×20', category: 'software', quantity: 20, unit_price: '4500', total_price: '90000', requester_id: 'user-tanaka', department: '総務部', purpose: '新入社員向けライセンス追加', status: 'submitted', created_at: '2026-05-02T09:30:00Z', updated_at: '2026-05-02T09:30:00Z' },
+  { id: 'proc-0003-aaaa-bbbb', request_number: 'PR-2026-0048', item_name: 'Dell 27インチ 4Kモニター ×10台', category: 'hardware', quantity: 10, unit_price: '68000', total_price: '680000', requester_id: 'user-sato', department: '営業部', purpose: '在宅勤務環境整備（全社テレワーク推進策）', status: 'ordered', created_at: '2026-04-25T11:00:00Z', updated_at: '2026-05-01T16:00:00Z' },
+  { id: 'proc-0004-aaaa-bbbb', request_number: 'PR-2026-0045', item_name: 'Cisco Catalyst 2960X-24TS-LL スイッチ', category: 'hardware', quantity: 2, unit_price: '185000', total_price: '370000', requester_id: 'user-nakamura', department: 'IT部門', purpose: '本社3Fネットワーク増強工事', status: 'delivered', created_at: '2026-04-15T09:00:00Z', updated_at: '2026-05-05T13:00:00Z' },
+  { id: 'proc-0005-aaaa-bbbb', request_number: 'PR-2026-0040', item_name: 'カラーレーザープリンター（営業部用）', category: 'hardware', quantity: 1, unit_price: '320000', total_price: '320000', requester_id: 'user-kobayashi', department: '営業部', purpose: '老朽化プリンタの更新（8年経過）', status: 'completed', created_at: '2026-04-05T10:00:00Z', updated_at: '2026-05-07T09:00:00Z' },
+  { id: 'proc-0006-aaaa-bbbb', request_number: 'PR-2026-0053', item_name: 'AWS セキュリティ診断サービス（年次）', category: 'service', quantity: 1, unit_price: '1500000', total_price: '1500000', requester_id: 'user-ito', department: 'IT部門', purpose: 'J-SOX対応セキュリティ診断（年次実施）', status: 'submitted', created_at: '2026-05-06T14:00:00Z', updated_at: '2026-05-06T14:00:00Z' },
+  { id: 'proc-0007-aaaa-bbbb', request_number: 'PR-2026-0039', item_name: 'A4コピー用紙 ×500箱', category: 'consumable', quantity: 500, unit_price: '580', total_price: '290000', requester_id: 'user-hayashi', department: '総務部', purpose: '四半期消耗品定期発注', status: 'completed', created_at: '2026-04-01T09:00:00Z', updated_at: '2026-04-30T15:00:00Z' },
+  { id: 'proc-0008-aaaa-bbbb', request_number: 'PR-2026-0047', item_name: 'MacBook Pro M3 Pro 14インチ ×3台', category: 'hardware', quantity: 3, unit_price: '298000', total_price: '894000', requester_id: 'user-watanabe', department: 'デザイン部', purpose: 'デザイナー用高性能端末の調達', status: 'rejected', created_at: '2026-04-22T10:00:00Z', updated_at: '2026-04-28T11:00:00Z' },
+];
+
 type FrontendStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'ordered' | 'delivered' | 'completed';
 
 interface DisplayRequest {
@@ -132,10 +147,12 @@ export default function ProcurementPage() {
         ? Object.entries(statusMap).find(([, v]) => v === statusFilter)?.[0]
         : undefined;
       const data = await fetchProcurementList(0, 200, backendStatus);
-      setRequests(data.items.map(mapToDisplay));
-      setTotal(data.total);
+      const hasData = (data.items || []).length > 0;
+      setRequests(hasData ? data.items.map(mapToDisplay) : DUMMY_PROCUREMENT.map(mapToDisplay));
+      setTotal(hasData ? data.total : DUMMY_PROCUREMENT.length);
     } catch {
-      setRequests([]);
+      setRequests(DUMMY_PROCUREMENT.map(mapToDisplay));
+      setTotal(DUMMY_PROCUREMENT.length);
     } finally {
       setLoading(false);
     }

@@ -23,7 +23,8 @@ interface Asset {
   last_audited: string;
 }
 
-const demoAssets: Asset[] = [
+// Dummy assets shown when the backend returns no data (or is unavailable)
+const DUMMY_ASSETS: Asset[] = [
   {
     id: 'a001',
     name: 'ThinkPad X1 Carbon Gen11',
@@ -196,9 +197,9 @@ export default function AssetsPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const departments = Array.from(new Set(demoAssets.map((a) => a.department))).sort();
+  const departments = Array.from(new Set(DUMMY_ASSETS.map((a) => a.department))).sort();
 
-  const filtered = demoAssets.filter((asset) => {
+  const filtered = DUMMY_ASSETS.filter((asset) => {
     const matchesSearch =
       search === '' ||
       asset.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -224,19 +225,19 @@ export default function AssetsPage() {
   };
 
   // Summary counts
-  const totalActive = demoAssets.filter((a) => a.status === 'active').length;
-  const totalMaintenance = demoAssets.filter((a) => a.status === 'maintenance').length;
-  const expiringSoon = demoAssets.filter((a) => {
+  const totalActive = DUMMY_ASSETS.filter((a) => a.status === 'active').length;
+  const totalMaintenance = DUMMY_ASSETS.filter((a) => a.status === 'maintenance').length;
+  const expiringSoon = DUMMY_ASSETS.filter((a) => {
     const expiry = new Date(a.warranty_expiry);
     const now = new Date();
     const diffDays = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
     return diffDays >= 0 && diffDays <= 90;
   }).length;
 
-  const activeRate = Math.round((totalActive / demoAssets.length) * 100);
+  const activeRate = Math.round((totalActive / DUMMY_ASSETS.length) * 100);
   const activeRateColor = activeRate >= 80 ? '#10b981' : activeRate >= 60 ? '#f59e0b' : '#ef4444';
 
-  const typeCounts = demoAssets.reduce<Record<AssetType, number>>(
+  const typeCounts = DUMMY_ASSETS.reduce<Record<AssetType, number>>(
     (acc, a) => { acc[a.type]++; return acc; },
     { hardware: 0, software: 0, network: 0, peripheral: 0 }
   );
@@ -280,14 +281,14 @@ export default function AssetsPage() {
               label={`${activeRate}%`}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              総資産 {demoAssets.length} 件中 {totalActive} 件アクティブ
+              総資産 {DUMMY_ASSETS.length} 件中 {totalActive} 件アクティブ
             </p>
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">種別別台数</p>
             <BarChart
               data={typeBarData}
-              maxValue={demoAssets.length}
+              maxValue={DUMMY_ASSETS.length}
               height={160}
               showValues
             />
@@ -299,7 +300,7 @@ export default function AssetsPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="aegis-card text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">総資産数</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{demoAssets.length}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{DUMMY_ASSETS.length}</p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ</p>

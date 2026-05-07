@@ -13,6 +13,49 @@ import {
 } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+
+const DUMMY_VPN_CONNECTIONS: BackendVPNConnection[] = [
+  { id: 'vpn-0001', device_id: 'dev-aaaa1111', user_name: 'yamamoto.kenji',  vpn_server: 'vpn1.example.co.jp', client_ip: '203.0.113.10', assigned_ip: '10.8.0.2',  protocol: 'ipsec',     connected_at: '2026-05-07T08:12:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 52428800,  bytes_received: 314572800, is_active: true  },
+  { id: 'vpn-0002', device_id: 'dev-bbbb2222', user_name: 'tanaka.hiroshi',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.5', assigned_ip: '10.8.0.3',  protocol: 'ssl',       connected_at: '2026-05-07T09:00:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 10485760,  bytes_received: 73400320,  is_active: true  },
+  { id: 'vpn-0003', device_id: 'dev-cccc3333', user_name: 'sato.naoko',     vpn_server: 'vpn2.example.co.jp', client_ip: '192.0.2.88',   assigned_ip: '10.8.1.2',  protocol: 'wireguard', connected_at: '2026-05-07T07:45:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 83886080,  bytes_received: 524288000, is_active: true  },
+  { id: 'vpn-0004', device_id: 'dev-dddd4444', user_name: 'nakamura.ryota', vpn_server: 'vpn2.example.co.jp', client_ip: '203.0.113.42', assigned_ip: '10.8.1.3',  protocol: 'ipsec',     connected_at: '2026-05-07T10:05:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 5242880,   bytes_received: 31457280,  is_active: true  },
+  { id: 'vpn-0005', device_id: 'dev-eeee5555', user_name: 'kobayashi.emi',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.9', assigned_ip: '10.8.0.4',  protocol: 'ssl',       connected_at: '2026-05-07T08:30:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 20971520,  bytes_received: 167772160, is_active: true  },
+  { id: 'vpn-0006', device_id: 'dev-ffff6666', user_name: 'ito.keiko',      vpn_server: 'vpn1.example.co.jp', client_ip: '203.0.113.71', assigned_ip: '10.8.0.5',  protocol: 'wireguard', connected_at: '2026-05-07T09:15:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 31457280,  bytes_received: 209715200, is_active: true  },
+  { id: 'vpn-0007', device_id: 'dev-gggg7777', user_name: 'suzuki.taro',    vpn_server: 'vpn2.example.co.jp', client_ip: '192.0.2.55',   assigned_ip: '10.8.1.4',  protocol: 'l2tp',      connected_at: '2026-05-07T07:00:00Z', disconnected_at: null,                   duration_minutes: null, bytes_sent: 2097152,   bytes_received: 15728640,  is_active: true  },
+  { id: 'vpn-0008', device_id: 'dev-hhhh8888', user_name: 'watanabe.yuki',  vpn_server: 'vpn1.example.co.jp', client_ip: '198.51.100.22',assigned_ip: '10.8.0.6',  protocol: 'ipsec',     connected_at: '2026-05-06T17:30:00Z', disconnected_at: '2026-05-06T19:15:00Z', duration_minutes: 105,  bytes_sent: 8388608,   bytes_received: 52428800,  is_active: false },
+  { id: 'vpn-0009', device_id: 'dev-iiii9999', user_name: 'hayashi.akiko',  vpn_server: 'vpn2.example.co.jp', client_ip: '203.0.113.90', assigned_ip: '10.8.1.5',  protocol: 'ssl',       connected_at: '2026-05-06T14:00:00Z', disconnected_at: '2026-05-06T17:45:00Z', duration_minutes: 225,  bytes_sent: 41943040,  bytes_received: 314572800, is_active: false },
+  { id: 'vpn-0010', device_id: 'dev-jjjj0000', user_name: 'yoshida.masato', vpn_server: 'vpn1.example.co.jp', client_ip: '192.0.2.11',   assigned_ip: '10.8.0.7',  protocol: 'wireguard', connected_at: '2026-05-06T09:00:00Z', disconnected_at: '2026-05-06T18:00:00Z', duration_minutes: 540,  bytes_sent: 104857600, bytes_received: 734003200, is_active: false },
+];
+
+const DUMMY_REMOTE_ANALYTICS: BackendRemoteWorkAnalytics = {
+  total_connections: 2847,
+  active_connections: 7,
+  by_protocol: { ipsec: 1140, ssl: 854, wireguard: 712, l2tp: 141 },
+  total_bytes_sent:     9663676416,   // ~9 GB
+  total_bytes_received: 68719476736,  // ~64 GB
+  peak_hours: [
+    { hour: 0,  count: 8  }, { hour: 1,  count: 3  }, { hour: 2,  count: 1  },
+    { hour: 3,  count: 0  }, { hour: 4,  count: 2  }, { hour: 5,  count: 5  },
+    { hour: 6,  count: 18 }, { hour: 7,  count: 52 }, { hour: 8,  count: 134 },
+    { hour: 9,  count: 218 }, { hour: 10, count: 245 }, { hour: 11, count: 230 },
+    { hour: 12, count: 185 }, { hour: 13, count: 210 }, { hour: 14, count: 248 },
+    { hour: 15, count: 235 }, { hour: 16, count: 198 }, { hour: 17, count: 142 },
+    { hour: 18, count: 78 }, { hour: 19, count: 45 }, { hour: 20, count: 32 },
+    { hour: 21, count: 22 }, { hour: 22, count: 15 }, { hour: 23, count: 10 },
+  ],
+  utilization_rate: 0.68,
+  top_users: [
+    { user_name: 'yoshida.masato', connection_count: 142, total_minutes: 52080 },
+    { user_name: 'sato.naoko',     connection_count: 128, total_minutes: 38400 },
+    { user_name: 'yamamoto.kenji', connection_count: 115, total_minutes: 34500 },
+    { user_name: 'kobayashi.emi',  connection_count: 98,  total_minutes: 29400 },
+    { user_name: 'ito.keiko',      connection_count: 87,  total_minutes: 26100 },
+  ],
+};
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -222,12 +265,14 @@ export default function RemoteWorkPage() {
         fetchActiveVPN(0, 100),
         fetchRemoteAccessPolicies(0, 50),
       ]);
-      setAnalytics(analyticsRes);
-      setVpnSessions(vpnRes.items);
+      const hasVpn = (vpnRes.items || []).length > 0;
+      const hasAnalytics = analyticsRes.total_connections > 0 || analyticsRes.active_connections > 0;
+      setAnalytics(hasAnalytics ? analyticsRes : DUMMY_REMOTE_ANALYTICS);
+      setVpnSessions(hasVpn ? vpnRes.items : DUMMY_VPN_CONNECTIONS);
       setPolicies(policiesRes.items);
     } catch {
-      setAnalytics(null);
-      setVpnSessions([]);
+      setAnalytics(DUMMY_REMOTE_ANALYTICS);
+      setVpnSessions(DUMMY_VPN_CONNECTIONS);
       setPolicies([]);
     } finally {
       setLoading(false);

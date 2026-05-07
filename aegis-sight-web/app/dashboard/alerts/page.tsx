@@ -11,6 +11,28 @@ import {
 } from '@/lib/api';
 import type { BackendAlert, BackendAlertStats } from '@/lib/api';
 
+const DUMMY_ALERTS: BackendAlert[] = [
+  { id: 'al-0001', device_id: 'dev-aabb1100-0001', severity: 'critical', category: 'security',  title: 'マルウェア検出: Trojan:Win32/Emotet',              message: 'PC-SALES-042 でマルウェアが検出されました。デバイスを隔離しています。',           is_acknowledged: false, acknowledged_by: null,          acknowledged_at: null,                 resolved_at: null,                 created_at: '2026-05-07T06:42:00Z' },
+  { id: 'al-0002', device_id: 'dev-ccdd2200-0002', severity: 'critical', category: 'security',  title: 'BitLocker 無効: 財務部ノートPC 3台',                 message: '財務部門の端末3台でディスク暗号化が無効になっています。至急対応が必要です。',  is_acknowledged: true,  acknowledged_by: 'ito.keiko',    acknowledged_at: '2026-05-07T07:10:00Z', resolved_at: null,                 created_at: '2026-05-07T05:30:00Z' },
+  { id: 'al-0003', device_id: null,                severity: 'critical', category: 'license',   title: 'ライセンス超過: Adobe Creative Cloud (+12)',          message: 'インストール数が購入ライセンス数を12件超過しています。',                           is_acknowledged: false, acknowledged_by: null,          acknowledged_at: null,                 resolved_at: null,                 created_at: '2026-05-06T23:15:00Z' },
+  { id: 'al-0004', device_id: 'dev-eeff3300-0004', severity: 'warning',  category: 'hardware',  title: 'ディスク残量警告: SRV-DB-01 (残 8%)',                message: '本番DBサーバのディスク使用率が 92% に達しました。',                               is_acknowledged: true,  acknowledged_by: 'suzuki.taro',  acknowledged_at: '2026-05-07T08:05:00Z', resolved_at: null,                 created_at: '2026-05-07T03:00:00Z' },
+  { id: 'al-0005', device_id: 'dev-aabb4400-0005', severity: 'warning',  category: 'network',   title: 'VPN 接続異常: 海外IPからの多重接続',                 message: 'yamamoto.kenji のアカウントで異なる国から同時VPN接続が検出されました。',          is_acknowledged: false, acknowledged_by: null,          acknowledged_at: null,                 resolved_at: null,                 created_at: '2026-05-07T02:18:00Z' },
+  { id: 'al-0006', device_id: 'dev-ccdd5500-0006', severity: 'warning',  category: 'security',  title: 'Defender 定義ファイル未更新: 15台',                  message: '15台のエンドポイントでウイルス定義ファイルが7日以上更新されていません。',          is_acknowledged: false, acknowledged_by: null,          acknowledged_at: null,                 resolved_at: null,                 created_at: '2026-05-06T18:00:00Z' },
+  { id: 'al-0007', device_id: null,                severity: 'warning',  category: 'license',   title: 'ライセンス期限 30日以内: Windows Server 2019 (×4)', message: '4つのWindowsサーバライセンスが30日以内に期限切れとなります。',                   is_acknowledged: true,  acknowledged_by: 'nakamura.ryota', acknowledged_at: '2026-05-06T14:20:00Z', resolved_at: null,                 created_at: '2026-05-06T09:00:00Z' },
+  { id: 'al-0008', device_id: 'dev-eeff6600-0008', severity: 'warning',  category: 'hardware',  title: 'CPU 温度異常: SRV-APP-02 (95°C)',                   message: 'アプリサーバのCPU温度が危険域に達しました。冷却システムを確認してください。',     is_acknowledged: false, acknowledged_by: null,          acknowledged_at: null,                 resolved_at: null,                 created_at: '2026-05-07T07:55:00Z' },
+  { id: 'al-0009', device_id: 'dev-aabb7700-0009', severity: 'info',     category: 'network',   title: '新規デバイス接続: 未管理端末を検出',                 message: 'IPアドレス 192.168.10.247 の未登録デバイスがネットワークに接続しました。',        is_acknowledged: true,  acknowledged_by: 'hayashi.akiko', acknowledged_at: '2026-05-07T06:30:00Z', resolved_at: '2026-05-07T09:00:00Z', created_at: '2026-05-07T06:10:00Z' },
+  { id: 'al-0010', device_id: null,                severity: 'info',     category: 'security',  title: '月次パッチ適用完了: 1,105台',                         message: '5月度の月次Windowsアップデートが全対象端末に適用されました。',                     is_acknowledged: true,  acknowledged_by: 'suzuki.taro',  acknowledged_at: '2026-05-05T12:00:00Z', resolved_at: '2026-05-05T12:00:00Z', created_at: '2026-05-05T11:15:00Z' },
+];
+
+const DUMMY_STATS: BackendAlertStats = {
+  total: 10,
+  critical: 3,
+  warning: 5,
+  info: 2,
+  unacknowledged: 5,
+  unresolved: 8,
+};
+
 type Severity = 'critical' | 'warning' | 'info';
 type Category = 'security' | 'license' | 'hardware' | 'network';
 type AlertStatus = 'open' | 'acknowledged' | 'resolved';
@@ -68,10 +90,13 @@ export default function AlertsPage() {
       if (statusFilter === 'resolved') {
         items = items.filter(a => a.resolved_at !== null);
       }
-      setAlerts(items);
-      setStats(statsData);
+      // Fall back to dummy data when the API returns no results
+      setAlerts(items.length > 0 ? items : DUMMY_ALERTS);
+      setStats(statsData.total > 0 ? statsData : DUMMY_STATS);
     } catch {
-      // show empty state
+      // Backend unavailable — show dummy data so the UI remains informative
+      setAlerts(DUMMY_ALERTS);
+      setStats(DUMMY_STATS);
     } finally {
       setLoading(false);
     }

@@ -85,6 +85,42 @@ function formatValue(val: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
+// Dummy data (displayed when API returns empty or fails)
+// ---------------------------------------------------------------------------
+
+const DUMMY_SUMMARY: ChangeSummary = {
+  total_changes: 73,
+  by_change_type: { added: 18, modified: 43, removed: 12 },
+  by_snapshot_type: { hardware: 22, software: 30, security: 12, network: 9 },
+  daily: [
+    { date: '2026-05-01', count: 9 },
+    { date: '2026-05-02', count: 14 },
+    { date: '2026-05-03', count: 8 },
+    { date: '2026-05-04', count: 12 },
+    { date: '2026-05-05', count: 17 },
+    { date: '2026-05-06', count: 7 },
+    { date: '2026-05-07', count: 6 },
+  ],
+};
+
+const DUMMY_CHANGES: PaginatedChanges = {
+  items: [
+    { id: 'chg-001', device_id: 'dev-aabb1100-1234-5678-9012-abcd00000001', snapshot_before_id: 'snap-001a', snapshot_after_id: 'snap-001b', change_type: 'modified', field_path: 'os.version', old_value: 'Windows 11 22H2', new_value: 'Windows 11 23H2', detected_at: '2026-05-07T08:30:00Z' },
+    { id: 'chg-002', device_id: 'dev-ccdd2200-1234-5678-9012-abcd00000002', snapshot_before_id: null, snapshot_after_id: 'snap-002b', change_type: 'added', field_path: 'software.microsoft_teams', old_value: null, new_value: '23.240.0.1', detected_at: '2026-05-07T07:15:00Z' },
+    { id: 'chg-003', device_id: 'dev-eeff3300-1234-5678-9012-abcd00000003', snapshot_before_id: 'snap-003a', snapshot_after_id: 'snap-003b', change_type: 'removed', field_path: 'software.adobe_reader_dc', old_value: '22.003.20282', new_value: null, detected_at: '2026-05-06T16:45:00Z' },
+    { id: 'chg-004', device_id: 'dev-aabb4400-1234-5678-9012-abcd00000004', snapshot_before_id: 'snap-004a', snapshot_after_id: 'snap-004b', change_type: 'modified', field_path: 'security.defender_status', old_value: 'disabled', new_value: 'enabled', detected_at: '2026-05-06T14:20:00Z' },
+    { id: 'chg-005', device_id: 'dev-ccdd5500-1234-5678-9012-abcd00000005', snapshot_before_id: 'snap-005a', snapshot_after_id: 'snap-005b', change_type: 'modified', field_path: 'network.ip_address', old_value: '192.168.10.45', new_value: '192.168.10.67', detected_at: '2026-05-06T10:00:00Z' },
+    { id: 'chg-006', device_id: 'dev-eeff6600-1234-5678-9012-abcd00000006', snapshot_before_id: 'snap-006a', snapshot_after_id: 'snap-006b', change_type: 'modified', field_path: 'hardware.total_memory_gb', old_value: 8, new_value: 16, detected_at: '2026-05-05T15:30:00Z' },
+    { id: 'chg-007', device_id: 'dev-aabb7700-1234-5678-9012-abcd00000007', snapshot_before_id: null, snapshot_after_id: 'snap-007b', change_type: 'added', field_path: 'software.vscode', old_value: null, new_value: '1.88.1', detected_at: '2026-05-05T11:10:00Z' },
+    { id: 'chg-008', device_id: 'dev-ccdd8800-1234-5678-9012-abcd00000008', snapshot_before_id: 'snap-008a', snapshot_after_id: 'snap-008b', change_type: 'modified', field_path: 'security.bitlocker_status', old_value: 'not_encrypted', new_value: 'fully_encrypted', detected_at: '2026-05-04T09:00:00Z' },
+  ],
+  total: 73,
+  offset: 0,
+  limit: 20,
+  has_more: true,
+};
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 export default function ChangesPage() {
@@ -128,29 +164,14 @@ export default function ChangesPage() {
       if (!changesRes.ok) throw new Error(`Changes API: ${changesRes.status}`);
       if (!summaryRes.ok) throw new Error(`Summary API: ${summaryRes.status}`);
 
-      setChanges(await changesRes.json());
-      setSummary(await summaryRes.json());
+      const changesData = await changesRes.json() as PaginatedChanges;
+      const summaryData = await summaryRes.json() as ChangeSummary;
+      setSummary(summaryData.total_changes > 0 ? summaryData : DUMMY_SUMMARY);
+      setChanges(changesData.items.length > 0 ? changesData : DUMMY_CHANGES);
     } catch {
-      // API unavailable — use demo data
-      setSummary({
-        total_changes: 48,
-        by_change_type: { added: 12, modified: 28, removed: 8 },
-        by_snapshot_type: { hardware: 15, software: 18, security: 8, network: 7 },
-        daily: [
-          { date: '2026-03-25', count: 8 },
-          { date: '2026-03-26', count: 12 },
-          { date: '2026-03-27', count: 15 },
-          { date: '2026-03-28', count: 13 },
-        ],
-      });
-      setChanges({
-        items: [
-          { id: '1', device_id: 'dev-001', snapshot_before_id: 'snap-001', snapshot_after_id: 'snap-002', change_type: 'modified', field_path: 'os.version', old_value: '23H1', new_value: '23H2', detected_at: '2026-03-27T10:30:00Z' },
-          { id: '2', device_id: 'dev-002', snapshot_before_id: null, snapshot_after_id: 'snap-003', change_type: 'added', field_path: 'software.vscode', old_value: null, new_value: '1.87.0', detected_at: '2026-03-27T09:15:00Z' },
-          { id: '3', device_id: 'dev-003', snapshot_before_id: 'snap-004', snapshot_after_id: 'snap-005', change_type: 'removed', field_path: 'software.slack', old_value: '4.36', new_value: null, detected_at: '2026-03-26T16:00:00Z' },
-        ],
-        total: 48, offset: 0, limit: 20, has_more: true,
-      });
+      // API unavailable — use dummy data
+      setSummary(DUMMY_SUMMARY);
+      setChanges(DUMMY_CHANGES);
     } finally {
       setLoading(false);
     }

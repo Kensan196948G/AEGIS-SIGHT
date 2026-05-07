@@ -81,6 +81,243 @@ const indicatorTypeLabel: Record<IndicatorType, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+const DUMMY_INCIDENT_STATS: BackendIncidentStats = {
+  total: 10,
+  p1_critical: 1,
+  p2_high: 3,
+  p3_medium: 4,
+  p4_low: 2,
+  open_incidents: 6,
+  resolved_incidents: 4,
+  mttr_hours: 4.2,
+};
+
+const DUMMY_INCIDENTS: BackendIncidentResponse[] = [
+  {
+    id: 'inc-0001',
+    title: 'ランサムウェア感染疑い（PC-FIN-007）',
+    description: '財務部門端末でランサムウェア活動を示すプロセスが検出された。感染拡大防止のため即時ネットワーク隔離を実施。',
+    severity: 'P1_critical',
+    status: 'containing',
+    category: 'malware',
+    affected_devices: ['dev-aabb1100-0001'],
+    assigned_to: 'suzuki.taro',
+    reported_by: 'yamamoto.kenji',
+    timeline: [
+      { event: 'EDRアラート発砲', timestamp: '2026-05-01T03:12:00Z', details: 'Defender for Endpoint が疑わしいプロセスを検出' },
+      { event: 'SOCチーム初動調査開始', timestamp: '2026-05-01T03:25:00Z', details: '担当者がリモートで調査開始' },
+      { event: 'ネットワーク隔離実施', timestamp: '2026-05-01T03:40:00Z', details: '端末を企業LANから切断し封じ込め' },
+    ],
+    root_cause: null,
+    resolution: null,
+    lessons_learned: null,
+    detected_at: '2026-05-01T03:12:00Z',
+    resolved_at: null,
+    created_at: '2026-05-01T03:12:00Z',
+  },
+  {
+    id: 'inc-0002',
+    title: '不正SSH接続（SRV-DB-01）',
+    description: '深夜帯に海外IPアドレスからSSHによる不正ログインが複数回試みられた。Fail2banが自動遮断したが調査を継続中。',
+    severity: 'P2_high',
+    status: 'investigating',
+    category: 'unauthorized_access',
+    affected_devices: ['dev-ccdd2200-0002'],
+    assigned_to: 'tanaka.hiroshi',
+    reported_by: 'ops-monitoring',
+    timeline: [
+      { event: '不正ログイン試行検出', timestamp: '2026-05-02T23:14:00Z', details: '198.51.100.42 から SSH ブルートフォース攻撃' },
+      { event: 'Fail2ban 自動遮断', timestamp: '2026-05-02T23:14:30Z', details: '発信元IPをファイアウォールでブロック' },
+    ],
+    root_cause: null,
+    resolution: null,
+    lessons_learned: null,
+    detected_at: '2026-05-02T23:14:00Z',
+    resolved_at: null,
+    created_at: '2026-05-02T23:14:00Z',
+  },
+  {
+    id: 'inc-0003',
+    title: '機密ファイル外部送信疑い（DLP検知）',
+    description: 'DLPポリシーにより、個人情報を含む可能性のあるファイルが外部メールに添付されようとした行為を検出・ブロック。',
+    severity: 'P2_high',
+    status: 'post_mortem',
+    category: 'data_breach',
+    affected_devices: null,
+    assigned_to: 'ito.keiko',
+    reported_by: 'dlp-system',
+    timeline: [
+      { event: 'DLPシステムが送信をブロック', timestamp: '2026-04-28T14:05:00Z', details: '顧客情報含有ファイルの外部送信を自動遮断' },
+      { event: '当事者ヒアリング実施', timestamp: '2026-04-29T10:00:00Z', details: '誤送信であることを確認、教育対応実施' },
+    ],
+    root_cause: 'セキュリティ意識の不足による誤操作。送信先の確認不足。',
+    resolution: 'DLPポリシーにより送信前にブロック済み。当該ユーザーにセキュリティ再教育を実施。',
+    lessons_learned: 'DLPポリシーの有効性を確認。全社員向けセキュリティ研修を四半期実施に変更。',
+    detected_at: '2026-04-28T14:05:00Z',
+    resolved_at: '2026-04-30T17:00:00Z',
+    created_at: '2026-04-28T14:05:00Z',
+  },
+  {
+    id: 'inc-0004',
+    title: 'USBストレージ無断持ち込み（PC-HR-015）',
+    description: '人事部端末にてポリシー未承認のUSBストレージが接続された。データコピーの有無を調査中。',
+    severity: 'P2_high',
+    status: 'investigating',
+    category: 'policy_violation',
+    affected_devices: ['dev-eeff3300-0003'],
+    assigned_to: 'nakamura.ryota',
+    reported_by: 'endpoint-agent',
+    timeline: [
+      { event: 'USB接続をエージェントが検知', timestamp: '2026-05-03T09:48:00Z', details: 'エンドポイントエージェントがデバイス接続を記録' },
+      { event: '管理者にアラート通知', timestamp: '2026-05-03T09:49:00Z', details: '自動アラートをIT管理部門に送信' },
+    ],
+    root_cause: null,
+    resolution: null,
+    lessons_learned: null,
+    detected_at: '2026-05-03T09:48:00Z',
+    resolved_at: null,
+    created_at: '2026-05-03T09:48:00Z',
+  },
+  {
+    id: 'inc-0005',
+    title: 'SRV-APP-02 HDDクラッシュ',
+    description: 'アプリケーションサーバーのHDDがRAID障害を検知。冗長性は維持されているが交換が必要。',
+    severity: 'P2_high',
+    status: 'recovering',
+    category: 'hardware_failure',
+    affected_devices: ['dev-aabb4400-0004'],
+    assigned_to: 'watanabe.yuki',
+    reported_by: 'hardware-monitor',
+    timeline: [
+      { event: 'RAID障害アラート発砲', timestamp: '2026-05-04T07:30:00Z', details: 'RAID-5 アレイの1ドライブで読み取りエラー' },
+      { event: '予備ドライブへの再構築開始', timestamp: '2026-05-04T08:00:00Z', details: '自動フェイルオーバーが起動' },
+    ],
+    root_cause: '経年劣化によるHDD故障（稼働5年超）',
+    resolution: '予備ドライブへのRAID再構築中。翌営業日に物理ドライブ交換予定。',
+    lessons_learned: null,
+    detected_at: '2026-05-04T07:30:00Z',
+    resolved_at: null,
+    created_at: '2026-05-04T07:30:00Z',
+  },
+  {
+    id: 'inc-0006',
+    title: 'VPN認証情報漏洩疑い',
+    description: 'ダークウェブモニタリングにより、社内VPNの認証情報と思われる情報が検出された。',
+    severity: 'P3_medium',
+    status: 'eradicating',
+    category: 'unauthorized_access',
+    affected_devices: null,
+    assigned_to: 'suzuki.taro',
+    reported_by: 'threat-intel-feed',
+    timeline: [
+      { event: '脅威インテリジェンスが検知', timestamp: '2026-05-01T18:00:00Z', details: 'ダークウェブフォーラムへの投稿を検出' },
+      { event: '影響範囲調査開始', timestamp: '2026-05-01T18:30:00Z', details: '対象アカウントのリセット対応開始' },
+    ],
+    root_cause: 'フィッシングメール経由と推定',
+    resolution: null,
+    lessons_learned: null,
+    detected_at: '2026-05-01T18:00:00Z',
+    resolved_at: null,
+    created_at: '2026-05-01T18:00:00Z',
+  },
+  {
+    id: 'inc-0007',
+    title: 'Webアプリケーションへの不審なリクエスト',
+    description: 'Webアプリケーションファイアウォールが複数のSQLインジェクション試行を検出しブロックした。',
+    severity: 'P3_medium',
+    status: 'resolved',
+    category: 'unauthorized_access',
+    affected_devices: null,
+    assigned_to: 'kobayashi.emi',
+    reported_by: 'waf-system',
+    timeline: [
+      { event: 'WAFがSQLiを検出・ブロック', timestamp: '2026-04-25T22:10:00Z' },
+      { event: 'ログ分析完了', timestamp: '2026-04-26T10:00:00Z', details: '実害なし。WAFが正常に防御' },
+    ],
+    root_cause: '外部からの自動スキャンツールによる探索',
+    resolution: 'WAFが自動的にブロック。発信元IPをブロックリストに追加。実害なし。',
+    lessons_learned: 'WAFの定義ファイルを最新化するサイクルを週次に変更。',
+    detected_at: '2026-04-25T22:10:00Z',
+    resolved_at: '2026-04-26T17:00:00Z',
+    created_at: '2026-04-25T22:10:00Z',
+  },
+  {
+    id: 'inc-0008',
+    title: 'スパムメール大量受信（マルウェア添付）',
+    description: '複数社員宛てにマルウェア添付スパムが大量送信された。メールゲートウェイが自動隔離。',
+    severity: 'P3_medium',
+    status: 'resolved',
+    category: 'malware',
+    affected_devices: null,
+    assigned_to: 'hayashi.akiko',
+    reported_by: 'email-gateway',
+    timeline: [
+      { event: 'メールゲートウェイが隔離', timestamp: '2026-04-22T08:30:00Z', details: '47通の添付ファイルを自動隔離' },
+      { event: '全社通達完了', timestamp: '2026-04-22T10:00:00Z', details: 'フィッシング注意喚起メールを配信' },
+    ],
+    root_cause: 'フィッシングキャンペーンによる組織的攻撃',
+    resolution: 'メールゲートウェイが全数隔離。社員への注意喚起を実施。',
+    lessons_learned: 'メールゲートウェイのサンドボックス機能が有効に機能。定期的な訓練実施を継続。',
+    detected_at: '2026-04-22T08:30:00Z',
+    resolved_at: '2026-04-22T17:00:00Z',
+    created_at: '2026-04-22T08:30:00Z',
+  },
+  {
+    id: 'inc-0009',
+    title: 'PrintSpooler脆弱性（CVE-2021-34527）対応',
+    description: 'PrintNightmare脆弱性の影響を受ける可能性のある端末を特定。パッチ未適用端末への緊急展開を実施。',
+    severity: 'P4_low',
+    status: 'resolved',
+    category: 'other',
+    affected_devices: ['dev-ccdd5500-0005', 'dev-eeff6600-0006'],
+    assigned_to: 'yoshida.masato',
+    reported_by: 'vulnerability-scanner',
+    timeline: [
+      { event: '脆弱性スキャン実施', timestamp: '2026-04-15T09:00:00Z', details: '未適用端末12台を特定' },
+      { event: '緊急パッチ展開完了', timestamp: '2026-04-16T18:00:00Z', details: '全対象端末へのパッチ適用完了' },
+    ],
+    root_cause: 'パッチ管理サイクルの遅延',
+    resolution: '対象全端末へのパッチ適用完了。自動パッチ適用設定を強化。',
+    lessons_learned: 'Critical脆弱性は48時間以内の対応を義務化するポリシーを策定。',
+    detected_at: '2026-04-15T09:00:00Z',
+    resolved_at: '2026-04-16T18:00:00Z',
+    created_at: '2026-04-15T09:00:00Z',
+  },
+  {
+    id: 'inc-0010',
+    title: '共有フォルダ権限設定ミス（全社公開）',
+    description: '経理部門の共有フォルダが誤って全社員閲覧可能に設定変更されていることを発見。速やかに権限修正。',
+    severity: 'P4_low',
+    status: 'resolved',
+    category: 'policy_violation',
+    affected_devices: null,
+    assigned_to: 'sato.naoko',
+    reported_by: 'ito.keiko',
+    timeline: [
+      { event: '内部監査で設定ミスを検出', timestamp: '2026-04-10T14:00:00Z' },
+      { event: 'アクセス権限を修正', timestamp: '2026-04-10T14:30:00Z', details: '経理部門のみアクセス可能に修正' },
+    ],
+    root_cause: '管理者の操作ミス（権限設定変更時の確認不足）',
+    resolution: '権限設定を適切な状態に修正。アクセスログを調査し不正アクセスがないことを確認。',
+    lessons_learned: '権限変更操作の承認フロー（2名確認）を義務付けるプロセスを導入。',
+    detected_at: '2026-04-10T14:00:00Z',
+    resolved_at: '2026-04-10T18:00:00Z',
+    created_at: '2026-04-10T14:00:00Z',
+  },
+];
+
+const DUMMY_THREATS: BackendThreatIndicator[] = [
+  { id: 'ti-0001', indicator_type: 'ip_address', value: '198.51.100.42', threat_level: 'high', source: 'AbuseIPDB', description: 'SSHブルートフォース攻撃の発信元', is_active: true, first_seen: '2026-05-02T23:14:00Z', last_seen: '2026-05-04T11:00:00Z', related_incidents: ['inc-0002'] },
+  { id: 'ti-0002', indicator_type: 'domain', value: 'malware-c2.example.net', threat_level: 'critical', source: 'Threat Intel Feed', description: 'ランサムウェアC2サーバードメイン', is_active: true, first_seen: '2026-04-30T00:00:00Z', last_seen: '2026-05-05T06:00:00Z', related_incidents: ['inc-0001'] },
+  { id: 'ti-0003', indicator_type: 'file_hash', value: 'a3f5b2c1d4e6f7a8b9c0d1e2f3a4b5c6', threat_level: 'critical', source: 'VirusTotal', description: 'ランサムウェア本体のMD5ハッシュ', is_active: true, first_seen: '2026-05-01T03:12:00Z', last_seen: '2026-05-01T03:12:00Z', related_incidents: ['inc-0001'] },
+  { id: 'ti-0004', indicator_type: 'ip_address', value: '203.0.113.88', threat_level: 'medium', source: 'Internal SOC', description: 'フィッシングメールの送信元IP', is_active: false, first_seen: '2026-04-22T08:00:00Z', last_seen: '2026-04-22T09:00:00Z', related_incidents: ['inc-0008'] },
+  { id: 'ti-0005', indicator_type: 'url', value: 'https://phish.example.com/login', threat_level: 'high', source: 'PhishTank', description: 'フィッシングサイトURL', is_active: false, first_seen: '2026-04-20T00:00:00Z', last_seen: '2026-04-23T00:00:00Z', related_incidents: ['inc-0008'] },
+  { id: 'ti-0006', indicator_type: 'email', value: 'noreply@malicious-domain.xyz', threat_level: 'medium', source: 'Internal SOC', description: 'スパムキャンペーンの送信元アドレス', is_active: false, first_seen: '2026-04-22T08:00:00Z', last_seen: '2026-04-22T10:00:00Z', related_incidents: ['inc-0008'] },
+];
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export default function IncidentsPage() {
@@ -110,11 +347,16 @@ export default function IncidentsPage() {
         fetchIncidents(0, 100),
         fetchThreatIndicators(0, 100),
       ]);
-      setStats(statsData);
-      setIncidents(incPage.items);
-      setThreats(threatPage.items);
+      // Use dummy data when API returns empty results
+      const hasStats = statsData.total > 0;
+      setStats(hasStats ? statsData : DUMMY_INCIDENT_STATS);
+      setIncidents((incPage.items || []).length > 0 ? incPage.items : DUMMY_INCIDENTS);
+      setThreats((threatPage.items || []).length > 0 ? threatPage.items : DUMMY_THREATS);
     } catch {
-      // leave defaults
+      // Fallback to dummy data on error
+      setStats(DUMMY_INCIDENT_STATS);
+      setIncidents(DUMMY_INCIDENTS);
+      setThreats(DUMMY_THREATS);
     } finally {
       setLoading(false);
     }

@@ -230,6 +230,50 @@ function ActivityIcon({ type }: { type: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Dummy data (displayed when API returns empty or fails)
+// ---------------------------------------------------------------------------
+
+const DUMMY_SESSIONS: BackendSessionResponse[] = [
+  { id: 'ses-0001', device_id: 'dev-aabb1100-0001', user_name: 'yamamoto.kenji', session_type: 'rdp', source_ip: '192.168.1.105', source_hostname: 'LAPTOP-KY001', started_at: '2026-05-07T08:15:00Z', ended_at: null, duration_minutes: null, is_active: true },
+  { id: 'ses-0002', device_id: 'dev-ccdd2200-0002', user_name: 'suzuki.taro', session_type: 'vpn', source_ip: '10.8.0.22', source_hostname: null, started_at: '2026-05-07T08:30:00Z', ended_at: null, duration_minutes: null, is_active: true },
+  { id: 'ses-0003', device_id: 'dev-eeff3300-0003', user_name: 'sato.naoko', session_type: 'local', source_ip: '192.168.1.203', source_hostname: 'PC-SN003', started_at: '2026-05-07T09:00:00Z', ended_at: null, duration_minutes: null, is_active: true },
+  { id: 'ses-0004', device_id: 'dev-aabb4400-0004', user_name: 'tanaka.hiroshi', session_type: 'rdp', source_ip: '192.168.2.55', source_hostname: 'LAPTOP-TH004', started_at: '2026-05-07T07:45:00Z', ended_at: null, duration_minutes: null, is_active: true },
+  { id: 'ses-0005', device_id: 'dev-ccdd5500-0005', user_name: 'ito.keiko', session_type: 'citrix', source_ip: '172.16.5.11', source_hostname: 'CITRIX-IK005', started_at: '2026-05-07T09:15:00Z', ended_at: null, duration_minutes: null, is_active: true },
+  { id: 'ses-0006', device_id: 'dev-eeff6600-0006', user_name: 'nakamura.ryota', session_type: 'vpn', source_ip: '10.8.0.45', source_hostname: null, started_at: '2026-05-06T17:30:00Z', ended_at: '2026-05-06T18:45:00Z', duration_minutes: 75, is_active: false },
+  { id: 'ses-0007', device_id: 'dev-aabb7700-0007', user_name: 'kobayashi.emi', session_type: 'rdp', source_ip: '192.168.1.88', source_hostname: 'LAPTOP-KE007', started_at: '2026-05-06T16:00:00Z', ended_at: '2026-05-06T17:30:00Z', duration_minutes: 90, is_active: false },
+  { id: 'ses-0008', device_id: 'dev-ccdd8800-0008', user_name: 'watanabe.yuki', session_type: 'local', source_ip: '192.168.3.12', source_hostname: 'PC-WY008', started_at: '2026-05-06T15:00:00Z', ended_at: '2026-05-06T16:30:00Z', duration_minutes: 90, is_active: false },
+  { id: 'ses-0009', device_id: 'dev-eeff9900-0009', user_name: 'hayashi.akiko', session_type: 'rdp', source_ip: '192.168.2.77', source_hostname: 'LAPTOP-HA009', started_at: '2026-05-06T14:00:00Z', ended_at: '2026-05-06T15:30:00Z', duration_minutes: 90, is_active: false },
+  { id: 'ses-0010', device_id: 'dev-aabb0010-0010', user_name: 'yoshida.masato', session_type: 'citrix', source_ip: '172.16.5.22', source_hostname: 'CITRIX-YM010', started_at: '2026-05-06T10:00:00Z', ended_at: '2026-05-06T12:00:00Z', duration_minutes: 120, is_active: false },
+];
+
+const DUMMY_ANALYTICS: BackendSessionAnalytics = {
+  total_sessions: 1842,
+  active_sessions: 5,
+  by_type: { rdp: 980, vpn: 520, local: 280, citrix: 62 },
+  by_user: [
+    { user_name: 'yamamoto.kenji', session_count: 148, total_minutes: 8880 },
+    { user_name: 'suzuki.taro', session_count: 132, total_minutes: 7920 },
+    { user_name: 'tanaka.hiroshi', session_count: 115, total_minutes: 6900 },
+    { user_name: 'sato.naoko', session_count: 98, total_minutes: 5880 },
+    { user_name: 'ito.keiko', session_count: 87, total_minutes: 5220 },
+  ],
+  peak_hours: [
+    { hour: 8, count: 42 }, { hour: 9, count: 95 }, { hour: 10, count: 120 },
+    { hour: 11, count: 108 }, { hour: 12, count: 55 }, { hour: 13, count: 62 },
+    { hour: 14, count: 118 }, { hour: 15, count: 105 }, { hour: 16, count: 88 },
+    { hour: 17, count: 45 }, { hour: 18, count: 18 }, { hour: 19, count: 8 },
+  ],
+};
+
+const DUMMY_ACTIVITIES: BackendActivityResponse[] = [
+  { id: 'act-0001', device_id: 'dev-aabb1100-0001', user_name: 'yamamoto.kenji', activity_type: 'app_launch', detail: { app: 'Microsoft Excel', version: '16.0.17231' }, occurred_at: '2026-05-07T09:12:00Z' },
+  { id: 'act-0002', device_id: 'dev-ccdd2200-0002', user_name: 'suzuki.taro', activity_type: 'web_access', detail: { url: 'https://portal.azure.com', browser: 'Edge' }, occurred_at: '2026-05-07T09:05:00Z' },
+  { id: 'act-0003', device_id: 'dev-eeff3300-0003', user_name: 'sato.naoko', activity_type: 'file_access', detail: { path: '\\\\fileserver\\finance\\2026Q1_report.xlsx', operation: 'read' }, occurred_at: '2026-05-07T09:02:00Z' },
+  { id: 'act-0004', device_id: 'dev-aabb4400-0004', user_name: 'tanaka.hiroshi', activity_type: 'print', detail: { printer: 'HP-FLOOR3-COLOR', pages: 8, document: '提案書_v3.pdf' }, occurred_at: '2026-05-07T08:55:00Z' },
+  { id: 'act-0005', device_id: 'dev-ccdd5500-0005', user_name: 'ito.keiko', activity_type: 'app_launch', detail: { app: 'Microsoft Teams', version: '23.240.0.1' }, occurred_at: '2026-05-07T08:32:00Z' },
+];
+
+// ---------------------------------------------------------------------------
 // Tab type
 // ---------------------------------------------------------------------------
 type Tab = 'active' | 'analytics' | 'activities';
@@ -252,13 +296,13 @@ export default function SessionsPage() {
         fetchActiveSessions(0, 100),
         fetchActivities(0, 100),
       ]);
-      setAnalytics(analyticsData);
-      setSessions(sessionsData.items);
-      setActivities(activitiesData.items);
+      setAnalytics(analyticsData.total_sessions > 0 ? analyticsData : DUMMY_ANALYTICS);
+      setSessions(sessionsData.items.length > 0 ? sessionsData.items : DUMMY_SESSIONS);
+      setActivities(activitiesData.items.length > 0 ? activitiesData.items : DUMMY_ACTIVITIES);
     } catch {
-      setAnalytics(null);
-      setSessions([]);
-      setActivities([]);
+      setAnalytics(DUMMY_ANALYTICS);
+      setSessions(DUMMY_SESSIONS);
+      setActivities(DUMMY_ACTIVITIES);
     } finally {
       setLoading(false);
     }

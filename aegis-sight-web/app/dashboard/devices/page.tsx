@@ -7,6 +7,23 @@ import { DonutChart, BarChart } from '@/components/ui/chart';
 import { fetchDevices } from '@/lib/api';
 import type { BackendDevice } from '@/lib/api';
 
+const DUMMY_DEVICES: BackendDevice[] = [
+  { id: 'dev-aabb1100-0001', hostname: 'PC-ENG-001',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.101', mac_address: 'AA:BB:11:00:00:01', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:55:00Z', created_at: '2024-04-01T09:00:00Z' },
+  { id: 'dev-ccdd2200-0002', hostname: 'PC-ENG-002',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.102', mac_address: 'CC:DD:22:00:00:02', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:50:00Z', created_at: '2024-04-01T09:00:00Z' },
+  { id: 'dev-eeff3300-0003', hostname: 'PC-SALES-042',  os_version: 'Windows 10 Pro 22H2',      ip_address: '192.168.2.142', mac_address: 'EE:FF:33:00:00:03', domain: 'corp.example.jp', status: 'maintenance', last_seen: '2026-05-07T06:42:00Z', created_at: '2022-10-15T09:00:00Z' },
+  { id: 'dev-aabb4400-0004', hostname: 'PC-HR-015',     os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.3.115', mac_address: 'AA:BB:44:00:00:04', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:48:00Z', created_at: '2023-04-01T09:00:00Z' },
+  { id: 'dev-ccdd5500-0005', hostname: 'PC-FIN-007',    os_version: 'Windows 11 Enterprise 23H2', ip_address: '192.168.4.107', mac_address: 'CC:DD:55:00:00:05', domain: 'corp.example.jp', status: 'active',  last_seen: '2026-05-07T08:45:00Z', created_at: '2023-07-10T09:00:00Z' },
+  { id: 'dev-eeff6600-0006', hostname: 'SRV-APP-02',    os_version: 'Windows Server 2022 Std',  ip_address: '192.168.10.12', mac_address: 'EE:FF:66:00:00:06', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:58:00Z', created_at: '2022-07-01T09:00:00Z' },
+  { id: 'dev-aabb7700-0007', hostname: 'SRV-DB-01',     os_version: 'Windows Server 2019 Std',  ip_address: '192.168.10.11', mac_address: 'AA:BB:77:00:00:07', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:59:00Z', created_at: '2021-06-01T09:00:00Z' },
+  { id: 'dev-ccdd8800-0008', hostname: 'PC-DESIGN-003', os_version: 'macOS Sonoma 14.4',        ip_address: '192.168.1.203', mac_address: 'CC:DD:88:00:00:08', domain: null,              status: 'active',      last_seen: '2026-05-07T08:40:00Z', created_at: '2024-01-15T09:00:00Z' },
+  { id: 'dev-eeff9900-0009', hostname: 'PC-MKT-022',    os_version: 'Windows 11 Pro 22H2',      ip_address: '192.168.5.122', mac_address: 'EE:FF:99:00:00:09', domain: 'corp.example.jp', status: 'inactive',    last_seen: '2026-05-06T17:30:00Z', created_at: '2023-01-20T09:00:00Z' },
+  { id: 'dev-aabb0010-0010', hostname: 'PC-ENG-015',    os_version: 'Windows 11 Pro 23H2',      ip_address: '192.168.1.115', mac_address: 'AA:BB:00:10:00:0A', domain: 'corp.example.jp', status: 'active',      last_seen: '2026-05-07T08:52:00Z', created_at: '2024-03-01T09:00:00Z' },
+  { id: 'dev-ccdd0011-0011', hostname: 'PC-INFRA-001',  os_version: 'Ubuntu 22.04 LTS',         ip_address: '192.168.10.21', mac_address: 'CC:DD:00:11:00:0B', domain: null,              status: 'active',      last_seen: '2026-05-07T08:57:00Z', created_at: '2022-09-01T09:00:00Z' },
+  { id: 'dev-eeff0012-0012', hostname: 'PC-LEGAL-003',  os_version: 'Windows 11 Enterprise 23H2', ip_address: '192.168.6.103', mac_address: 'EE:FF:00:12:00:0C', domain: 'corp.example.jp', status: 'maintenance', last_seen: '2026-05-07T07:00:00Z', created_at: '2023-10-01T09:00:00Z' },
+];
+
+const DUMMY_STATUS_COUNTS = { active: 9, inactive: 1, maintenance: 2 };
+
 type BackendStatus = 'active' | 'inactive' | 'maintenance';
 
 const statusConfig: Record<BackendStatus, { label: string; variant: 'success' | 'danger' | 'info'; dot: string }> = {
@@ -46,10 +63,24 @@ export default function DevicesPage() {
         PAGE_SIZE,
         statusFilter !== 'all' ? statusFilter : undefined,
       );
-      setDevices(data.items);
-      setTotal(data.total);
+      // Fall back to dummy data when the API returns no devices
+      if (data.items.length > 0) {
+        setDevices(data.items);
+        setTotal(data.total);
+      } else {
+        const filtered = statusFilter === 'all'
+          ? DUMMY_DEVICES
+          : DUMMY_DEVICES.filter(d => d.status === statusFilter);
+        setDevices(filtered);
+        setTotal(filtered.length);
+      }
     } catch {
-      setDevices([]);
+      // Backend unavailable — show dummy data so the UI remains informative
+      const filtered = statusFilter === 'all'
+        ? DUMMY_DEVICES
+        : DUMMY_DEVICES.filter(d => d.status === statusFilter);
+      setDevices(filtered);
+      setTotal(filtered.length);
     } finally {
       setLoading(false);
     }
@@ -64,8 +95,15 @@ export default function DevicesPage() {
       fetchDevices(0, 1, 'inactive'),
       fetchDevices(0, 1, 'maintenance'),
     ]).then(([a, i, m]) => {
-      setStatusCounts({ active: a.total, inactive: i.total, maintenance: m.total });
-    }).catch(() => {});
+      const total = a.total + i.total + m.total;
+      if (total > 0) {
+        setStatusCounts({ active: a.total, inactive: i.total, maintenance: m.total });
+      } else {
+        setStatusCounts(DUMMY_STATUS_COUNTS);
+      }
+    }).catch(() => {
+      setStatusCounts(DUMMY_STATUS_COUNTS);
+    });
   }, []);
 
   const filtered = search

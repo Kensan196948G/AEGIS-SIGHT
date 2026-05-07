@@ -130,7 +130,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-3">
         {navigationGroups.map((group) => {
           const hasActive = groupContainsActive(group, pathname);
-          const isOpen = (openGroups[group.title] ?? true) || hasActive;
+          const isOpen = openGroups[group.title] ?? true;
 
           return (
             <div key={group.title} className="mb-1">
@@ -159,7 +159,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               <div
                 className={clsx(
                   'overflow-hidden transition-all duration-200 ease-in-out',
-                  isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                  isOpen ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0'
                 )}
               >
                 <div className="space-y-0.5 px-2 pb-1">

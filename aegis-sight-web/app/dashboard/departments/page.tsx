@@ -33,6 +33,38 @@ const emptyForm: DepartmentForm = {
   description: '',
 };
 
+// Dummy departments with tree structure (displayed when API returns empty or fails)
+const DUMMY_DEPARTMENTS: Department[] = [
+  {
+    id: 'd-001', name: 'IT管理部', code: 'IT', parent_id: null,
+    manager_name: '山田 太郎', budget_yearly: '50000000', description: 'IT資産・インフラ・セキュリティ統括',
+    device_count: 45,
+    children: [
+      { id: 'd-006', name: 'インフラチーム', code: 'IT-INFRA', parent_id: 'd-001', manager_name: '小林 恵美', budget_yearly: '20000000', description: 'サーバー・ネットワーク管理', device_count: 20, children: [] },
+      { id: 'd-007', name: 'セキュリティチーム', code: 'IT-SEC', parent_id: 'd-001', manager_name: '吉田 正人', budget_yearly: '15000000', description: 'セキュリティ監視・インシデント対応', device_count: 10, children: [] },
+    ],
+  },
+  {
+    id: 'd-002', name: '営業部', code: 'SALES', parent_id: null,
+    manager_name: '鈴木 花子', budget_yearly: '30000000', description: '国内営業統括',
+    device_count: 120,
+    children: [
+      { id: 'd-008', name: '東日本営業チーム', code: 'SALES-E', parent_id: 'd-002', manager_name: '渡辺 雄太', budget_yearly: '12000000', description: '関東・東北エリア担当', device_count: 65, children: [] },
+      { id: 'd-009', name: '西日本営業チーム', code: 'SALES-W', parent_id: 'd-002', manager_name: '林 明子', budget_yearly: '10000000', description: '近畿・九州エリア担当', device_count: 55, children: [] },
+    ],
+  },
+  {
+    id: 'd-003', name: '開発部', code: 'DEV', parent_id: null,
+    manager_name: '佐藤 一郎', budget_yearly: '80000000', description: 'ソフトウェア製品開発',
+    device_count: 85,
+    children: [
+      { id: 'd-010', name: 'バックエンドチーム', code: 'DEV-BE', parent_id: 'd-003', manager_name: '中村 健太', budget_yearly: '30000000', description: 'API・DB・インフラ開発', device_count: 40, children: [] },
+    ],
+  },
+  { id: 'd-004', name: '経理部', code: 'FIN', parent_id: null, manager_name: '高橋 美咲', budget_yearly: '20000000', description: '財務・経理・予算管理', device_count: 30, children: [] },
+  { id: 'd-005', name: '総務部', code: 'GA', parent_id: null, manager_name: '伊藤 圭子', budget_yearly: '15000000', description: '総務・庶務・施設管理', device_count: 20, children: [] },
+];
+
 function TreeNode({ dept, depth = 0, onEdit }: { dept: Department; depth?: number; onEdit: (d: Department) => void }) {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = dept.children && dept.children.length > 0;
@@ -146,8 +178,10 @@ export default function DepartmentsPage() {
       });
       clearTimeout(timeout);
       if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
+        const data = await res.json() as Department[];
+        setDepartments(data.length > 0 ? data : DUMMY_DEPARTMENTS);
+      } else {
+        setDepartments(DUMMY_DEPARTMENTS);
       }
       // Also fetch flat list for parent dropdown
       const controller2 = new AbortController();
@@ -158,18 +192,12 @@ export default function DepartmentsPage() {
       });
       clearTimeout(timeout2);
       if (flatRes.ok) {
-        const flatData = await flatRes.json();
+        const flatData = await flatRes.json() as { items?: Department[] };
         setFlatDepartments(flatData.items || []);
       }
     } catch {
-      // API unavailable — use demo data
-      setDepartments([
-        { id: '1', name: 'IT管理部', code: 'IT', parent_id: null, manager_name: '山田 太郎', budget_yearly: '50000000', description: 'IT統括', children: [], device_count: 45 },
-        { id: '2', name: '営業部', code: 'SALES', parent_id: null, manager_name: '鈴木 花子', budget_yearly: '30000000', description: '営業統括', children: [], device_count: 120 },
-        { id: '3', name: '開発部', code: 'DEV', parent_id: null, manager_name: '佐藤 一郎', budget_yearly: '80000000', description: 'ソフトウェア開発', children: [], device_count: 85 },
-        { id: '4', name: '経理部', code: 'FIN', parent_id: null, manager_name: '高橋 美咲', budget_yearly: '20000000', description: '財務・経理', children: [], device_count: 30 },
-        { id: '5', name: '総務部', code: 'GA', parent_id: null, manager_name: '中村 健太', budget_yearly: '15000000', description: '総務・庶務', children: [], device_count: 20 },
-      ]);
+      // API unavailable — use dummy data
+      setDepartments(DUMMY_DEPARTMENTS);
     } finally {
       setLoading(false);
     }

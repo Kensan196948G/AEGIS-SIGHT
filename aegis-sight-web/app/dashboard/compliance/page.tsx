@@ -17,6 +17,78 @@ import type {
 } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+
+const DUMMY_OVERVIEW: BackendComplianceOverview = {
+  iso27001_score: 78,
+  jsox_status: 'partial',
+  nist_tier: 2.5,
+  open_issues: 5,
+  issues: [
+    { id: 'iss-0001', title: 'アクセスログの定期レビューが未実施', severity: 'critical', framework: 'ISO 27001', due_date: '2026-06-30', status: 'open' },
+    { id: 'iss-0002', title: 'バックアップ復旧テストが半年間未実施', severity: 'high', framework: 'ISO 27001', due_date: '2026-07-15', status: 'in_progress' },
+    { id: 'iss-0003', title: 'ソフトウェアライセンス台帳の更新漏れ', severity: 'medium', framework: 'J-SOX', due_date: '2026-06-15', status: 'open' },
+    { id: 'iss-0004', title: 'インシデント対応手順書が旧版のまま', severity: 'medium', framework: 'NIST CSF', due_date: '2026-08-01', status: 'in_progress' },
+    { id: 'iss-0005', title: '退職者アカウントの削除確認が未完了', severity: 'high', framework: 'ISO 27001', due_date: '2026-05-31', status: 'open' },
+  ],
+  recent_events: [
+    { event_type: 'assessment', description: 'ISO 27001 内部監査（第2四半期）実施', actor: 'compliance-team', timestamp: '2026-05-06T10:00:00Z' },
+    { event_type: 'remediation', description: 'CVE-2026-21408 対応パッチ適用完了', actor: 'it-ops', timestamp: '2026-05-05T14:30:00Z' },
+    { event_type: 'finding', description: 'J-SOX IT全般統制評価で特権IDの管理不備を指摘', actor: 'external-auditor', timestamp: '2026-05-04T09:00:00Z' },
+    { event_type: 'training', description: 'セキュリティ意識向上研修（全社員対象）完了', actor: 'hr-dept', timestamp: '2026-05-02T16:00:00Z' },
+    { event_type: 'review', description: 'NIST CSF 成熟度自己評価レポート提出', actor: 'ciso', timestamp: '2026-04-30T11:00:00Z' },
+  ],
+};
+
+const DUMMY_ISO: BackendISO27001Response = {
+  overall_score: 78,
+  last_assessment: '2026-05-06',
+  next_review: '2026-08-06',
+  categories: [
+    { name: '情報セキュリティポリシー (A.5)', score: 90, max_score: 100, status: 'compliant' },
+    { name: '組織のセキュリティ (A.6)', score: 85, max_score: 100, status: 'compliant' },
+    { name: '人的資源セキュリティ (A.7)', score: 80, max_score: 100, status: 'compliant' },
+    { name: '資産管理 (A.8)', score: 72, max_score: 100, status: 'partial' },
+    { name: 'アクセス制御 (A.9)', score: 75, max_score: 100, status: 'partial' },
+    { name: '暗号化 (A.10)', score: 88, max_score: 100, status: 'compliant' },
+    { name: '物理的・環境的セキュリティ (A.11)', score: 92, max_score: 100, status: 'compliant' },
+    { name: '運用セキュリティ (A.12)', score: 68, max_score: 100, status: 'partial' },
+    { name: '通信セキュリティ (A.13)', score: 82, max_score: 100, status: 'compliant' },
+    { name: 'システムの取得・開発・保守 (A.14)', score: 71, max_score: 100, status: 'partial' },
+    { name: 'サプライヤー関係 (A.15)', score: 60, max_score: 100, status: 'partial' },
+    { name: '情報セキュリティインシデント管理 (A.16)', score: 78, max_score: 100, status: 'partial' },
+    { name: '事業継続マネジメント (A.17)', score: 55, max_score: 100, status: 'non_compliant' },
+    { name: '適合性 (A.18)', score: 83, max_score: 100, status: 'compliant' },
+  ],
+};
+
+const DUMMY_JSOX: BackendJSOXResponse = {
+  overall_status: 'partial',
+  audit_period: '2026年4月〜2026年6月',
+  last_tested: '2026-04-30',
+  controls: [
+    { area: 'アクセス管理', status: 'effective', findings: 0, remediation_progress: 100 },
+    { area: '変更管理', status: 'partially_effective', findings: 2, remediation_progress: 65 },
+    { area: '運用管理', status: 'partially_effective', findings: 1, remediation_progress: 80 },
+    { area: 'ITセキュリティ管理', status: 'effective', findings: 0, remediation_progress: 100 },
+  ],
+};
+
+const DUMMY_NIST: BackendNISTResponse = {
+  overall_tier: 2.5,
+  last_assessment: '2026-04-30',
+  functions: [
+    { function: 'Identify（特定）', tier: 3, target_tier: 3, score: 80, max_score: 100 },
+    { function: 'Protect（防御）', tier: 3, target_tier: 3, score: 75, max_score: 100 },
+    { function: 'Detect（検知）', tier: 2, target_tier: 3, score: 60, max_score: 100 },
+    { function: 'Respond（対応）', tier: 2, target_tier: 3, score: 55, max_score: 100 },
+    { function: 'Recover（回復）', tier: 2, target_tier: 3, score: 50, max_score: 100 },
+    { function: 'Govern（統治）', tier: 3, target_tier: 3, score: 78, max_score: 100 },
+  ],
+};
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -147,12 +219,19 @@ export default function CompliancePage() {
       fetchComplianceNIST(),
     ])
       .then(([ov, iso27k, jsoxRes, nistRes]) => {
-        setOverview(ov);
-        setIso(iso27k);
-        setJsox(jsoxRes);
-        setNist(nistRes);
+        // Fall back to dummy data when API returns empty results
+        setOverview((ov.issues || []).length === 0 ? DUMMY_OVERVIEW : ov);
+        setIso(iso27k.overall_score === 0 ? DUMMY_ISO : iso27k);
+        setJsox((jsoxRes.controls || []).length === 0 ? DUMMY_JSOX : jsoxRes);
+        setNist((nistRes.functions || []).length === 0 ? DUMMY_NIST : nistRes);
       })
-      .catch(() => {/* retain null — UI shows skeleton/empty */})
+      .catch(() => {
+        // Fallback to dummy data on error
+        setOverview(DUMMY_OVERVIEW);
+        setIso(DUMMY_ISO);
+        setJsox(DUMMY_JSOX);
+        setNist(DUMMY_NIST);
+      })
       .finally(() => setLoading(false));
   }, []);
 

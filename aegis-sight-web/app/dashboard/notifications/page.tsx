@@ -32,6 +32,26 @@ const channelTypeVariant: Record<string, 'info' | 'success' | 'warning' | 'dange
 };
 
 // ---------------------------------------------------------------------------
+// Dummy data (displayed when API returns empty or fails)
+// ---------------------------------------------------------------------------
+
+const DUMMY_CHANNELS: BackendNotificationChannel[] = [
+  { id: 'ch-0001', name: 'Slack #it-alerts', channel_type: 'slack', config: { webhook_url: 'https://hooks.slack.com/services/EXAMPLE' }, is_enabled: true, created_by: 'yamamoto.kenji', created_at: '2026-03-01T09:00:00Z', updated_at: '2026-04-15T10:30:00Z' },
+  { id: 'ch-0002', name: '管理者メール通知', channel_type: 'email', config: { to: 'it-admin@example.co.jp', smtp_host: 'smtp.example.co.jp' }, is_enabled: true, created_by: 'suzuki.taro', created_at: '2026-03-01T09:05:00Z', updated_at: '2026-03-01T09:05:00Z' },
+  { id: 'ch-0003', name: 'Teams - セキュリティチーム', channel_type: 'teams', config: { webhook_url: 'https://outlook.office.com/webhook/EXAMPLE' }, is_enabled: true, created_by: 'ito.keiko', created_at: '2026-03-10T14:00:00Z', updated_at: '2026-04-20T08:00:00Z' },
+  { id: 'ch-0004', name: 'Webhook - SIEM連携', channel_type: 'webhook', config: { url: 'https://siem.example.co.jp/api/ingest', secret: 'xxxxxxxx' }, is_enabled: false, created_by: 'nakamura.ryota', created_at: '2026-04-01T11:00:00Z', updated_at: '2026-04-01T11:00:00Z' },
+];
+
+const DUMMY_RULES: BackendNotificationRule[] = [
+  { id: 'rule-0001', name: 'クリティカルアラート即時通知', event_type: 'alert.critical', channel_id: 'ch-0001', conditions: { severity: 'critical' }, is_enabled: true, created_at: '2026-03-02T10:00:00Z' },
+  { id: 'rule-0002', name: 'ライセンス期限警告', event_type: 'license.expiry_warning', channel_id: 'ch-0002', conditions: { days_remaining: 30 }, is_enabled: true, created_at: '2026-03-02T10:05:00Z' },
+  { id: 'rule-0003', name: '廃棄申請承認待ち', event_type: 'disposal.pending_approval', channel_id: 'ch-0002', conditions: null, is_enabled: true, created_at: '2026-03-05T09:00:00Z' },
+  { id: 'rule-0004', name: 'セキュリティインシデント検知', event_type: 'incident.detected', channel_id: 'ch-0003', conditions: { severity: ['p1', 'p2'] }, is_enabled: true, created_at: '2026-03-10T15:00:00Z' },
+  { id: 'rule-0005', name: 'パッチ未適用デバイス週次レポート', event_type: 'patch.weekly_report', channel_id: 'ch-0002', conditions: { missing_critical: true }, is_enabled: true, created_at: '2026-03-15T09:00:00Z' },
+  { id: 'rule-0006', name: 'SIEM イベント転送', event_type: 'alert.any', channel_id: 'ch-0004', conditions: null, is_enabled: false, created_at: '2026-04-01T11:05:00Z' },
+];
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -51,11 +71,11 @@ export default function NotificationsPage() {
         fetchNotificationChannels(0, 100),
         fetchNotificationRules(0, 100),
       ]);
-      setChannels(channelsRes.items);
-      setRules(rulesRes.items);
+      setChannels(channelsRes.items.length > 0 ? channelsRes.items : DUMMY_CHANNELS);
+      setRules(rulesRes.items.length > 0 ? rulesRes.items : DUMMY_RULES);
     } catch {
-      setChannels([]);
-      setRules([]);
+      setChannels(DUMMY_CHANNELS);
+      setRules(DUMMY_RULES);
     } finally {
       setLoading(false);
     }

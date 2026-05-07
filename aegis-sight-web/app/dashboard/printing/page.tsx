@@ -15,6 +15,66 @@ import {
 } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
+// Dummy data (shown when API returns empty or errors)
+// ---------------------------------------------------------------------------
+
+const DUMMY_PRINT_STATS: BackendPrintStats = {
+  total_pages: 18432,
+  total_jobs: 1247,
+  color_ratio: 0.34,
+  by_user: [
+    { user_name: 'tanaka.hiroshi', total_pages: 3210 },
+    { user_name: 'suzuki.yuki', total_pages: 2850 },
+    { user_name: 'yamamoto.kenji', total_pages: 2440 },
+    { user_name: 'sato.naoko', total_pages: 1980 },
+    { user_name: 'nakamura.ryota', total_pages: 1650 },
+  ],
+  by_printer: [
+    { printer_id: 'prn-0001', printer_name: '本社3F 複合機A', total_pages: 6240 },
+    { printer_id: 'prn-0002', printer_name: '本社3F 複合機B', total_pages: 4890 },
+    { printer_id: 'prn-0003', printer_name: '本社2F レーザープリンタ', total_pages: 3880 },
+    { printer_id: 'prn-0004', printer_name: '営業部 カラー複合機', total_pages: 2150 },
+    { printer_id: 'prn-0005', printer_name: '役員室 白黒プリンタ', total_pages: 1272 },
+  ],
+  by_department: [
+    { department: '営業部', total_pages: 5620 },
+    { department: '総務部', total_pages: 4210 },
+    { department: '開発部', total_pages: 3890 },
+    { department: '経理部', total_pages: 2880 },
+    { department: '人事部', total_pages: 1832 },
+  ],
+  monthly_trend: [
+    { month: '2025-12', total_pages: 14200 },
+    { month: '2026-01', total_pages: 16800 },
+    { month: '2026-02', total_pages: 15300 },
+    { month: '2026-03', total_pages: 17600 },
+    { month: '2026-04', total_pages: 19100 },
+    { month: '2026-05', total_pages: 18432 },
+  ],
+};
+
+const DUMMY_PRINTERS: BackendPrinter[] = [
+  { id: 'prn-0001', name: '本社3F 複合機A', location: '本社3Fコピーコーナー', ip_address: '192.168.1.101', model: 'Fujifilm Apeos C7070', is_network: true, is_active: true, department: null, created_at: '2024-04-01T09:00:00Z' },
+  { id: 'prn-0002', name: '本社3F 複合機B', location: '本社3Fコピーコーナー', ip_address: '192.168.1.102', model: 'Fujifilm Apeos C5570', is_network: true, is_active: true, department: null, created_at: '2024-04-01T09:00:00Z' },
+  { id: 'prn-0003', name: '本社2F レーザープリンタ', location: '本社2F事務スペース', ip_address: '192.168.1.110', model: 'HP LaserJet Enterprise M507dn', is_network: true, is_active: true, department: '総務部', created_at: '2024-06-15T09:00:00Z' },
+  { id: 'prn-0004', name: '営業部 カラー複合機', location: '営業フロア会議室横', ip_address: '192.168.2.201', model: 'Canon imageRUNNER ADVANCE C5560F', is_network: true, is_active: true, department: '営業部', created_at: '2024-08-01T09:00:00Z' },
+  { id: 'prn-0005', name: '役員室 白黒プリンタ', location: '役員室', ip_address: '192.168.10.50', model: 'HP LaserJet Pro M404n', is_network: false, is_active: false, department: '経営企画室', created_at: '2023-10-01T09:00:00Z' },
+];
+
+const DUMMY_PRINT_JOBS: BackendPrintJob[] = [
+  { id: 'job-0001', printer_id: 'prn-0001', device_id: 'dev-aabb1100-5678', user_name: 'tanaka.hiroshi', document_name: '2026年5月度 営業報告書.pdf', pages: 24, copies: 3, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T09:12:00Z' },
+  { id: 'job-0002', printer_id: 'prn-0004', device_id: 'dev-ccdd2200-1234', user_name: 'suzuki.yuki', document_name: '顧客提案資料_株式会社サンプル様v3.pptx', pages: 16, copies: 5, color: true, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T10:05:00Z' },
+  { id: 'job-0003', printer_id: 'prn-0002', device_id: 'dev-eeff3300-7890', user_name: 'yamamoto.kenji', document_name: '経費精算申請書_2026年4月分.xlsx', pages: 3, copies: 1, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T10:30:00Z' },
+  { id: 'job-0004', printer_id: 'prn-0003', device_id: null, user_name: 'sato.naoko', document_name: '就業規則改訂版_2026年度.pdf', pages: 48, copies: 10, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T11:00:00Z' },
+  { id: 'job-0005', printer_id: 'prn-0001', device_id: 'dev-aabb4400-3456', user_name: 'nakamura.ryota', document_name: '開発仕様書_v2.1.docx', pages: 35, copies: 2, color: false, duplex: true, paper_size: 'A4', status: 'failed', printed_at: '2026-05-07T11:45:00Z' },
+  { id: 'job-0006', printer_id: 'prn-0004', device_id: 'dev-ccdd5500-9012', user_name: 'kobayashi.emi', document_name: '製品カタログ2026春夏版.pdf', pages: 8, copies: 20, color: true, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T13:15:00Z' },
+  { id: 'job-0007', printer_id: 'prn-0002', device_id: 'dev-eeff6600-1234', user_name: 'watanabe.taro', document_name: '契約書_確認用.pdf', pages: 12, copies: 2, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T14:00:00Z' },
+  { id: 'job-0008', printer_id: 'prn-0001', device_id: 'dev-aabb7700-5678', user_name: 'ito.keiko', document_name: '人事評価シート_2026H1.xlsx', pages: 4, copies: 30, color: false, duplex: true, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T14:30:00Z' },
+  { id: 'job-0009', printer_id: 'prn-0003', device_id: null, user_name: 'hayashi.akiko', document_name: '社内通知_テレワーク制度改定について.pdf', pages: 2, copies: 50, color: false, duplex: false, paper_size: 'A4', status: 'completed', printed_at: '2026-05-07T15:00:00Z' },
+  { id: 'job-0010', printer_id: 'prn-0004', device_id: 'dev-ccdd8800-7890', user_name: 'yoshida.masato', document_name: '見積書_A00234様向け.pdf', pages: 6, copies: 1, color: true, duplex: false, paper_size: 'A4', status: 'cancelled', printed_at: '2026-05-07T15:45:00Z' },
+];
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -351,14 +411,17 @@ export default function PrintingPage() {
         fetchPrintStats(),
         fetchPrintPolicies(0, 100),
       ]);
-      setPrinters(printersRes.items);
-      setJobs(jobsRes.items);
-      setStats(statsRes);
+      const hasPrinters = (printersRes.items || []).length > 0;
+      const hasJobs = (jobsRes.items || []).length > 0;
+      const hasStats = statsRes.total_jobs > 0 || statsRes.total_pages > 0;
+      setPrinters(hasPrinters ? printersRes.items : DUMMY_PRINTERS);
+      setJobs(hasJobs ? jobsRes.items : DUMMY_PRINT_JOBS);
+      setStats(hasStats ? statsRes : DUMMY_PRINT_STATS);
       setPolicies(policiesRes.items);
     } catch {
-      setPrinters([]);
-      setJobs([]);
-      setStats(null);
+      setPrinters(DUMMY_PRINTERS);
+      setJobs(DUMMY_PRINT_JOBS);
+      setStats(DUMMY_PRINT_STATS);
       setPolicies([]);
     } finally {
       setLoading(false);
