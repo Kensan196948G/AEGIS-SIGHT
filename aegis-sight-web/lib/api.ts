@@ -537,3 +537,139 @@ export async function fetchComplianceJSOX(): Promise<BackendJSOXResponse> {
 export async function fetchComplianceNIST(): Promise<BackendNISTResponse> {
   return api.get<BackendNISTResponse>('/api/v1/compliance/nist');
 }
+
+// ── Patches ──────────────────────────────────────────────────────────────────
+
+export interface BackendPatchComplianceSummary {
+  total_devices: number;
+  total_updates: number;
+  fully_patched_devices: number;
+  compliance_rate: number;
+  critical_missing: number;
+  important_missing: number;
+  moderate_missing: number;
+  low_missing: number;
+}
+
+export interface BackendMissingPatchEntry {
+  update_id: string;
+  kb_number: string;
+  title: string;
+  severity: string;
+  release_date: string;
+  missing_device_count: number;
+}
+
+export interface BackendVulnerability {
+  id: string;
+  cve_id: string;
+  title: string;
+  severity: string;
+  cvss_score: number;
+  affected_software: Record<string, unknown> | null;
+  remediation: string | null;
+  published_at: string;
+  is_resolved: boolean;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export async function fetchPatchCompliance(): Promise<BackendPatchComplianceSummary> {
+  return api.get<BackendPatchComplianceSummary>('/api/v1/patches/compliance');
+}
+
+export async function fetchMissingPatches(limit = 50): Promise<BackendMissingPatchEntry[]> {
+  return api.get<BackendMissingPatchEntry[]>(`/api/v1/patches/missing?limit=${limit}`);
+}
+
+export async function fetchVulnerabilities(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendVulnerability>> {
+  return api.get<PaginatedBackend<BackendVulnerability>>(
+    `/api/v1/patches/vulnerabilities?offset=${offset}&limit=${limit}`,
+  );
+}
+
+// ── Incidents ─────────────────────────────────────────────────────────────────
+
+export interface BackendIncidentStats {
+  total: number;
+  p1_critical: number;
+  p2_high: number;
+  p3_medium: number;
+  p4_low: number;
+  open_incidents: number;
+  resolved_incidents: number;
+  mttr_hours: number | null;
+}
+
+export interface BackendIncidentResponse {
+  id: string;
+  title: string;
+  description: string;
+  severity: string;
+  status: string;
+  category: string;
+  affected_devices: string[] | null;
+  assigned_to: string | null;
+  reported_by: string;
+  timeline: Record<string, unknown>[] | null;
+  root_cause: string | null;
+  resolution: string | null;
+  lessons_learned: string | null;
+  detected_at: string;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export interface BackendThreatIndicator {
+  id: string;
+  indicator_type: string;
+  value: string;
+  threat_level: string;
+  source: string;
+  description: string;
+  is_active: boolean;
+  first_seen: string;
+  last_seen: string;
+  related_incidents: string[] | null;
+}
+
+export async function fetchIncidentStats(): Promise<BackendIncidentStats> {
+  return api.get<BackendIncidentStats>('/api/v1/incidents/stats');
+}
+
+export async function fetchIncidents(
+  offset = 0,
+  limit = 50,
+  severity?: string,
+  status?: string,
+  category?: string,
+): Promise<PaginatedBackend<BackendIncidentResponse>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (severity) params.set('severity', severity);
+  if (status) params.set('status', status);
+  if (category) params.set('category', category);
+  return api.get<PaginatedBackend<BackendIncidentResponse>>(`/api/v1/incidents?${params}`);
+}
+
+export async function createIncident(data: {
+  title: string;
+  description: string;
+  severity: string;
+  category: string;
+  affected_devices?: string[];
+  detected_at?: string;
+}): Promise<BackendIncidentResponse> {
+  return api.post<BackendIncidentResponse>('/api/v1/incidents', data);
+}
+
+export async function fetchThreatIndicators(
+  offset = 0,
+  limit = 50,
+): Promise<PaginatedBackend<BackendThreatIndicator>> {
+  return api.get<PaginatedBackend<BackendThreatIndicator>>(
+    `/api/v1/incidents/threats?offset=${offset}&limit=${limit}`,
+  );
+}

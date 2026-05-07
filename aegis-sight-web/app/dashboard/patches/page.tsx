@@ -1,40 +1,22 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DonutChart, ProgressBar } from '@/components/ui/chart';
+import {
+  fetchPatchCompliance,
+  fetchMissingPatches,
+  fetchVulnerabilities,
+} from '@/lib/api';
+import type {
+  BackendPatchComplianceSummary,
+  BackendMissingPatchEntry,
+  BackendVulnerability,
+} from '@/lib/api';
 
 // ---------------------------------------------------------------------------
-// Mock data (to be replaced with API calls)
+// Static placeholder (no backend endpoint yet)
 // ---------------------------------------------------------------------------
-
-const complianceSummary = {
-  totalDevices: 1284,
-  totalUpdates: 47,
-  fullyPatchedDevices: 1105,
-  complianceRate: 86.1,
-  criticalMissing: 12,
-  importantMissing: 34,
-  moderateMissing: 18,
-  lowMissing: 7,
-};
-
-const missingPatches = [
-  { id: '1', kbNumber: 'KB5034763', title: '2024-02 Cumulative Update for Windows 11', severity: 'critical', releaseDate: '2024-02-13', missingCount: 47 },
-  { id: '2', kbNumber: 'KB5034765', title: '2024-02 Security Update for .NET Framework', severity: 'critical', releaseDate: '2024-02-13', missingCount: 23 },
-  { id: '3', kbNumber: 'KB5034441', title: '2024-01 Security Update for Windows RE', severity: 'important', releaseDate: '2024-01-09', missingCount: 132 },
-  { id: '4', kbNumber: 'KB5034275', title: '2024-01 Cumulative Update for Windows 11', severity: 'important', releaseDate: '2024-01-09', missingCount: 89 },
-  { id: '5', kbNumber: 'KB5033375', title: '2023-12 Cumulative Update Preview', severity: 'moderate', releaseDate: '2023-12-12', missingCount: 56 },
-  { id: '6', kbNumber: 'KB5032288', title: '2023-11 Cumulative Update for Windows 11', severity: 'low', releaseDate: '2023-11-14', missingCount: 14 },
-];
-
-const vulnerabilities = [
-  { id: '1', cveId: 'CVE-2024-21338', title: 'Windows Kernel Elevation of Privilege', severity: 'critical', cvss: 9.8, resolved: false, publishedAt: '2024-02-13' },
-  { id: '2', cveId: 'CVE-2024-21412', title: 'Internet Shortcut SmartScreen Bypass', severity: 'critical', cvss: 9.1, resolved: false, publishedAt: '2024-02-13' },
-  { id: '3', cveId: 'CVE-2024-21351', title: 'Windows SmartScreen Security Feature Bypass', severity: 'high', cvss: 7.6, resolved: false, publishedAt: '2024-02-13' },
-  { id: '4', cveId: 'CVE-2024-20677', title: 'Microsoft Office Remote Code Execution', severity: 'high', cvss: 7.3, resolved: true, publishedAt: '2024-01-09' },
-  { id: '5', cveId: 'CVE-2024-20674', title: 'Windows Kerberos Security Feature Bypass', severity: 'medium', cvss: 5.4, resolved: true, publishedAt: '2024-01-09' },
-  { id: '6', cveId: 'CVE-2024-20683', title: 'Win32k Elevation of Privilege', severity: 'low', cvss: 3.2, resolved: true, publishedAt: '2024-01-09' },
-];
 
 const devicePatchHeatmap = [
   { hostname: 'PC-SALES-001', critical: 0, important: 1, moderate: 0, status: 'good' },
@@ -96,6 +78,37 @@ export function getComplianceBarClass(rate: number): string {
 // ---------------------------------------------------------------------------
 
 export default function PatchesPage() {
+  const [compliance, setCompliance] = useState<BackendPatchComplianceSummary | null>(null);
+  const [missingPatches, setMissingPatches] = useState<BackendMissingPatchEntry[]>([]);
+  const [vulnerabilities, setVulnerabilities] = useState<BackendVulnerability[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [comp, missing, vulnPage] = await Promise.all([
+          fetchPatchCompliance(),
+          fetchMissingPatches(50),
+          fetchVulnerabilities(0, 50),
+        ]);
+        setCompliance(comp);
+        setMissingPatches(missing);
+        setVulnerabilities(vulnPage.items);
+      } catch {
+        // leave defaults
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const rate = compliance?.compliance_rate ?? 0;
+  const totalMissing =
+    (compliance?.critical_missing ?? 0) +
+    (compliance?.important_missing ?? 0) +
+    (compliance?.moderate_missing ?? 0) +
+    (compliance?.low_missing ?? 0);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -117,142 +130,153 @@ export default function PatchesPage() {
       </div>
 
       {/* Patch Compliance Overview */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* DonutChart: Compliance Rate */}
-        <div className="aegis-card flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <div className="flex flex-col items-center">
-            <DonutChart
-              value={complianceSummary.complianceRate}
-              max={100}
-              size={140}
-              strokeWidth={14}
-              color={getComplianceDonutColor(complianceSummary.complianceRate)}
-              label={`${complianceSummary.complianceRate}%`}
-            />
-            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-              パッチ適用率
-            </p>
-          </div>
-          <div className="flex-1 space-y-1.5">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              適用状況（{complianceSummary.fullyPatchedDevices} / {complianceSummary.totalDevices} 台）
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              未適用パッチ総数: {complianceSummary.totalUpdates} 件
-            </p>
-            <div className="space-y-2 pt-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Critical</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">
-                  {complianceSummary.criticalMissing} 件
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Important</span>
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  {complianceSummary.importantMissing} 件
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Moderate</span>
-                <span className="font-semibold text-yellow-600 dark:text-yellow-400">
-                  {complianceSummary.moderateMissing} 件
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Low</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">
-                  {complianceSummary.lowMissing} 件
-                </span>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="aegis-card h-48 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+          <div className="aegis-card h-48 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* DonutChart: Compliance Rate */}
+          <div className="aegis-card flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <div className="flex flex-col items-center">
+              <DonutChart
+                value={rate}
+                max={100}
+                size={140}
+                strokeWidth={14}
+                color={getComplianceDonutColor(rate)}
+                label={`${rate}%`}
+              />
+              <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                パッチ適用率
+              </p>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                適用状況（{compliance?.fully_patched_devices ?? 0} / {compliance?.total_devices ?? 0} 台）
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                未適用パッチ総数: {compliance?.total_updates ?? 0} 件
+              </p>
+              <div className="space-y-2 pt-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Critical</span>
+                  <span className="font-semibold text-red-600 dark:text-red-400">
+                    {compliance?.critical_missing ?? 0} 件
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Important</span>
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
+                    {compliance?.important_missing ?? 0} 件
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Moderate</span>
+                  <span className="font-semibold text-yellow-600 dark:text-yellow-400">
+                    {compliance?.moderate_missing ?? 0} 件
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Low</span>
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {compliance?.low_missing ?? 0} 件
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ProgressBar: Severity Breakdown */}
-        <div className="aegis-card">
-          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-            重要度別 未適用パッチ比率
-          </h2>
-          <div className="space-y-4">
-            {[
-              { label: 'Critical',  value: complianceSummary.criticalMissing,  color: 'red'   as const },
-              { label: 'Important', value: complianceSummary.importantMissing, color: 'amber' as const },
-              { label: 'Moderate',  value: complianceSummary.moderateMissing,  color: 'amber' as const },
-              { label: 'Low',       value: complianceSummary.lowMissing,       color: 'blue'  as const },
-            ].map((item) => (
-              <div key={item.label}>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{item.value} 件</span>
+          {/* ProgressBar: Severity Breakdown */}
+          <div className="aegis-card">
+            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+              重要度別 未適用パッチ比率
+            </h2>
+            <div className="space-y-4">
+              {[
+                { label: 'Critical',  value: compliance?.critical_missing ?? 0,  color: 'red'   as const },
+                { label: 'Important', value: compliance?.important_missing ?? 0, color: 'amber' as const },
+                { label: 'Moderate',  value: compliance?.moderate_missing ?? 0,  color: 'amber' as const },
+                { label: 'Low',       value: compliance?.low_missing ?? 0,       color: 'blue'  as const },
+              ].map((item) => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{item.value} 件</span>
+                  </div>
+                  <ProgressBar
+                    value={item.value}
+                    max={totalMissing || 1}
+                    color={item.color}
+                    size="sm"
+                    showLabel={false}
+                  />
                 </div>
-                <ProgressBar
-                  value={item.value}
-                  max={complianceSummary.importantMissing + complianceSummary.criticalMissing + complianceSummary.moderateMissing + complianceSummary.lowMissing}
-                  color={item.color}
-                  size="sm"
-                  showLabel={false}
-                />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Compliance Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Overall compliance */}
-        <div className="aegis-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">適用率</p>
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getComplianceStatusClass(complianceSummary.complianceRate)}`}>
-              {complianceSummary.fullyPatchedDevices} / {complianceSummary.totalDevices}台
-            </span>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="aegis-card h-28 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="aegis-card p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">適用率</p>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getComplianceStatusClass(rate)}`}>
+                {compliance?.fully_patched_devices ?? 0} / {compliance?.total_devices ?? 0}台
+              </span>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+              {rate}%
+            </p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+              <div
+                className={`h-full rounded-full transition-all ${getComplianceBarClass(rate)}`}
+                style={{ width: `${rate}%` }}
+              />
+            </div>
           </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {complianceSummary.complianceRate}%
-          </p>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              className={`h-full rounded-full transition-all ${getComplianceBarClass(complianceSummary.complianceRate)}`}
-              style={{ width: `${complianceSummary.complianceRate}%` }}
-            />
+
+          <div className="aegis-card p-5">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Critical 未適用</p>
+            <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
+              {compliance?.critical_missing ?? 0}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              デバイス x パッチ件数
+            </p>
+          </div>
+
+          <div className="aegis-card p-5">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Important 未適用</p>
+            <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
+              {compliance?.important_missing ?? 0}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              デバイス x パッチ件数
+            </p>
+          </div>
+
+          <div className="aegis-card p-5">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Moderate 未適用</p>
+            <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+              {compliance?.moderate_missing ?? 0}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              デバイス x パッチ件数
+            </p>
           </div>
         </div>
-
-        {/* Critical missing */}
-        <div className="aegis-card p-5">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Critical 未適用</p>
-          <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
-            {complianceSummary.criticalMissing}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            デバイス x パッチ件数
-          </p>
-        </div>
-
-        {/* Important missing */}
-        <div className="aegis-card p-5">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Important 未適用</p>
-          <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
-            {complianceSummary.importantMissing}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            デバイス x パッチ件数
-          </p>
-        </div>
-
-        {/* Moderate missing */}
-        <div className="aegis-card p-5">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Moderate 未適用</p>
-          <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-            {complianceSummary.moderateMissing}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            デバイス x パッチ件数
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Missing Patches Table */}
       <div className="aegis-card">
@@ -268,45 +292,53 @@ export default function PatchesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 dark:border-aegis-border dark:bg-aegis-darker">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  KB番号
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  タイトル
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  重要度
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  リリース日
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  未適用台数
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">KB番号</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">タイトル</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">重要度</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">リリース日</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">未適用台数</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-aegis-border">
-              {missingPatches.map((patch) => (
-                <tr key={patch.id} className="hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-primary-600 dark:text-primary-400">
-                    {patch.kbNumber}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
-                    {patch.title}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${severityColor[patch.severity]}`}>
-                      {patch.severity}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {patch.releaseDate}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                    {patch.missingCount}
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    {[...Array(5)].map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : missingPatches.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    未適用パッチなし
                   </td>
                 </tr>
-              ))}
+              ) : (
+                missingPatches.map((patch) => (
+                  <tr key={patch.update_id} className="hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-primary-600 dark:text-primary-400">
+                      {patch.kb_number}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
+                      {patch.title}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${severityColor[patch.severity] ?? ''}`}>
+                        {patch.severity}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(patch.release_date).toLocaleDateString('ja-JP')}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                      {patch.missing_device_count}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -326,71 +358,77 @@ export default function PatchesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 dark:border-aegis-border dark:bg-aegis-darker">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  CVE ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  タイトル
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  重要度
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  CVSS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  公開日
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  状態
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVE ID</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">タイトル</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">重要度</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVSS</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">公開日</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">状態</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-aegis-border">
-              {vulnerabilities.map((vuln) => (
-                <tr key={vuln.id} className="hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-primary-600 dark:text-primary-400">
-                    {vuln.cveId}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
-                    {vuln.title}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${severityColor[vuln.severity]}`}>
-                      {vuln.severity}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                        <div
-                          className={`h-full rounded-full ${cvssBarColor(vuln.cvss)}`}
-                          style={{ width: `${(vuln.cvss / 10) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {vuln.cvss}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {vuln.publishedAt}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    {vuln.resolved ? (
-                      <Badge variant="success">解決済</Badge>
-                    ) : (
-                      <Badge variant="danger">未解決</Badge>
-                    )}
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    {[...Array(6)].map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 rounded bg-gray-200 dark:bg-gray-700" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : vulnerabilities.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    脆弱性なし
                   </td>
                 </tr>
-              ))}
+              ) : (
+                vulnerabilities.map((vuln) => (
+                  <tr key={vuln.id} className="hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium text-primary-600 dark:text-primary-400">
+                      {vuln.cve_id}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
+                      {vuln.title}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${severityColor[vuln.severity] ?? ''}`}>
+                        {vuln.severity}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                          <div
+                            className={`h-full rounded-full ${cvssBarColor(vuln.cvss_score)}`}
+                            style={{ width: `${(vuln.cvss_score / 10) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {vuln.cvss_score}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(vuln.published_at).toLocaleDateString('ja-JP')}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      {vuln.is_resolved ? (
+                        <Badge variant="success">解決済</Badge>
+                      ) : (
+                        <Badge variant="danger">未解決</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Device Patch Heatmap */}
+      {/* Device Patch Heatmap (static placeholder — no backend endpoint) */}
       <div className="aegis-card">
         <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -407,43 +445,33 @@ export default function PatchesPage() {
                 key={device.hostname}
                 className="relative overflow-hidden rounded-lg border border-gray-200 p-4 dark:border-aegis-border"
               >
-                {/* Status indicator bar */}
                 <div className={`absolute left-0 top-0 h-full w-1 ${heatmapStatusColor[device.status]}`} />
-
-                <p className="ml-2 text-sm font-semibold text-gray-900 dark:text-white truncate">
+                <p className="ml-2 truncate text-sm font-semibold text-gray-900 dark:text-white">
                   {device.hostname}
                 </p>
                 <div className="ml-2 mt-2 space-y-1">
                   {device.critical > 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-red-500" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        Critical: {device.critical}
-                      </span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Critical: {device.critical}</span>
                     </div>
                   )}
                   {device.important > 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-orange-500" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        Important: {device.important}
-                      </span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Important: {device.important}</span>
                     </div>
                   )}
                   {device.moderate > 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        Moderate: {device.moderate}
-                      </span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Moderate: {device.moderate}</span>
                     </div>
                   )}
                   {device.critical === 0 && device.important === 0 && device.moderate === 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                        全て適用済
-                      </span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400">全て適用済</span>
                     </div>
                   )}
                 </div>
@@ -451,7 +479,6 @@ export default function PatchesPage() {
             ))}
           </div>
 
-          {/* Legend */}
           <div className="mt-4 flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
