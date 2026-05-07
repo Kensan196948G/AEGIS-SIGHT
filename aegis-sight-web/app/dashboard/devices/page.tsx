@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { DonutChart, BarChart } from '@/components/ui/chart';
 import { fetchDevices } from '@/lib/api';
 import type { BackendDevice } from '@/lib/api';
 
@@ -35,6 +36,8 @@ export default function DevicesPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<BackendStatus | 'all'>('all');
 
+  const [statusCounts, setStatusCounts] = useState({ active: 0, inactive: 0, maintenance: 0 });
+
   const load = useCallback(async (p: number) => {
     setLoading(true);
     try {
@@ -55,6 +58,16 @@ export default function DevicesPage() {
   useEffect(() => { setPage(0); }, [statusFilter]);
   useEffect(() => { load(page); }, [load, page]);
 
+  useEffect(() => {
+    Promise.all([
+      fetchDevices(0, 1, 'active'),
+      fetchDevices(0, 1, 'inactive'),
+      fetchDevices(0, 1, 'maintenance'),
+    ]).then(([a, i, m]) => {
+      setStatusCounts({ active: a.total, inactive: i.total, maintenance: m.total });
+    }).catch(() => {});
+  }, []);
+
   const filtered = search
     ? devices.filter(d =>
         d.hostname.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,11 +75,16 @@ export default function DevicesPage() {
       )
     : devices;
 
-  const activeCount = devices.filter(d => d.status === 'active').length;
-  const inactiveCount = devices.filter(d => d.status === 'inactive').length;
-  const maintenanceCount = devices.filter(d => d.status === 'maintenance').length;
-
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const allTotal = statusCounts.active + statusCounts.inactive + statusCounts.maintenance;
+  const onlineRate = allTotal > 0 ? Math.round((statusCounts.active / allTotal) * 100) : 0;
+  const onlineRateColor = onlineRate >= 80 ? '#10b981' : onlineRate >= 60 ? '#f59e0b' : '#ef4444';
+  const statusBarData = [
+    { label: 'アクティブ',    value: statusCounts.active,      color: 'bg-emerald-500' },
+    { label: 'オフライン',    value: statusCounts.inactive,    color: 'bg-gray-400'    },
+    { label: 'メンテナンス',  value: statusCounts.maintenance, color: 'bg-blue-500'    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -80,6 +98,26 @@ export default function DevicesPage() {
         </div>
       </div>
 
+      {/* Device Overview Charts */}
+      {allTotal > 0 && (
+        <div className="aegis-card">
+          <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">デバイス概要</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">アクティブ率</p>
+              <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRateColor} label={`${onlineRate}%`} />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                全 {allTotal.toLocaleString()} 台中 {statusCounts.active.toLocaleString()} 台アクティブ
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ステータス別台数</p>
+              <BarChart data={statusBarData} maxValue={allTotal} height={160} showValues />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="aegis-card text-center">
@@ -91,19 +129,19 @@ export default function DevicesPage() {
         <div className="aegis-card text-center">
           <p className="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400">アクティブ</p>
           <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-            {loading ? '—' : activeCount.toLocaleString()}
+            {allTotal > 0 ? statusCounts.active.toLocaleString() : (loading ? '—' : '0')}
           </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">オフライン</p>
           <p className="mt-2 text-3xl font-bold text-gray-500 dark:text-gray-400">
-            {loading ? '—' : inactiveCount.toLocaleString()}
+            {allTotal > 0 ? statusCounts.inactive.toLocaleString() : (loading ? '—' : '0')}
           </p>
         </div>
         <div className="aegis-card text-center">
           <p className="text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">メンテナンス</p>
           <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-            {loading ? '—' : maintenanceCount.toLocaleString()}
+            {allTotal > 0 ? statusCounts.maintenance.toLocaleString() : (loading ? '—' : '0')}
           </p>
         </div>
       </div>
