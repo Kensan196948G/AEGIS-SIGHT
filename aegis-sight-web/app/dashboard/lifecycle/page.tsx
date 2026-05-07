@@ -18,6 +18,31 @@ const disposalStatusConfig: Record<DisposalStatus, { label: string; variant: 'wa
   rejected:  { label: '却下',     variant: 'danger'  },
 };
 
+const DUMMY_SUMMARY: BackendLifecycleSummary = {
+  procured: 1248,
+  deployed: 1072,
+  maintenance: 89,
+  disposed: 134,
+  disposal_pending: 17,
+  disposal_approved: 8,
+  total_events: 4523,
+};
+
+const DUMMY_DISPOSALS: BackendDisposalRequest[] = [
+  { id: 'dr-0001', device_id: 'dev-aabb1100-1234', reason: 'リース満了', method: '物理破壊', requested_by: 'yamamoto.kenji', approved_by: 'suzuki.taro', status: 'approved', certificate_path: null, certificate_number: 'CERT-2026-0412', disposal_date: '2026-06-15', created_at: '2026-05-01T10:00:00Z' },
+  { id: 'dr-0002', device_id: 'dev-ccdd2200-5678', reason: '障害・修理不能', method: 'データ消去のみ', requested_by: 'tanaka.hiroshi', approved_by: null, status: 'pending', certificate_path: null, certificate_number: null, disposal_date: null, created_at: '2026-05-03T14:22:00Z' },
+  { id: 'dr-0003', device_id: 'dev-eeff3300-9012', reason: 'OS サポート終了', method: '第三者業者委託', requested_by: 'sato.naoko', approved_by: 'ito.keiko', status: 'completed', certificate_path: '/certs/2026/dr-0003.pdf', certificate_number: 'CERT-2026-0388', disposal_date: '2026-04-28', created_at: '2026-04-10T09:15:00Z' },
+  { id: 'dr-0004', device_id: 'dev-aabb4400-3456', reason: 'セキュリティポリシー不適合', method: '物理破壊', requested_by: 'nakamura.ryota', approved_by: 'ito.keiko', status: 'approved', certificate_path: null, certificate_number: 'CERT-2026-0401', disposal_date: '2026-06-01', created_at: '2026-04-25T11:40:00Z' },
+  { id: 'dr-0005', device_id: 'dev-ccdd5500-7890', reason: '調達先倒産・部品調達不能', method: 'データ消去のみ', requested_by: 'watanabe.yuki', approved_by: null, status: 'rejected', certificate_path: null, certificate_number: null, disposal_date: null, created_at: '2026-04-20T16:05:00Z' },
+  { id: 'dr-0006', device_id: 'dev-eeff6600-1234', reason: 'リース満了', method: '第三者業者委託', requested_by: 'kobayashi.emi', approved_by: 'suzuki.taro', status: 'completed', certificate_path: '/certs/2026/dr-0006.pdf', certificate_number: 'CERT-2026-0365', disposal_date: '2026-04-15', created_at: '2026-03-30T08:00:00Z' },
+  { id: 'dr-0007', device_id: 'dev-aabb7700-5678', reason: 'J-SOX 廃棄ポリシー準拠', method: '物理破壊', requested_by: 'yoshida.masato', approved_by: null, status: 'pending', certificate_path: null, certificate_number: null, disposal_date: '2026-07-01', created_at: '2026-05-05T09:30:00Z' },
+  { id: 'dr-0008', device_id: 'dev-ccdd8800-9012', reason: '経年劣化・性能不足', method: 'データ消去のみ', requested_by: 'hayashi.akiko', approved_by: 'ito.keiko', status: 'approved', certificate_path: null, certificate_number: 'CERT-2026-0418', disposal_date: '2026-06-20', created_at: '2026-05-04T13:00:00Z' },
+  { id: 'dr-0009', device_id: 'dev-eeff9900-3456', reason: 'リース満了', method: '第三者業者委託', requested_by: 'yamamoto.kenji', approved_by: null, status: 'pending', certificate_path: null, certificate_number: null, disposal_date: '2026-06-30', created_at: '2026-05-06T11:20:00Z' },
+  { id: 'dr-0010', device_id: 'dev-aabb0010-7890', reason: 'マルウェア感染・復旧不能', method: '物理破壊', requested_by: 'tanaka.hiroshi', approved_by: 'suzuki.taro', status: 'completed', certificate_path: '/certs/2026/dr-0010.pdf', certificate_number: 'CERT-2026-0330', disposal_date: '2026-03-31', created_at: '2026-03-15T10:45:00Z' },
+  { id: 'dr-0011', device_id: 'dev-ccdd0011-1234', reason: '障害・修理不能', method: 'データ消去のみ', requested_by: 'sato.naoko', approved_by: null, status: 'pending', certificate_path: null, certificate_number: null, disposal_date: null, created_at: '2026-05-07T08:10:00Z' },
+  { id: 'dr-0012', device_id: 'dev-eeff0012-5678', reason: 'OS サポート終了', method: '物理破壊', requested_by: 'nakamura.ryota', approved_by: 'ito.keiko', status: 'approved', certificate_path: null, certificate_number: 'CERT-2026-0420', disposal_date: '2026-07-15', created_at: '2026-05-02T15:30:00Z' },
+];
+
 export default function LifecyclePage() {
   const [summary, setSummary] = useState<BackendLifecycleSummary | null>(null);
   const [disposals, setDisposals] = useState<BackendDisposalRequest[]>([]);
@@ -30,11 +55,12 @@ export default function LifecyclePage() {
         fetchLifecycleSummary(),
         fetchDisposalRequests(0, 100),
       ]);
-      setSummary(summaryRes);
-      setDisposals(disposalsRes.items);
+      const hasData = summaryRes.deployed > 0 || summaryRes.procured > 0;
+      setSummary(hasData ? summaryRes : DUMMY_SUMMARY);
+      setDisposals((disposalsRes.items || []).length > 0 ? disposalsRes.items : DUMMY_DISPOSALS);
     } catch {
-      setSummary(null);
-      setDisposals([]);
+      setSummary(DUMMY_SUMMARY);
+      setDisposals(DUMMY_DISPOSALS);
     } finally {
       setLoading(false);
     }

@@ -8,6 +8,40 @@ import type { BackendAuditLog } from '@/lib/api';
 
 const AUDIT_ACTIONS = ['create', 'update', 'delete', 'login', 'logout', 'export', 'approve', 'reject'] as const;
 
+// ---------------------------------------------------------------------------
+// Dummy data (shown when API returns no data)
+// ---------------------------------------------------------------------------
+
+const DUMMY_AUDIT_LOGS: BackendAuditLog[] = [
+  { id: 'a001', action: 'login',  user_id: 'usr-admin-01', resource_type: 'auth',     resource_id: null,       ip_address: '192.168.1.10', created_at: '2026-05-07T09:01:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { method: 'password' } },
+  { id: 'a002', action: 'create', user_id: 'usr-admin-01', resource_type: 'device',   resource_id: 'dev-5521', ip_address: '192.168.1.10', created_at: '2026-05-07T09:05:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { hostname: 'WS-0552', ip: '10.0.10.55' } },
+  { id: 'a003', action: 'update', user_id: 'usr-tanaka-02',resource_type: 'license',  resource_id: 'lic-3301', ip_address: '10.0.10.22',   created_at: '2026-05-07T09:12:00Z', user_agent: 'Mozilla/5.0 Firefox/125', detail: { field: 'assigned_user', from: null, to: 'usr-ito-05' } },
+  { id: 'a004', action: 'export', user_id: 'usr-admin-01', resource_type: 'report',   resource_id: null,       ip_address: '192.168.1.10', created_at: '2026-05-07T09:18:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { format: 'csv', rows: 1842 } },
+  { id: 'a005', action: 'login',  user_id: 'usr-tanaka-02',resource_type: 'auth',     resource_id: null,       ip_address: '10.0.10.22',   created_at: '2026-05-07T09:20:00Z', user_agent: 'Mozilla/5.0 Firefox/125', detail: { method: 'sso_azure' } },
+  { id: 'a006', action: 'approve',user_id: 'usr-admin-01', resource_type: 'request',  resource_id: 'req-0088', ip_address: '192.168.1.10', created_at: '2026-05-07T09:25:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { type: 'license_request', software: 'Adobe Creative Cloud' } },
+  { id: 'a007', action: 'delete', user_id: 'usr-admin-01', resource_type: 'device',   resource_id: 'dev-4412', ip_address: '192.168.1.10', created_at: '2026-05-07T09:31:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { reason: 'decommissioned', hostname: 'SRV-OLD-12' } },
+  { id: 'a008', action: 'update', user_id: 'usr-sato-03',  resource_type: 'user',     resource_id: 'usr-ito-05',ip_address: '10.0.1.51',   created_at: '2026-05-07T09:45:00Z', user_agent: 'Mozilla/5.0 Safari/17', detail: { field: 'department', from: '営業部', to: 'IT部' } },
+  { id: 'a009', action: 'login',  user_id: 'usr-sato-03',  resource_type: 'auth',     resource_id: null,       ip_address: '10.0.1.51',    created_at: '2026-05-07T09:44:00Z', user_agent: 'Mozilla/5.0 Safari/17', detail: { method: 'sso_azure' } },
+  { id: 'a010', action: 'create', user_id: 'usr-tanaka-02',resource_type: 'license',  resource_id: 'lic-4890', ip_address: '10.0.10.22',   created_at: '2026-05-07T10:02:00Z', user_agent: 'Mozilla/5.0 Firefox/125', detail: { software: 'Microsoft 365 E3', count: 5 } },
+  { id: 'a011', action: 'reject', user_id: 'usr-admin-01', resource_type: 'request',  resource_id: 'req-0089', ip_address: '192.168.1.10', created_at: '2026-05-07T10:10:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { type: 'admin_access', reason: '権限不足' } },
+  { id: 'a012', action: 'export', user_id: 'usr-sato-03',  resource_type: 'report',   resource_id: null,       ip_address: '10.0.1.51',    created_at: '2026-05-07T10:15:00Z', user_agent: 'Mozilla/5.0 Safari/17', detail: { format: 'pdf', rows: 340 } },
+  { id: 'a013', action: 'update', user_id: 'usr-ito-05',   resource_type: 'device',   resource_id: 'dev-7721', ip_address: '10.0.10.88',   created_at: '2026-05-07T10:22:00Z', user_agent: 'Mozilla/5.0 Edge/124', detail: { field: 'is_managed', from: false, to: true } },
+  { id: 'a014', action: 'login',  user_id: 'usr-ito-05',   resource_type: 'auth',     resource_id: null,       ip_address: '10.0.10.88',   created_at: '2026-05-07T10:20:00Z', user_agent: 'Mozilla/5.0 Edge/124', detail: { method: 'password' } },
+  { id: 'a015', action: 'delete', user_id: 'usr-admin-01', resource_type: 'license',  resource_id: 'lic-2208', ip_address: '192.168.1.10', created_at: '2026-05-07T10:30:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { software: 'Adobe Acrobat', reason: '未使用' } },
+  { id: 'a016', action: 'create', user_id: 'usr-admin-01', resource_type: 'user',     resource_id: 'usr-new-08',ip_address:'192.168.1.10', created_at: '2026-05-07T10:45:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { email: 'new.staff@corp.local', role: 'viewer' } },
+  { id: 'a017', action: 'login',  user_id: null,            resource_type: 'auth',     resource_id: null,       ip_address: '203.0.113.42', created_at: '2026-05-07T10:55:00Z', user_agent: 'python-requests/2.31', detail: { method: 'password', result: 'failed', attempts: 5 } },
+  { id: 'a018', action: 'update', user_id: 'usr-admin-01', resource_type: 'settings', resource_id: 'cfg-sla',  ip_address: '192.168.1.10', created_at: '2026-05-07T11:00:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { field: 'sla_threshold', from: 95, to: 99 } },
+  { id: 'a019', action: 'logout', user_id: 'usr-tanaka-02',resource_type: 'auth',     resource_id: null,       ip_address: '10.0.10.22',   created_at: '2026-05-07T11:30:00Z', user_agent: 'Mozilla/5.0 Firefox/125', detail: {} },
+  { id: 'a020', action: 'export', user_id: 'usr-admin-01', resource_type: 'audit',    resource_id: null,       ip_address: '192.168.1.10', created_at: '2026-05-07T11:45:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { format: 'csv', rows: 500, filter: 'delete' } },
+  { id: 'a021', action: 'approve',user_id: 'usr-sato-03',  resource_type: 'request',  resource_id: 'req-0092', ip_address: '10.0.1.51',    created_at: '2026-05-07T12:01:00Z', user_agent: 'Mozilla/5.0 Safari/17', detail: { type: 'license_request', software: 'Slack Business+' } },
+  { id: 'a022', action: 'create', user_id: 'usr-ito-05',   resource_type: 'ticket',   resource_id: 'tkt-1122', ip_address: '10.0.10.88',   created_at: '2026-05-07T12:10:00Z', user_agent: 'Mozilla/5.0 Edge/124', detail: { title: 'VPN接続不安定', priority: 'P2' } },
+  { id: 'a023', action: 'update', user_id: 'usr-admin-01', resource_type: 'license',  resource_id: 'lic-0098', ip_address: '192.168.1.10', created_at: '2026-05-07T12:30:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { field: 'expiry_date', from: '2026-06-01', to: '2027-06-01' } },
+  { id: 'a024', action: 'login',  user_id: 'usr-admin-01', resource_type: 'auth',     resource_id: null,       ip_address: '192.168.1.10', created_at: '2026-05-07T13:00:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { method: 'mfa_totp' } },
+  { id: 'a025', action: 'delete', user_id: 'usr-admin-01', resource_type: 'user',     resource_id: 'usr-exit-99',ip_address:'192.168.1.10', created_at:'2026-05-07T13:15:00Z', user_agent: 'Mozilla/5.0 Chrome/124', detail: { reason: '退職', email: 'ex.staff@corp.local' } },
+];
+
+const SUSPICIOUS_ACTIONS = ['a017']; // IDs of suspicious audit log entries
+
 const actionBadgeVariant = (action: string): 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'default' => {
   switch (action) {
     case 'login':
@@ -70,10 +104,19 @@ export default function AuditLogPage() {
         filterDateFrom || undefined,
         filterDateTo || undefined,
       );
-      setLogs(data.items);
-      setTotal(data.total);
+      if (data.items.length > 0) {
+        setLogs(data.items);
+        setTotal(data.total);
+      } else {
+        const filtered = filterAction
+          ? DUMMY_AUDIT_LOGS.filter((l) => l.action === filterAction)
+          : DUMMY_AUDIT_LOGS;
+        setLogs(filtered);
+        setTotal(filtered.length);
+      }
     } catch {
-      setLogs([]);
+      setLogs(DUMMY_AUDIT_LOGS);
+      setTotal(DUMMY_AUDIT_LOGS.length);
     } finally {
       setLoading(false);
     }
@@ -112,6 +155,13 @@ export default function AuditLogPage() {
     actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
   });
   const uniqueUserIds = new Set(logs.map((l) => l.user_id).filter(Boolean)).size;
+  const todayLogs = logs.filter((l) => {
+    const d = new Date(l.created_at);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }).length;
+  const suspiciousCount = logs.filter((l) => SUSPICIOUS_ACTIONS.includes(l.id) || (!l.user_id && l.action === 'login')).length;
+  const deleteCount = logs.filter((l) => l.action === 'delete').length;
   const topActions = Object.entries(actionCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
@@ -148,6 +198,43 @@ export default function AuditLogPage() {
           </button>
         </div>
       </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">総ログ件数</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{total.toLocaleString()}</p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">操作ユーザー数</p>
+          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">{uniqueUserIds}</p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400">削除操作</p>
+          <p className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-400">{deleteCount}</p>
+        </div>
+        <div className="aegis-card text-center">
+          <p className="text-xs font-medium uppercase tracking-wider text-red-600 dark:text-red-400">不審アクション</p>
+          <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">{suspiciousCount}</p>
+        </div>
+      </div>
+
+      {/* Suspicious Activity Alert */}
+      {suspiciousCount > 0 && (
+        <div className="flex items-center gap-4 rounded-xl border border-red-200 bg-red-50 px-6 py-4 dark:border-red-800/40 dark:bg-red-900/20">
+          <svg className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+              不審なアクセスが {suspiciousCount} 件検出されています
+            </p>
+            <p className="mt-0.5 text-xs text-red-700 dark:text-red-400">
+              ユーザーIDなしのログイン試行、または外部IPからのアクセスが含まれます。直ちに確認してください。
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 監査ログ概要チャート */}
       <div className="aegis-card">

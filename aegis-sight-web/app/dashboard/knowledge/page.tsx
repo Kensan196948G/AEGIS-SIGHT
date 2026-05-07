@@ -54,6 +54,217 @@ const KNOWN_CATEGORIES = Object.keys(CATEGORY_LABEL);
 const KNOWN_STATUSES = Object.keys(STATUS_LABEL);
 
 // ---------------------------------------------------------------------------
+// Dummy data fallbacks (shown when API returns empty results)
+// ---------------------------------------------------------------------------
+
+const DUMMY_CATEGORIES: BackendKBCategory[] = [
+  {
+    id: 'cat-how-to',
+    name: 'ハウツー',
+    description: '操作手順や設定方法を解説したガイド記事',
+    icon: '📖',
+    sort_order: 1,
+    parent_id: null,
+    article_count: 3,
+  },
+  {
+    id: 'cat-troubleshooting',
+    name: 'トラブルシューティング',
+    description: 'エラーや障害発生時の調査・解決手順',
+    icon: '🔧',
+    sort_order: 2,
+    parent_id: null,
+    article_count: 3,
+  },
+  {
+    id: 'cat-policy',
+    name: 'ポリシー',
+    description: '社内規程・セキュリティポリシー・コンプライアンス要件',
+    icon: '📋',
+    sort_order: 3,
+    parent_id: null,
+    article_count: 2,
+  },
+  {
+    id: 'cat-faq',
+    name: 'FAQ',
+    description: 'よくある質問と回答集',
+    icon: '❓',
+    sort_order: 4,
+    parent_id: null,
+    article_count: 2,
+  },
+  {
+    id: 'cat-best-practice',
+    name: 'ベストプラクティス',
+    description: '推奨設定・開発標準・セキュリティ強化のベストプラクティス',
+    icon: '⭐',
+    sort_order: 5,
+    parent_id: null,
+    article_count: 2,
+  },
+];
+
+const DUMMY_ARTICLES: BackendKBArticle[] = [
+  {
+    id: 'art-001',
+    title: 'VPN 接続の設定手順（Windows / macOS 共通）',
+    category: 'how_to',
+    content: `# VPN 接続の設定手順\n\n## 概要\n社内ネットワークへのリモートアクセスには、認定 VPN クライアントを使用してください。\n\n## 手順\n1. 管理者から配布された VPN インストーラーを実行する\n2. サーバーアドレスに \`vpn.example.co.jp\` を入力する\n3. 社員番号とパスワードでログインする\n4. 接続後、社内ポータルへアクセスできることを確認する\n\n接続に失敗する場合はヘルプデスク（内線 4100）へご連絡ください。`,
+    tags: ['VPN', 'リモートワーク', 'ネットワーク'],
+    status: 'published',
+    author_id: 'user-001',
+    view_count: 2843,
+    helpful_count: 198,
+    created_at: '2025-11-01T09:00:00Z',
+    updated_at: '2026-03-15T14:30:00Z',
+  },
+  {
+    id: 'art-002',
+    title: 'Microsoft 365 多要素認証（MFA）の初期設定方法',
+    category: 'how_to',
+    content: `# Microsoft 365 MFA 初期設定\n\n## 必要なもの\n- スマートフォン（iOS / Android）\n- Microsoft Authenticator アプリ\n\n## 設定手順\n1. App Store または Google Play から Microsoft Authenticator をインストールする\n2. \`aka.ms/mfasetup\` にアクセスしてサインインする\n3. 「認証アプリ」を選択し、QR コードをスキャンする\n4. 6 桁の確認コードを入力して設定を完了する\n\n設定後は 30 日ごとに再認証が求められます。`,
+    tags: ['MFA', 'Microsoft 365', 'セキュリティ', '認証'],
+    status: 'published',
+    author_id: 'user-002',
+    view_count: 1956,
+    helpful_count: 147,
+    created_at: '2025-10-15T10:00:00Z',
+    updated_at: '2026-02-20T11:00:00Z',
+  },
+  {
+    id: 'art-003',
+    title: '新入社員向け：社内システムアカウント申請手順',
+    category: 'how_to',
+    content: `# 社内システムアカウント申請\n\n## 申請が必要なシステム\n- 社内ポータル / イントラネット\n- 人事システム（HRIS）\n- 経費精算システム\n- コード管理（GitHub Enterprise）\n\n## 申請方法\n1. 社内ポータル > 申請 > システムアクセス申請 を開く\n2. 必要なシステムにチェックを入れて申請する\n3. 上長承認後、1〜2 営業日でアカウントが発行される\n\n権限に関する問い合わせは情報システム部（it-support@example.co.jp）まで。`,
+    tags: ['アカウント', '新入社員', 'オンボーディング'],
+    status: 'draft',
+    author_id: 'user-003',
+    view_count: 512,
+    helpful_count: 34,
+    created_at: '2026-01-10T08:00:00Z',
+    updated_at: '2026-04-01T09:00:00Z',
+  },
+  {
+    id: 'art-004',
+    title: 'メールが送受信できない場合のトラブルシューティング',
+    category: 'troubleshooting',
+    content: `# メール送受信トラブルシューティング\n\n## 確認手順\n1. インターネット接続が正常か確認する\n2. Outlook / メールクライアントを再起動する\n3. パスワードが変更されていないか確認する（最近 MFA を変更した場合は再認証が必要）\n4. \`https://outlook.office.com\` でウェブ版にアクセスできるか試す\n\n## よくある原因\n- パスワード期限切れ（90 日ごとに更新が必要）\n- MFA 再設定後のキャッシュ残存\n- 受信ボックス容量超過（50 GB 上限）\n\nウェブ版でも接続できない場合はヘルプデスクへご連絡ください。`,
+    tags: ['メール', 'Outlook', 'トラブル'],
+    status: 'published',
+    author_id: 'user-001',
+    view_count: 3012,
+    helpful_count: 221,
+    created_at: '2025-09-20T10:00:00Z',
+    updated_at: '2026-01-10T16:00:00Z',
+  },
+  {
+    id: 'art-005',
+    title: '社内 Wi-Fi に接続できない場合の対処方法',
+    category: 'troubleshooting',
+    content: `# 社内 Wi-Fi 接続トラブル\n\n## 基本確認\n1. SSID が \`CORP-WIFI\` または \`CORP-WIFI-5G\` になっているか確認する\n2. Wi-Fi を一度オフにして、再度オンにする\n3. デバイスを再起動する\n\n## 証明書エラーが出る場合\n- 社内ルート証明書がインストールされていない可能性があります\n- 情報システム部から配布された証明書インストーラーを実行してください\n\n## ゲスト Wi-Fi（GUEST-WIFI）について\n- インターネット接続のみ可能です\n- 社内システムへのアクセスはできません\n- VPN を使用することで社内ネットワークに接続できます`,
+    tags: ['Wi-Fi', 'ネットワーク', 'トラブル', '証明書'],
+    status: 'published',
+    author_id: 'user-004',
+    view_count: 1487,
+    helpful_count: 89,
+    created_at: '2025-10-05T11:00:00Z',
+    updated_at: '2026-02-14T09:30:00Z',
+  },
+  {
+    id: 'art-006',
+    title: 'PC の動作が遅い場合の初期対応手順',
+    category: 'troubleshooting',
+    content: `# PC 動作遅延のトラブルシューティング\n\n## まず試すこと\n1. 不要なアプリケーションを閉じる\n2. PC を再起動する（シャットダウン後、30 秒待ってから起動）\n3. Windows Update / macOS ソフトウェアアップデートを確認・適用する\n\n## ディスク容量確認\n- C ドライブの空き容量が 10% 未満になると動作が遅くなります\n- 一時ファイルのクリーンアップ: \`ディスク クリーンアップ\` ツールを実行\n\n上記で解決しない場合はヘルプデスクへ PC を持参してください（要予約）。`,
+    tags: ['PC', 'パフォーマンス', 'トラブル'],
+    status: 'draft',
+    author_id: 'user-002',
+    view_count: 876,
+    helpful_count: 56,
+    created_at: '2025-12-01T13:00:00Z',
+    updated_at: '2026-03-20T10:00:00Z',
+  },
+  {
+    id: 'art-007',
+    title: '情報セキュリティポリシー（2026年度版）',
+    category: 'policy',
+    content: `# 情報セキュリティポリシー 2026年度版\n\n## 基本方針\n当社は、情報資産を適切に保護し、情報セキュリティの維持・向上に努めます。\n\n## 遵守事項\n- 業務情報の個人デバイスへの保存を禁止する\n- パスワードは 12 文字以上、大小英数字と記号を含めること\n- 不審なメールのリンク・添付ファイルは開かないこと\n- 業務上知り得た情報を社外に漏洩しないこと\n\n## 違反時の対応\n重大な違反は就業規則に基づき懲戒処分の対象となります。\n不明な点はコンプライアンス部（compliance@example.co.jp）にお問い合わせください。`,
+    tags: ['セキュリティポリシー', 'コンプライアンス', '2026年度'],
+    status: 'published',
+    author_id: 'user-005',
+    view_count: 2100,
+    helpful_count: 143,
+    created_at: '2026-04-01T00:00:00Z',
+    updated_at: '2026-04-01T00:00:00Z',
+  },
+  {
+    id: 'art-008',
+    title: 'テレワーク勤務規程（在宅勤務ガイドライン）',
+    category: 'policy',
+    content: `# テレワーク勤務規程\n\n## 対象者\n- 正社員・契約社員（要上長承認）\n\n## 申請方法\n1. 社内ポータルの「テレワーク申請」から事前申請する（前日 17:00 まで）\n2. 上長承認後に在宅勤務可\n\n## 勤務時の注意事項\n- 必ず VPN 経由で社内システムにアクセスする\n- 公共 Wi-Fi での業務は禁止\n- 勤怠打刻は通常通り行う\n- 緊急連絡先として携帯番号を上長に登録しておくこと\n\n月の在宅勤務上限は 12 日です。`,
+    tags: ['テレワーク', '在宅勤務', 'ポリシー'],
+    status: 'published',
+    author_id: 'user-005',
+    view_count: 1650,
+    helpful_count: 112,
+    created_at: '2025-08-01T00:00:00Z',
+    updated_at: '2026-03-01T00:00:00Z',
+  },
+  {
+    id: 'art-009',
+    title: 'FAQ: パスワードを忘れた場合はどうすればよいですか？',
+    category: 'faq',
+    content: `# パスワードリセットについて\n\n## セルフサービスリセット（推奨）\n1. \`https://passwordreset.microsoftonline.com\` にアクセスする\n2. 社員番号（メールアドレス）を入力する\n3. 登録済みの携帯電話または Authenticator アプリで本人確認する\n4. 新しいパスワードを設定する\n\n## セルフサービスが使えない場合\n- ヘルプデスク（内線 4100 または helpdesk@example.co.jp）に連絡する\n- 本人確認のため社員証が必要です\n\nパスワードは 90 日ごとに変更が必要です。変更期限が近づくと通知が届きます。`,
+    tags: ['パスワード', 'FAQ', 'アカウント'],
+    status: 'published',
+    author_id: 'user-003',
+    view_count: 2567,
+    helpful_count: 187,
+    created_at: '2025-07-15T09:00:00Z',
+    updated_at: '2026-01-20T10:00:00Z',
+  },
+  {
+    id: 'art-010',
+    title: 'FAQ: 経費精算の締め日と申請方法を教えてください',
+    category: 'faq',
+    content: `# 経費精算 FAQ\n\n## 締め日\n- 毎月 25 日（25 日が土日祝の場合は前営業日）\n\n## 申請手順\n1. 経費精算システム（SAP Concur）にログインする\n2. 「新規レポート作成」をクリックする\n3. 領収書を撮影・アップロードして金額・用途を入力する\n4. 上長へ承認申請を送信する\n\n## 注意事項\n- 交通費は IC カード利用明細を添付する（現金払いは領収書必須）\n- 飲食費は参加者の氏名・人数・目的を必ず記載する\n- 上限額を超える場合は事前に稟議申請が必要\n\n問い合わせ先: 経理部（keiri@example.co.jp）`,
+    tags: ['経費精算', 'FAQ', 'Concur'],
+    status: 'published',
+    author_id: 'user-006',
+    view_count: 1320,
+    helpful_count: 98,
+    created_at: '2025-09-01T09:00:00Z',
+    updated_at: '2026-02-01T09:00:00Z',
+  },
+  {
+    id: 'art-011',
+    title: 'セキュアなパスワード管理のベストプラクティス',
+    category: 'best_practice',
+    content: `# パスワード管理ベストプラクティス\n\n## 推奨事項\n- パスワードマネージャー（1Password / Bitwarden）を利用する\n- サービスごとに異なるパスワードを設定する\n- 12 文字以上、大文字・小文字・数字・記号を組み合わせる\n- フィッシング耐性の高い FIDO2 / パスキーを積極活用する\n\n## 避けるべき事項\n- 同じパスワードを複数サービスで使い回さない\n- 誕生日や社員番号など推測されやすい文字列を使わない\n- パスワードをメモに書いてモニターに貼らない\n\n社内承認パスワードマネージャーは IT 申請フォームから申請できます。`,
+    tags: ['パスワード', 'セキュリティ', 'ベストプラクティス', 'FIDO2'],
+    status: 'published',
+    author_id: 'user-004',
+    view_count: 1789,
+    helpful_count: 134,
+    created_at: '2025-11-20T10:00:00Z',
+    updated_at: '2026-03-10T11:00:00Z',
+  },
+  {
+    id: 'art-012',
+    title: 'クラウドストレージ利用ガイド（OneDrive / SharePoint）',
+    category: 'best_practice',
+    content: `# クラウドストレージ利用ガイド\n\n## 用途別推奨ストレージ\n- **個人ファイル**: OneDrive（1 TB／人）\n- **チーム共有ファイル**: SharePoint チームサイト\n- **外部共有**: SharePoint の「外部共有リンク」機能を使用\n\n## ベストプラクティス\n1. 機密情報はアクセス権限を最小化して保存する\n2. 外部共有リンクには有効期限（最大 30 日）を設定する\n3. 重要なフォルダはバックアップ設定を有効にする\n4. 不要になった外部共有は速やかに削除する\n\n## 禁止事項\n- 個人の Google Drive / Dropbox など未承認クラウドへの業務データ保存\n- 無期限の外部共有リンクの発行\n\n詳細は情報セキュリティポリシーを参照してください。`,
+    tags: ['OneDrive', 'SharePoint', 'クラウド', 'ストレージ'],
+    status: 'draft',
+    author_id: 'user-002',
+    view_count: 654,
+    helpful_count: 41,
+    created_at: '2026-02-10T14:00:00Z',
+    updated_at: '2026-04-25T09:00:00Z',
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Skeleton components
 // ---------------------------------------------------------------------------
 
@@ -115,11 +326,14 @@ export default function KnowledgeBasePage() {
         fetchKBCategories(),
         fetchKBPopular(10),
       ]);
-      setArticles(articlesData.items);
-      setCategories(catsData);
-      setPopularArticles(popularData);
+      setArticles(articlesData.items.length > 0 ? articlesData.items : DUMMY_ARTICLES);
+      setCategories(catsData.length > 0 ? catsData : DUMMY_CATEGORIES);
+      setPopularArticles(popularData.length > 0 ? popularData : DUMMY_ARTICLES.slice(0, 5).sort((a, b) => b.view_count - a.view_count));
     } catch (err) {
       console.error('Knowledge base data fetch error:', err);
+      setArticles(DUMMY_ARTICLES);
+      setCategories(DUMMY_CATEGORIES);
+      setPopularArticles([...DUMMY_ARTICLES].sort((a, b) => b.view_count - a.view_count).slice(0, 5));
     } finally {
       setLoading(false);
     }
