@@ -96,7 +96,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of navigationGroups) {
-      initial[group.title] = true;
+      initial[group.title] = groupContainsActive(group, pathname);
     }
     return initial;
   });

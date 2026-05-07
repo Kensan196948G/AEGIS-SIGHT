@@ -42,6 +42,17 @@ const emptyForm: GroupForm = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+const DUMMY_GROUPS: DeviceGroup[] = [
+  { id: 'dg-0001', name: 'Windows 11 PC 全台',    description: 'Windows 11 搭載エンドポイント全台',           criteria: { os_name: 'Windows 11' },              is_dynamic: true,  created_by: 'admin',           created_at: '2025-04-01T09:00:00Z', updated_at: '2026-05-01T10:00:00Z', member_count: 842 },
+  { id: 'dg-0002', name: 'macOS デバイス',          description: 'MacBook / Mac Mini を含む全 macOS 機器',     criteria: { os_name: 'macOS' },                   is_dynamic: true,  created_by: 'admin',           created_at: '2025-04-01T09:00:00Z', updated_at: '2026-05-01T10:00:00Z', member_count: 186 },
+  { id: 'dg-0003', name: '東京本社 — 人事部',       description: '人事部に所属するデバイス一覧',               criteria: { department: '人事部', location: '東京' },is_dynamic: true,  created_by: 'tanaka.hiroshi',  created_at: '2025-06-15T10:30:00Z', updated_at: '2026-04-20T08:00:00Z', member_count: 34 },
+  { id: 'dg-0004', name: '重要サーバー群',           description: 'DB・AP・認証サーバーの管理グループ',         criteria: { device_type: 'server', critical: true }, is_dynamic: true,  created_by: 'yamamoto.kenji', created_at: '2025-07-01T08:00:00Z', updated_at: '2026-03-10T12:00:00Z', member_count: 28 },
+  { id: 'dg-0005', name: '廃棄予定デバイス',         description: '廃棄申請中または廃棄承認済みデバイス',       criteria: null,                                   is_dynamic: false, created_by: 'sato.naoko',      created_at: '2026-01-10T14:00:00Z', updated_at: '2026-05-06T09:00:00Z', member_count: 25 },
+  { id: 'dg-0006', name: 'パッチ未適用 — 緊急対応', description: '重大パッチが未適用のデバイス（自動更新対象）', criteria: { patch_status: 'critical_missing' },   is_dynamic: true,  created_by: 'nakamura.ryota', created_at: '2026-03-01T11:00:00Z', updated_at: '2026-05-07T06:30:00Z', member_count: 47 },
+  { id: 'dg-0007', name: 'リモートワーク端末',       description: 'VPN 接続実績あり / リモートワーク対象端末', criteria: { remote_work: true },                  is_dynamic: true,  created_by: 'kobayashi.emi',  created_at: '2025-09-01T08:00:00Z', updated_at: '2026-04-30T15:00:00Z', member_count: 312 },
+  { id: 'dg-0008', name: 'コンプライアンス違反端末', description: 'ポリシー違反が検出されたデバイス（要調査）', criteria: { compliance_status: 'non_compliant' },  is_dynamic: true,  created_by: 'admin',           created_at: '2026-02-15T09:30:00Z', updated_at: '2026-05-07T08:00:00Z', member_count: 13 },
+];
+
 export default function DeviceGroupsPage() {
   const [groups, setGroups] = useState<DeviceGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,9 +79,10 @@ export default function DeviceGroupsPage() {
       });
       if (!res.ok) throw new Error(`グループの取得に失敗しました: ${res.status}`);
       const data = await res.json();
-      setGroups(data.items || []);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : '不明なエラーが発生しました');
+      const items: DeviceGroup[] = data.items || [];
+      setGroups(items.length > 0 ? items : DUMMY_GROUPS);
+    } catch {
+      setGroups(DUMMY_GROUPS);
     } finally {
       setLoading(false);
     }

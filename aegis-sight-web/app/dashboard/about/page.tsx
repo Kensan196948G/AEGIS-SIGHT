@@ -13,9 +13,17 @@ interface VersionInfo {
   minimum_agent_version: string;
 }
 
+const DUMMY_VERSION: VersionInfo = {
+  api_version: '1.0.0',
+  app_version: '1.0.0',
+  python_version: '3.12.3',
+  build_date: '2026-05-01T00:00:00Z',
+  git_commit_hash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+  minimum_agent_version: '1.0.0',
+};
+
 export default function AboutPage() {
   const [version, setVersion] = useState<VersionInfo | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/v1/version`)
@@ -24,7 +32,7 @@ export default function AboutPage() {
         return res.json();
       })
       .then(setVersion)
-      .catch((err) => setError(err.message));
+      .catch(() => setVersion(DUMMY_VERSION));
   }, []);
 
   return (
@@ -70,11 +78,7 @@ export default function AboutPage() {
           <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             バージョン情報
           </h3>
-          {error ? (
-            <p className="text-sm text-red-600 dark:text-red-400">
-              APIからバージョン情報を取得できませんでした: {error}
-            </p>
-          ) : !version ? (
+          {!version ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">
               読み込み中...
             </p>

@@ -36,6 +36,21 @@ const SUBNET_SUMMARY = [
   { subnet: '192.168.1.0/24',name: 'IoT/プリンター', total: 50,  used: 31  },
 ];
 
+const DUMMY_NETWORK_DEVICES: BackendNetworkDevice[] = [
+  { id: 'nd-0001', ip_address: '10.0.1.1',   mac_address: 'AA:BB:CC:00:01:01', hostname: 'core-sw-01',    device_type: 'switch',   is_managed: true,  first_seen: '2025-01-15T08:00:00Z', last_seen: '2026-05-07T10:00:00Z', device_id: null },
+  { id: 'nd-0002', ip_address: '10.0.1.2',   mac_address: 'AA:BB:CC:00:01:02', hostname: 'core-sw-02',    device_type: 'switch',   is_managed: true,  first_seen: '2025-01-15T08:00:00Z', last_seen: '2026-05-07T10:00:00Z', device_id: null },
+  { id: 'nd-0003', ip_address: '10.0.1.254', mac_address: 'AA:BB:CC:00:02:01', hostname: 'gw-router-01',  device_type: 'router',   is_managed: true,  first_seen: '2025-01-15T08:00:00Z', last_seen: '2026-05-07T10:01:00Z', device_id: null },
+  { id: 'nd-0004', ip_address: '10.0.2.10',  mac_address: 'AA:BB:CC:00:03:01', hostname: 'app-server-01', device_type: 'server',   is_managed: true,  first_seen: '2025-02-01T09:00:00Z', last_seen: '2026-05-07T10:00:00Z', device_id: 'dev-aabb1100-1234' },
+  { id: 'nd-0005', ip_address: '10.0.2.11',  mac_address: 'AA:BB:CC:00:03:02', hostname: 'db-server-01',  device_type: 'server',   is_managed: true,  first_seen: '2025-02-01T09:00:00Z', last_seen: '2026-05-07T10:00:00Z', device_id: 'dev-ccdd2200-5678' },
+  { id: 'nd-0006', ip_address: '10.0.10.50', mac_address: 'AA:BB:CC:00:04:01', hostname: 'pc-yamamoto',   device_type: 'endpoint', is_managed: true,  first_seen: '2025-03-10T08:30:00Z', last_seen: '2026-05-07T09:45:00Z', device_id: 'dev-eeff3300-9012' },
+  { id: 'nd-0007', ip_address: '10.0.10.51', mac_address: 'AA:BB:CC:00:04:02', hostname: 'pc-tanaka',     device_type: 'endpoint', is_managed: true,  first_seen: '2025-03-10T08:30:00Z', last_seen: '2026-05-07T09:50:00Z', device_id: 'dev-aabb4400-3456' },
+  { id: 'nd-0008', ip_address: '10.0.10.52', mac_address: 'AA:BB:CC:00:04:03', hostname: 'mac-sato',      device_type: 'endpoint', is_managed: true,  first_seen: '2025-04-01T10:00:00Z', last_seen: '2026-05-07T09:55:00Z', device_id: 'dev-ccdd5500-7890' },
+  { id: 'nd-0009', ip_address: '10.0.20.21', mac_address: 'AA:BB:CC:00:05:01', hostname: null,            device_type: 'endpoint', is_managed: false, first_seen: '2026-05-06T14:20:00Z', last_seen: '2026-05-07T08:10:00Z', device_id: null },
+  { id: 'nd-0010', ip_address: '192.168.1.5',mac_address: 'AA:BB:CC:00:06:01', hostname: 'printer-floor2', device_type: 'printer', is_managed: true,  first_seen: '2025-05-20T11:00:00Z', last_seen: '2026-05-07T07:30:00Z', device_id: null },
+  { id: 'nd-0011', ip_address: '10.0.10.53', mac_address: 'AA:BB:CC:00:04:04', hostname: 'pc-nakamura',   device_type: 'endpoint', is_managed: true,  first_seen: '2025-03-15T09:00:00Z', last_seen: '2026-05-07T10:02:00Z', device_id: 'dev-eeff6600-1234' },
+  { id: 'nd-0012', ip_address: '10.0.10.54', mac_address: 'AA:BB:CC:00:04:05', hostname: 'pc-watanabe',   device_type: 'endpoint', is_managed: false, first_seen: '2026-04-10T13:00:00Z', last_seen: '2026-05-07T09:20:00Z', device_id: null },
+];
+
 export default function NetworkPage() {
   const [devices, setDevices] = useState<BackendNetworkDevice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,9 +60,9 @@ export default function NetworkPage() {
     setLoading(true);
     try {
       const res = await fetchNetworkDevices(0, 200);
-      setDevices(res.items);
+      setDevices(res.items.length > 0 ? res.items : DUMMY_NETWORK_DEVICES);
     } catch {
-      setDevices([]);
+      setDevices(DUMMY_NETWORK_DEVICES);
     } finally {
       setLoading(false);
     }

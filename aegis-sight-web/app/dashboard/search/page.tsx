@@ -290,28 +290,97 @@ function SearchContent() {
         </div>
       )}
 
-      {/* Empty state when no search performed */}
+      {/* Empty state: quick-access category cards */}
       {!loading && !results && !error && (
-        <div className="py-12 text-center">
-          <svg
-            className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-            />
-          </svg>
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            検索キーワードを入力してください
+        <div>
+          <p className="mb-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            キーワードを入力するか、カテゴリを選択して検索してください
           </p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            デバイス名、IPアドレス、ソフトウェア名、調達番号、アラートタイトルで検索できます
-          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[
+              {
+                type: 'device',
+                label: 'デバイス',
+                description: 'デバイス名・IPアドレス・MACアドレスで検索',
+                examples: ['Windows 11', '10.0.1.1', 'core-sw-01'],
+                iconPath: 'M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0H3',
+                accent: 'border-blue-200 dark:border-blue-800',
+                iconColor: 'text-blue-500 dark:text-blue-400',
+                chipColor: 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40',
+              },
+              {
+                type: 'license',
+                label: 'ライセンス',
+                description: 'ソフトウェア名・ベンダー・ライセンスキーで検索',
+                examples: ['Microsoft 365', 'Adobe', 'Zoom'],
+                iconPath: 'M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 14.25 5.25h1.5Z',
+                accent: 'border-green-200 dark:border-green-800',
+                iconColor: 'text-green-500 dark:text-green-400',
+                chipColor: 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/40',
+              },
+              {
+                type: 'procurement',
+                label: '調達',
+                description: '発注番号・ベンダー・品目名で検索',
+                examples: ['PO-2026', 'Dell', 'ThinkPad'],
+                iconPath: 'M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z',
+                accent: 'border-purple-200 dark:border-purple-800',
+                iconColor: 'text-purple-500 dark:text-purple-400',
+                chipColor: 'bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/40',
+              },
+              {
+                type: 'alert',
+                label: 'アラート',
+                description: 'アラートタイトル・重要度・デバイスで検索',
+                examples: ['CPU使用率', 'ディスク容量', 'オフライン'],
+                iconPath: 'M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0',
+                accent: 'border-red-200 dark:border-red-800',
+                iconColor: 'text-red-500 dark:text-red-400',
+                chipColor: 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40',
+              },
+            ].map(({ type, label, description, examples, iconPath, accent, iconColor, chipColor }) => (
+              <div
+                key={type}
+                className={`rounded-xl border bg-white p-5 dark:bg-aegis-card ${accent}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 ${iconColor}`}>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={iconPath} />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{label}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {examples.map((kw) => (
+                    <button
+                      key={kw}
+                      onClick={() => {
+                        setQuery(kw);
+                        setActiveType(type);
+                        router.push(`/dashboard/search?q=${encodeURIComponent(kw)}&type=${type}`);
+                      }}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${chipColor}`}
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+                <Link
+                  href={TYPE_LINKS[type]}
+                  className="mt-4 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                >
+                  一覧を見る
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

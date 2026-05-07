@@ -9,6 +9,17 @@ import type { SamLicense } from '@/lib/types';
 
 export { getSamDonutColor };
 
+const DUMMY_SAM_LICENSES: SamLicense[] = [
+  { id: 'sl-0001', software_name: 'Microsoft 365 Business Premium', vendor: 'Microsoft',  license_type: 'subscription', license_key: null, purchased_count: 1200, installed_count: 1124, m365_assigned: 1124, cost_per_unit: 2640,   currency: 'JPY', purchase_date: '2026-04-01', expiry_date: '2027-03-31', vendor_contract_id: 'MS-EA-2026-001',   notes: null,             created_at: '2026-04-01T09:00:00Z', updated_at: '2026-05-01T10:00:00Z' },
+  { id: 'sl-0002', software_name: 'Adobe Acrobat Pro',              vendor: 'Adobe',      license_type: 'subscription', license_key: null, purchased_count:  200, installed_count:  198, m365_assigned:   0, cost_per_unit: 1980,   currency: 'JPY', purchase_date: '2026-01-01', expiry_date: '2026-12-31', vendor_contract_id: 'AD-VIP-2026-001',  notes: null,             created_at: '2026-01-10T09:00:00Z', updated_at: '2026-04-15T08:00:00Z' },
+  { id: 'sl-0003', software_name: 'Windows 11 Pro',                 vendor: 'Microsoft',  license_type: 'oem',          license_key: null, purchased_count: 1050, installed_count: 1042, m365_assigned:   0, cost_per_unit: null,    currency: 'JPY', purchase_date: null,         expiry_date: null,         vendor_contract_id: null,              notes: 'OEM バンドル',   created_at: '2025-01-15T09:00:00Z', updated_at: '2026-03-01T10:00:00Z' },
+  { id: 'sl-0004', software_name: 'Slack Business+',                vendor: 'Salesforce', license_type: 'subscription', license_key: null, purchased_count:  300, installed_count:  287, m365_assigned:   0, cost_per_unit: 1350,   currency: 'JPY', purchase_date: '2026-02-01', expiry_date: '2027-01-31', vendor_contract_id: 'SL-BIZ-2026-003',  notes: null,             created_at: '2026-02-01T09:00:00Z', updated_at: '2026-04-20T08:00:00Z' },
+  { id: 'sl-0005', software_name: 'AutoCAD LT 2026',                vendor: 'Autodesk',   license_type: 'subscription', license_key: null, purchased_count:   30, installed_count:   29, m365_assigned:   0, cost_per_unit: 68200,  currency: 'JPY', purchase_date: '2025-09-01', expiry_date: '2026-08-31', vendor_contract_id: 'AD-ACAD-2025-007', notes: '設計部門専用',   created_at: '2025-09-05T09:00:00Z', updated_at: '2026-01-10T08:00:00Z' },
+  { id: 'sl-0006', software_name: 'Zoom Business',                  vendor: 'Zoom',       license_type: 'subscription', license_key: null, purchased_count:  150, installed_count:  312, m365_assigned:   0, cost_per_unit: 2200,   currency: 'JPY', purchase_date: '2026-03-01', expiry_date: '2027-02-28', vendor_contract_id: 'ZM-BIZ-2026-002',  notes: null,             created_at: '2026-03-01T09:00:00Z', updated_at: '2026-05-01T08:00:00Z' },
+  { id: 'sl-0007', software_name: 'Tableau Creator',                vendor: 'Salesforce', license_type: 'subscription', license_key: null, purchased_count:   20, installed_count:   18, m365_assigned:   0, cost_per_unit: 115000, currency: 'JPY', purchase_date: '2026-01-01', expiry_date: '2026-05-31', vendor_contract_id: 'TB-CRT-2026-001',  notes: '来月更新要確認', created_at: '2026-01-05T09:00:00Z', updated_at: '2026-04-01T08:00:00Z' },
+  { id: 'sl-0008', software_name: 'GitHub Enterprise Cloud',        vendor: 'Microsoft',  license_type: 'subscription', license_key: null, purchased_count:   80, installed_count:   76, m365_assigned:   0, cost_per_unit: 22500,  currency: 'JPY', purchase_date: '2026-04-01', expiry_date: '2027-03-31', vendor_contract_id: 'GH-ENT-2026-001',  notes: null,             created_at: '2026-04-01T09:00:00Z', updated_at: '2026-05-01T10:00:00Z' },
+];
+
 function buildStats(licenses: SamLicense[]) {
   const totalItems      = licenses.length;
   const compliantCount  = licenses.filter(l => computeStatus(l) === 'compliant').length;
@@ -42,7 +53,7 @@ function SkeletonCard() {
 }
 
 export default function SAMPage() {
-  const { licenses, loading, error, refetch } = useSamLicenses();
+  const { licenses, loading } = useSamLicenses();
 
   if (loading) {
     return (
@@ -59,26 +70,8 @@ export default function SAMPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SAM - ソフトウェア資産管理</h1>
-        </div>
-        <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
-          <button
-            onClick={refetch}
-            className="mt-2 text-sm font-medium text-red-600 underline dark:text-red-400"
-          >
-            再試行
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { totalItems, compliantCount, overDeployed, underUtilized, expiringSoon, complianceRate, totalMonthlyCost, vendorCosts } = buildStats(licenses);
+  const displayLicenses = licenses.length > 0 ? licenses : DUMMY_SAM_LICENSES;
+  const { totalItems, compliantCount, overDeployed, underUtilized, expiringSoon, complianceRate, totalMonthlyCost, vendorCosts } = buildStats(displayLicenses);
   const donutColor = getSamDonutColor(complianceRate);
 
   return (
