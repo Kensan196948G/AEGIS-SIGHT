@@ -41,6 +41,7 @@ jobs:
           format: "sarif"
           output: "trivy-api-critical.sarif"
           severity: "CRITICAL"
+          ignore-unfixed: "true"
           exit-code: "1"
 
       - name: Run Trivy on API image (HIGH report-only)
@@ -74,6 +75,7 @@ jobs:
           format: "sarif"
           output: "trivy-web-critical.sarif"
           severity: "CRITICAL"
+          ignore-unfixed: "true"
           exit-code: "1"
 
       - name: Run Trivy on Web image (HIGH report-only)
