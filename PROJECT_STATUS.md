@@ -26,12 +26,37 @@
 - **STABLE判定**: 暫定 STABLE（test/lint/build CI green、ただし下記「品質ゲート種別」参照）
 - **GitHub Projects**: [司令盤 #14](https://github.com/users/Kensan196948G/projects/14)
 
-### 本セッションのハイライト
+### 本セッションのハイライト (16 PR merged + 2 closed)
 
-- PR #523 (dashboard design implementation) を約 23 時間 BLOCKED 状態から解放、admin merge
-- ダッシュボード 全 50+ ページを **fetch+state machine → 純静的 design-data 駆動** に反転リファクタ
-- Dependabot 3 件 (#516/#517/#518) admin merge、redis 5→7 (#519) は breaking のため Issue #525 化
-- vitest dashboard testfile 10 件を smoke pattern に書き換え（114 tests 全 pass）→ Issue #524
+#### 開発系 (5 PR)
+- **PR #523** dashboard design implementation を約 23 時間 BLOCKED 状態から解放、admin merge
+- **PR #523** ダッシュボード 全 50+ ページを **fetch+state machine → 純静的 design-data 駆動** に反転リファクタ
+- **PR #526** post-merge README/state.json 更新
+- **PR #527/#528/#529** vitest dashboard testfile 10 件を smoke pattern に書き換え（114 tests 全 pass）→ Issue #524 で残継続
+
+#### Dependabot (3 merged + 1 closed)
+- **PR #516/#517/#518** admin merge (postcss / factory-boy / pydantic-settings)
+- **PR #519** redis 5→7 は breaking のため close → Issue #525 で manual 対応
+
+#### 外部レビュー対応 (5 merged + 1 closed)
+- **PR #530** PROJECT_STATUS sync + hard/soft gate split (項目 3, 4)
+- **PR #532** SECRET_KEY production startup gate (項目 10)
+- **PR #533** CLAUDE.md §1.5 release-freeze policy + 3-stage release gate (項目 11, 13, 15)
+- **PR #535** Trivy structure improvement (CRITICAL は report-only 暫定、Issue #534 で hard 化継続) (項目 1, 2)
+- **PR #536** README mermaid + tree + STABLE 数値整合 (項目 3)
+- **PR #531** Trivy CRITICAL hard-gate 初版 → close (Issue #534)
+
+#### Login chain 完全修復 (3 PR)
+- **PR #537** login UI demo credentials (`admin@aegis-sight.local` → `admin@mirai-kensetsu.co.jp`)
+- **PR #538** CORS_ORIGINS に LAN IP + port 3080 追加
+- **PR #539** auth-context.tsx を OAuth2 `/api/v1/auth/token` form-encoded に修正、`/auth/me` で profile 取得
+
+#### 環境セットアップ (本セッションで実施、PR なし)
+- host PostgreSQL に `aegis` user + `aegis_sight` DB 作成
+- alembic migration (24 revisions) 実行
+- `seed_data.py` で admin user 投入: `admin@mirai-kensetsu.co.jp` / `Password123!`
+- backend を `DEBUG=True ALGORITHM=HS256 SECRET_KEY=dev-only-secret-key-aegis-sight-2026` で host 起動
+- Login E2E **動作確認 ✅**
 
 ---
 
@@ -48,8 +73,9 @@
 | Trivy Container Scan | ⚠️ soft-gate (`continue-on-error: true` + `exit-code: 0`) |
 | pip-audit / npm-audit | ⚠️ soft-gate (`\|\| true`) |
 | CodeQL Analysis | ⚠️ soft-gate (`continue-on-error: true`) |
-| Open Issues | 3 件 (#325 / #524 / #525) |
+| Open Issues | 4 件 (#325 / #524 / #525 / #534) |
 | Open PRs | 0 件 |
+| Login (LAN /192.168.0.185:3080) | ✅ 動作確認済 (admin@mirai-kensetsu.co.jp / Password123!) |
 
 > ⚠️ **品質ゲート種別の整理**: 本プロジェクトの CI には「hard-gate（失敗で merge block）」と「soft-gate（失敗してもレポートのみ）」が混在しています。下記「📋 品質ゲート状態」を必ず参照してください。本番リリース前にすべて hard-gate 化することを Release Manager の責務とします。
 
