@@ -27,9 +27,9 @@
     "phase": "Verify",
     "auto_stop_threshold": 5,
     "graceful_shutdown": true,
-    "current_session_start_at": "2026-05-01T08:30:01+09:00",
+    "current_session_start_at": "2026-05-08T08:30:01+09:00",
     "last_trigger": "cron",
-    "last_cron_session_id": "20260501-083001-AEGIS-SIGHT"
+    "last_cron_session_id": "20260508-083001-AEGIS-SIGHT"
   },
   "token": {
     "total_budget": 100,
@@ -104,22 +104,24 @@
       501,
       502,
       503,
-      507
+      507,
+      508,
+      509
     ],
     "open_prs": [
-      508
+      510
     ],
     "closed_issues": [
       504,
       505,
       506
     ],
-    "last_updated": "2026-05-01T12:10:00+09:00",
+    "last_updated": "2026-05-01T13:05:00+09:00",
     "days_left": 147,
-    "notes": "vitest 2720件(+6) / functions 99.82% / branches 91.30%(+0.42pp)。PR#507 MERGED(security: proxy.ts+CSP+Secure cookie+mobile nav)。PR#508 OPEN(coverage improvements: setTimeout/ResizeObserver/SAM aliases error handling)。追加テスト: scheduler setTimeout(2), dept abort(1), chart ResizeObserver(2), SAM aliases error(6)。Issues #504/#505/#506 CLOSED。Open Issues: #325(ESLint10保留)のみ。残2未カバーFn: getServerSnapshot(SSR専用)+RootLayout(Server Component)=実質上限99.82%。",
-    "frontend_test_count": 2720,
+    "notes": "vitest 2726件(+6 from PR#509) / functions 99.82% / branches 91.30%→~91.8%(予測)。PR#507-509 MERGED。PR#510 OPEN(branch coverage: scheduler+device-groups, +19 branches)。Issues #504/#505/#506 CLOSED。Open Issues: #325(ESLint10保留)のみ。",
+    "frontend_test_count": 2726,
     "frontend_coverage_functions": "99.82%",
-    "frontend_coverage_branches": "91.30%"
+    "frontend_coverage_branches": "~91.8%(予測)"
   },
   "kpi_status": {
     "frontend_coverage_statements": 98.37,

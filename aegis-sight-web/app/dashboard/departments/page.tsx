@@ -1,479 +1,146 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { DonutChart, BarChart } from '@/components/ui/chart';
+import { useState } from 'react';
+import { Badge, SearchInput, Modal, DonutChart, ProgressBar } from '@/components/ui/design-components';
 
-interface Department {
-  id: string;
-  name: string;
-  code: string;
-  parent_id: string | null;
-  manager_name: string | null;
-  budget_yearly: string | null;
-  description: string | null;
-  children: Department[];
-  device_count: number;
-}
+const DEPARTMENTS = [
+  { id: 'dp-001', name: 'エンジニアリング部',   head: '山本 健司', members: 42, devices: 89,  licenses: 96,  mfaRate: 100, status: 'healthy', budget: 18000000 },
+  { id: 'dp-002', name: 'セキュリティ部',       head: '田中 浩',   members: 12, devices: 28,  licenses: 34,  mfaRate: 100, status: 'healthy', budget:  6000000 },
+  { id: 'dp-003', name: 'コンプライアンス部',   head: '佐藤 由紀', members:  8, devices: 18,  licenses: 22,  mfaRate:  88, status: 'warning', budget:  4000000 },
+  { id: 'dp-004', name: 'インフラ部',           head: '伊藤 勝',   members: 15, devices: 52,  licenses: 38,  mfaRate: 100, status: 'healthy', budget:  8000000 },
+  { id: 'dp-005', name: '営業部',               head: '鈴木 明',   members: 65, devices: 70,  licenses: 140, mfaRate:  72, status: 'warning', budget: 10000000 },
+  { id: 'dp-006', name: '総務部',               head: '渡辺 さくら', members: 20, devices: 22, licenses: 48,  mfaRate:  90, status: 'healthy', budget:  5000000 },
+  { id: 'dp-007', name: '人事部',               head: '高橋 誠一', members: 14, devices: 16,  licenses: 32,  mfaRate:  86, status: 'warning', budget:  4000000 },
+  { id: 'dp-008', name: '建設現場管理部',       head: '中村 大樹', members: 30, devices: 35,  licenses: 62,  mfaRate:  80, status: 'warning', budget:  7000000 },
+  { id: 'dp-009', name: '内部監査部',           head: '加藤 光',   members:  6, devices:  8,  licenses: 14,  mfaRate: 100, status: 'healthy', budget:  2000000 },
+];
 
-interface DepartmentForm {
-  name: string;
-  code: string;
-  parent_id: string;
-  manager_name: string;
-  budget_yearly: string;
-  description: string;
-}
-
-const emptyForm: DepartmentForm = {
-  name: '',
-  code: '',
-  parent_id: '',
-  manager_name: '',
-  budget_yearly: '',
-  description: '',
+type DeptStatus = 'healthy' | 'warning' | 'critical';
+const STATUS_CFG: Record<DeptStatus, { l: string; v: 'success' | 'warning' | 'danger' }> = {
+  healthy:  { l: '良好', v: 'success' },
+  warning:  { l: '要注意', v: 'warning' },
+  critical: { l: '危険',   v: 'danger'  },
 };
 
-function TreeNode({ dept, depth = 0, onEdit }: { dept: Department; depth?: number; onEdit: (d: Department) => void }) {
-  const [expanded, setExpanded] = useState(true);
-  const hasChildren = dept.children && dept.children.length > 0;
+type Dept = typeof DEPARTMENTS[number];
 
-  return (
-    <div>
-      <div
-        className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface"
-        style={{ paddingLeft: `${depth * 24 + 12}px` }}
-      >
-        {/* Expand/collapse toggle */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400"
-          disabled={!hasChildren}
-        >
-          {hasChildren ? (
-            <svg
-              className={`h-4 w-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-            </svg>
-          ) : (
-            <span className="h-4 w-4" />
-          )}
-        </button>
-
-        {/* Department icon */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
-          <svg className="h-4 w-4 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
-          </svg>
-        </div>
-
-        {/* Department info */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">{dept.name}</span>
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-              {dept.code}
-            </span>
-          </div>
-          {dept.manager_name && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {dept.manager_name}
-            </p>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="flex items-center gap-4 text-sm">
-          <div className="text-center">
-            <p className="font-semibold text-gray-900 dark:text-white">{dept.device_count}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Devices</p>
-          </div>
-          {dept.budget_yearly && (
-            <div className="text-center">
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {Number(dept.budget_yearly).toLocaleString('ja-JP')}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Budget</p>
-            </div>
-          )}
-        </div>
-
-        {/* Edit button */}
-        <button
-          onClick={() => onEdit(dept)}
-          className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Children */}
-      {expanded && hasChildren && (
-        <div>
-          {dept.children.map((child) => (
-            <TreeNode key={child.id} dept={child} depth={depth + 1} onEdit={onEdit} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const totalMembers  = DEPARTMENTS.reduce((s, d) => s + d.members, 0);
+const totalDevices  = DEPARTMENTS.reduce((s, d) => s + d.devices, 0);
+const avgMfa        = Math.round(DEPARTMENTS.reduce((s, d) => s + d.mfaRate, 0) / DEPARTMENTS.length);
+const warningDepts  = DEPARTMENTS.filter(d => d.status !== 'healthy').length;
 
 export default function DepartmentsPage() {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingDept, setEditingDept] = useState<Department | null>(null);
-  const [form, setForm] = useState<DepartmentForm>(emptyForm);
-  const [flatDepartments, setFlatDepartments] = useState<Department[]>([]);
+  const [search, setSearch] = useState('');
+  const [detail, setDetail] = useState<Dept | null>(null);
 
-  const fetchDepartments = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('aegis_token');
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiBase}/api/v1/departments?tree=true`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
-      }
-      // Also fetch flat list for parent dropdown
-      const controller2 = new AbortController();
-      const timeout2 = setTimeout(() => controller2.abort(), 5000);
-      const flatRes = await fetch(`${apiBase}/api/v1/departments?limit=200`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller2.signal,
-      });
-      clearTimeout(timeout2);
-      if (flatRes.ok) {
-        const flatData = await flatRes.json();
-        setFlatDepartments(flatData.items || []);
-      }
-    } catch {
-      // API unavailable — use demo data
-      setDepartments([
-        { id: '1', name: 'IT管理部', code: 'IT', parent_id: null, manager_name: '山田 太郎', budget_yearly: '50000000', description: 'IT統括', children: [], device_count: 45 },
-        { id: '2', name: '営業部', code: 'SALES', parent_id: null, manager_name: '鈴木 花子', budget_yearly: '30000000', description: '営業統括', children: [], device_count: 120 },
-        { id: '3', name: '開発部', code: 'DEV', parent_id: null, manager_name: '佐藤 一郎', budget_yearly: '80000000', description: 'ソフトウェア開発', children: [], device_count: 85 },
-        { id: '4', name: '経理部', code: 'FIN', parent_id: null, manager_name: '高橋 美咲', budget_yearly: '20000000', description: '財務・経理', children: [], device_count: 30 },
-        { id: '5', name: '総務部', code: 'GA', parent_id: null, manager_name: '中村 健太', budget_yearly: '15000000', description: '総務・庶務', children: [], device_count: 20 },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
-
-  const handleOpenCreate = () => {
-    setEditingDept(null);
-    setForm(emptyForm);
-    setShowModal(true);
-  };
-
-  const handleOpenEdit = (dept: Department) => {
-    setEditingDept(dept);
-    setForm({
-      name: dept.name,
-      code: dept.code,
-      parent_id: dept.parent_id || '',
-      manager_name: dept.manager_name || '',
-      budget_yearly: dept.budget_yearly || '',
-      description: dept.description || '',
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem('aegis_token');
-    const payload: Record<string, unknown> = {
-      name: form.name,
-      code: form.code,
-      manager_name: form.manager_name || null,
-      budget_yearly: form.budget_yearly || null,
-      description: form.description || null,
-    };
-    if (form.parent_id) {
-      payload.parent_id = form.parent_id;
-    }
-
-    const url = editingDept
-      ? `/api/v1/departments/${editingDept.id}`
-      : '/api/v1/departments';
-    const method = editingDept ? 'PATCH' : 'POST';
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        setShowModal(false);
-        fetchDepartments();
-      }
-    } catch {
-      // Error handled silently
-    }
-  };
-
-  // Count total departments recursively
-  const countAll = (depts: Department[]): number => {
-    return depts.reduce((sum, d) => sum + 1 + countAll(d.children || []), 0);
-  };
-
-  const totalCount = countAll(departments);
+  const filtered = DEPARTMENTS.filter(d =>
+    !search ||
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.head.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      {/* 部門概要チャート */}
-      {!loading && departments.length > 0 && (() => {
-        const totalDevices = departments.reduce((s, d) => s + (d.device_count || 0), 0);
-        const withDevices = departments.filter(d => (d.device_count || 0) > 0).length;
-        const coverageRate = departments.length > 0 ? Math.round((withDevices / departments.length) * 100) : 0;
-        const coverageColor = coverageRate >= 80 ? '#10b981' : coverageRate >= 50 ? '#f59e0b' : '#ef4444';
-        const deptBarData = departments
-          .filter(d => (d.device_count || 0) > 0)
-          .sort((a, b) => (b.device_count || 0) - (a.device_count || 0))
-          .slice(0, 6)
-          .map((d, i) => ({
-            label: d.name.substring(0, 6),
-            value: d.device_count || 0,
-            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-teal-500'][i] || 'bg-gray-400',
-          }));
-        return (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-aegis-border dark:bg-aegis-dark">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">部門概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">デバイス配置率</p>
-                <DonutChart value={coverageRate} max={100} size={140} strokeWidth={14} color={coverageColor} label={`${totalDevices}台`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {departments.length} 部門中 {withDevices} 部門にデバイス配置
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">部門別デバイス数 Top</p>
-                <BarChart data={deptBarData} maxValue={Math.max(...deptBarData.map(d => d.value), 1)} height={160} showValues />
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Department Management
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Organizational hierarchy, budgets, and device allocation
-          </p>
+          <h1 className="page-title">部門管理</h1>
+          <p className="page-subtitle">組織部門ごとのデバイス・ライセンス・MFA 適用状況</p>
         </div>
-        <button onClick={handleOpenCreate} className="aegis-btn-primary">
-          <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add Department
-        </button>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="aegis-card">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Departments</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{totalCount}</p>
-        </div>
-        <div className="aegis-card">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Top-Level Units</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-            {departments.length}
-          </p>
-        </div>
-        <div className="aegis-card">
-          <p className="text-sm text-gray-500 dark:text-gray-400">With Sub-Departments</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-            {departments.filter((d) => d.children && d.children.length > 0).length}
-          </p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
         </div>
       </div>
 
-      {/* Department Tree */}
-      <div className="aegis-card p-0">
-        <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-            Organization Tree
-          </h2>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">部門数</p><p className="stat-value">{DEPARTMENTS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">総ユーザー数</p><p className="stat-value">{totalMembers}</p></div>
+        <div className="card card-center"><p className="stat-label">総デバイス数</p><p className="stat-value">{totalDevices}</p></div>
+        <div className="card card-center">
+          <p className="stat-label">平均MFA適用率</p>
+          <p className="stat-value" style={{ color: avgMfa >= 90 ? '#10b981' : '#f59e0b' }}>{avgMfa}%</p>
         </div>
-        <div className="divide-y divide-gray-100 dark:divide-aegis-border">
-          {loading ? (
-            [...Array(5)].map((_, i) => (
-              <div key={i} className="flex animate-pulse items-center gap-3 px-6 py-4">
-                <div className="h-8 w-8 rounded-lg bg-gray-200 dark:bg-gray-700" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700" />
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">MFA 適用状況サマリー</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">組織全体 MFA 率</p>
+            <DonutChart value={avgMfa} max={100} size={130} strokeWidth={13} color={avgMfa >= 90 ? '#10b981' : '#f59e0b'} />
+            <p className="chart-sublabel">全部門平均</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p className="chart-label" style={{ marginBottom: 8 }}>部門別 MFA 適用率</p>
+            {DEPARTMENTS.map(d => (
+              <div key={d.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <span className="text-sub" style={{ fontSize: 12 }}>{d.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: d.mfaRate >= 90 ? '#10b981' : '#f59e0b' }}>{d.mfaRate}%</span>
                 </div>
+                <ProgressBar value={d.mfaRate} max={100} color={d.mfaRate >= 90 ? '#10b981' : '#f59e0b'} size="sm" />
               </div>
-            ))
-          ) : departments.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
-              </svg>
-              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                No departments yet. Click &quot;Add Department&quot; to get started.
-              </p>
-            </div>
-          ) : (
-            departments.map((dept) => (
-              <TreeNode key={dept.id} dept={dept} onEdit={handleOpenEdit} />
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-aegis-darker">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingDept ? 'Edit Department' : 'New Department'}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Department Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="aegis-input mt-1"
-                  placeholder="e.g. Engineering"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Code *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.code}
-                  onChange={(e) => setForm({ ...form, code: e.target.value })}
-                  className="aegis-input mt-1"
-                  placeholder="e.g. ENG"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Parent Department
-                </label>
-                <select
-                  value={form.parent_id}
-                  onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
-                  className="aegis-input mt-1"
-                >
-                  <option value="">None (top-level)</option>
-                  {flatDepartments
-                    .filter((d) => d.id !== editingDept?.id)
-                    .map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name} ({d.code})
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Manager Name
-                </label>
-                <input
-                  type="text"
-                  value={form.manager_name}
-                  onChange={(e) => setForm({ ...form, manager_name: e.target.value })}
-                  className="aegis-input mt-1"
-                  placeholder="e.g. Tanaka Taro"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Yearly Budget
-                </label>
-                <input
-                  type="number"
-                  value={form.budget_yearly}
-                  onChange={(e) => setForm({ ...form, budget_yearly: e.target.value })}
-                  className="aegis-input mt-1"
-                  placeholder="e.g. 50000000"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Description
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="aegis-input mt-1"
-                  rows={3}
-                  placeholder="Optional description..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="aegis-btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="aegis-btn-primary">
-                  {editingDept ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
+            ))}
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="card filter-row">
+        <SearchInput placeholder="部門名・部門長で検索..." value={search} onChange={v => setSearch(v)} style={{ flex: 1, minWidth: 200 }} />
+      </div>
+
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['部門名', '部門長', 'メンバー数', 'デバイス数', 'ライセンス数', 'MFA適用率', '状態'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.length > 0 ? filtered.map(d => {
+                const st = STATUS_CFG[d.status as DeptStatus] ?? STATUS_CFG.healthy;
+                return (
+                  <tr key={d.id} className="table-row-hover" onClick={() => setDetail(d)} style={{ cursor: 'pointer' }}>
+                    <td><span className="link-text">{d.name}</span></td>
+                    <td className="text-sub">{d.head}</td>
+                    <td className="text-sub">{d.members}</td>
+                    <td className="text-sub">{d.devices}</td>
+                    <td className="text-sub">{d.licenses}</td>
+                    <td>
+                      <span style={{ fontWeight: 600, color: d.mfaRate >= 90 ? '#10b981' : '#f59e0b' }}>{d.mfaRate}%</span>
+                    </td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
+                  </tr>
+                );
+              }) : (
+                <tr><td colSpan={7} className="table-empty">条件に一致する部門が見つかりません</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-footer">
+          <span className="table-info">全 {DEPARTMENTS.length} 件中 {filtered.length} 件を表示</span>
+        </div>
+      </div>
+
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? '部門詳細'} wide>
+        {detail && (
+          <div className="detail-grid">
+            {([
+              ['部門長',         detail.head],
+              ['メンバー数',     String(detail.members)],
+              ['デバイス数',     String(detail.devices)],
+              ['ライセンス数',   String(detail.licenses)],
+              ['MFA適用率',      `${detail.mfaRate}%`],
+              ['予算',           `¥${detail.budget.toLocaleString()}`],
+              ['状態',           STATUS_CFG[detail.status as DeptStatus]?.l ?? '不明'],
+            ] as [string, string][]).map(([k, v]) => (
+              <div key={k} className="detail-item">
+                <span className="detail-label">{k}</span>
+                <span className="detail-value">{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

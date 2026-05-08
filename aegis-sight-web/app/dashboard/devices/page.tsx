@@ -1,397 +1,191 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
+import {
+  Badge, DonutChart, MiniBarChart, ProgressBar,
+  SearchInput, Select, Modal, Tooltip,
+} from '@/components/ui/design-components';
 
-type DeviceStatus = 'online' | 'offline' | 'warning' | 'maintenance';
-type OsType = 'Windows' | 'macOS' | 'Linux' | 'Other';
-
-interface Device {
-  id: string;
-  hostname: string;
-  os_type: OsType;
-  os_version: string;
-  ip_address: string;
-  department: string;
-  status: DeviceStatus;
-  last_seen: string;
-  assigned_user: string;
-}
-
-const demoDevices: Device[] = [
-  {
-    id: 'd001',
-    hostname: 'PC-TANAKA-001',
-    os_type: 'Windows',
-    os_version: 'Windows 11 Pro 23H2',
-    ip_address: '192.168.1.101',
-    department: 'エンジニアリング',
-    status: 'online',
-    last_seen: '2026-04-02 14:30',
-    assigned_user: '田中 一郎',
-  },
-  {
-    id: 'd002',
-    hostname: 'PC-SATO-002',
-    os_type: 'Windows',
-    os_version: 'Windows 10 Pro 22H2',
-    ip_address: '192.168.1.102',
-    department: '営業',
-    status: 'online',
-    last_seen: '2026-04-02 14:25',
-    assigned_user: '佐藤 花子',
-  },
-  {
-    id: 'd003',
-    hostname: 'MAC-YAMADA-001',
-    os_type: 'macOS',
-    os_version: 'macOS Sonoma 14.3',
-    ip_address: '192.168.1.103',
-    department: 'デザイン',
-    status: 'online',
-    last_seen: '2026-04-02 14:28',
-    assigned_user: '山田 次郎',
-  },
-  {
-    id: 'd004',
-    hostname: 'SRV-WEB-001',
-    os_type: 'Linux',
-    os_version: 'Ubuntu 22.04 LTS',
-    ip_address: '192.168.2.10',
-    department: 'インフラ',
-    status: 'online',
-    last_seen: '2026-04-02 14:31',
-    assigned_user: '（共有）',
-  },
-  {
-    id: 'd005',
-    hostname: 'PC-SUZUKI-003',
-    os_type: 'Windows',
-    os_version: 'Windows 11 Pro 23H2',
-    ip_address: '192.168.1.105',
-    department: '人事',
-    status: 'offline',
-    last_seen: '2026-04-01 18:10',
-    assigned_user: '鈴木 三郎',
-  },
-  {
-    id: 'd006',
-    hostname: 'PC-ITO-004',
-    os_type: 'Windows',
-    os_version: 'Windows 10 Pro 22H2',
-    ip_address: '192.168.1.106',
-    department: '経理',
-    status: 'warning',
-    last_seen: '2026-04-02 13:45',
-    assigned_user: '伊藤 四郎',
-  },
-  {
-    id: 'd007',
-    hostname: 'MAC-KOBAYASHI-002',
-    os_type: 'macOS',
-    os_version: 'macOS Ventura 13.6',
-    ip_address: '192.168.1.107',
-    department: 'エンジニアリング',
-    status: 'warning',
-    last_seen: '2026-04-02 12:00',
-    assigned_user: '小林 五郎',
-  },
-  {
-    id: 'd008',
-    hostname: 'SRV-DB-001',
-    os_type: 'Linux',
-    os_version: 'CentOS Stream 9',
-    ip_address: '192.168.2.20',
-    department: 'インフラ',
-    status: 'maintenance',
-    last_seen: '2026-04-02 10:00',
-    assigned_user: '（共有）',
-  },
-  {
-    id: 'd009',
-    hostname: 'PC-NAKAMURA-005',
-    os_type: 'Windows',
-    os_version: 'Windows 11 Pro 23H2',
-    ip_address: '192.168.1.109',
-    department: '営業',
-    status: 'online',
-    last_seen: '2026-04-02 14:15',
-    assigned_user: '中村 六郎',
-  },
-  {
-    id: 'd010',
-    hostname: 'PC-KIMURA-006',
-    os_type: 'Windows',
-    os_version: 'Windows 10 Home 22H2',
-    ip_address: '192.168.1.110',
-    department: '総務',
-    status: 'offline',
-    last_seen: '2026-03-30 17:00',
-    assigned_user: '木村 七子',
-  },
+const DEMO_DEVICES = [
+  { id: 'd001', hostname: 'PC-TANAKA-001',     os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.101', dept: 'エンジニアリング', status: 'online',      lastSeen: '2026-05-07 14:30', user: '田中 一郎',   cpu: 45, mem: 62, disk: 38 },
+  { id: 'd002', hostname: 'PC-SATO-002',       os: 'Windows', osVer: 'Windows 10 Pro 22H2',       ip: '192.168.1.102', dept: '営業',             status: 'online',      lastSeen: '2026-05-07 14:25', user: '佐藤 花子',   cpu: 32, mem: 55, disk: 71 },
+  { id: 'd003', hostname: 'MAC-YAMADA-001',    os: 'macOS',   osVer: 'macOS Sonoma 14.3',          ip: '192.168.1.103', dept: 'デザイン',         status: 'online',      lastSeen: '2026-05-07 14:28', user: '山田 次郎',   cpu: 78, mem: 81, disk: 45 },
+  { id: 'd004', hostname: 'SRV-WEB-001',       os: 'Linux',   osVer: 'Ubuntu 22.04 LTS',           ip: '192.168.2.10',  dept: 'インフラ',         status: 'online',      lastSeen: '2026-05-07 14:31', user: '（共有）',    cpu: 65, mem: 72, disk: 55 },
+  { id: 'd005', hostname: 'PC-SUZUKI-003',     os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.105', dept: '人事',             status: 'offline',     lastSeen: '2026-05-06 18:10', user: '鈴木 三郎',   cpu: 0,  mem: 0,  disk: 42 },
+  { id: 'd006', hostname: 'PC-ITO-004',        os: 'Windows', osVer: 'Windows 10 Pro 22H2',       ip: '192.168.1.106', dept: '経理',             status: 'warning',     lastSeen: '2026-05-07 13:45', user: '伊藤 四郎',   cpu: 92, mem: 88, disk: 85 },
+  { id: 'd007', hostname: 'MAC-KOBAYASHI-002', os: 'macOS',   osVer: 'macOS Ventura 13.6',         ip: '192.168.1.107', dept: 'エンジニアリング', status: 'warning',     lastSeen: '2026-05-07 12:00', user: '小林 五郎',   cpu: 55, mem: 90, disk: 78 },
+  { id: 'd008', hostname: 'SRV-DB-001',        os: 'Linux',   osVer: 'CentOS Stream 9',            ip: '192.168.2.20',  dept: 'インフラ',         status: 'maintenance', lastSeen: '2026-05-07 10:00', user: '（共有）',    cpu: 12, mem: 35, disk: 62 },
+  { id: 'd009', hostname: 'PC-NAKAMURA-005',   os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '192.168.1.109', dept: '営業',             status: 'online',      lastSeen: '2026-05-07 14:15', user: '中村 六郎',   cpu: 28, mem: 48, disk: 35 },
+  { id: 'd010', hostname: 'PC-KIMURA-006',     os: 'Windows', osVer: 'Windows 10 Home 22H2',      ip: '192.168.1.110', dept: '総務',             status: 'offline',     lastSeen: '2026-05-04 17:00', user: '木村 七子',   cpu: 0,  mem: 0,  disk: 58 },
+  { id: 'd011', hostname: 'PC-FIELD-A01',      os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '10.0.1.50',     dept: '建設現場A',        status: 'online',      lastSeen: '2026-05-07 13:50', user: '高橋 八郎',   cpu: 35, mem: 42, disk: 29 },
+  { id: 'd012', hostname: 'PC-FIELD-B01',      os: 'Windows', osVer: 'Windows 11 Pro 23H2',       ip: '10.0.2.51',     dept: '建設現場B',        status: 'online',      lastSeen: '2026-05-07 14:05', user: '渡辺 九子',   cpu: 41, mem: 50, disk: 33 },
 ];
 
-const demoStats = {
-  total: 1284,
-  online: 1102,
-  offline: 128,
-  warning: 54,
+const DEVICE_STATS = { total: 1284, online: 1102, offline: 128, warning: 54 };
+
+type DeviceStatus = 'online' | 'offline' | 'warning' | 'maintenance';
+
+const STATUS_CFG: Record<DeviceStatus, { l: string; v: 'success' | 'danger' | 'warning' | 'info'; dot: string }> = {
+  online:      { l: 'オンライン',     v: 'success', dot: '#10b981' },
+  offline:     { l: 'オフライン',     v: 'danger',  dot: '#9ca3af' },
+  warning:     { l: '要注意',         v: 'warning', dot: '#f59e0b' },
+  maintenance: { l: 'メンテナンス',   v: 'info',    dot: '#3b82f6' },
 };
 
-const statusConfig: Record<DeviceStatus, { label: string; variant: 'success' | 'danger' | 'warning' | 'info' }> = {
-  online: { label: 'オンライン', variant: 'success' },
-  offline: { label: 'オフライン', variant: 'danger' },
-  warning: { label: '要注意', variant: 'warning' },
-  maintenance: { label: 'メンテナンス', variant: 'info' },
-};
+type Device = typeof DEMO_DEVICES[number];
 
-const osTypeOptions: Array<OsType | 'all'> = ['all', 'Windows', 'macOS', 'Linux', 'Other'];
-const statusOptions: Array<DeviceStatus | 'all'> = ['all', 'online', 'offline', 'warning', 'maintenance'];
-const departmentOptions = ['all', 'エンジニアリング', '営業', 'デザイン', 'インフラ', '人事', '経理', '総務'];
+const getStatus = (s: string) => STATUS_CFG[s as DeviceStatus] ?? STATUS_CFG.offline;
 
 export default function DevicesPage() {
-  const [search, setSearch] = useState('');
-  const [osFilter, setOsFilter] = useState<OsType | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<DeviceStatus | 'all'>('all');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [search, setSearch]     = useState('');
+  const [osF, setOsF]           = useState('all');
+  const [statusF, setStatusF]   = useState('all');
+  const [deptF, setDeptF]       = useState('all');
+  const [selected, setSelected] = useState<Device | null>(null);
 
-  const onlineRate = Math.round((demoStats.online / demoStats.total) * 100);
-  const onlineRateColor = onlineRate >= 80 ? '#10b981' : onlineRate >= 60 ? '#f59e0b' : '#ef4444';
+  const onlineRate = Math.round((DEVICE_STATS.online / DEVICE_STATS.total) * 100);
   const statusBarData = [
-    { label: 'オンライン', value: demoStats.online,  color: 'bg-emerald-500' },
-    { label: 'オフライン', value: demoStats.offline, color: 'bg-gray-400'    },
-    { label: '要注意',     value: demoStats.warning, color: 'bg-amber-500'   },
+    { label: 'オンライン', value: DEVICE_STATS.online,  color: '#10b981' },
+    { label: 'オフライン', value: DEVICE_STATS.offline, color: '#9ca3af' },
+    { label: '要注意',     value: DEVICE_STATS.warning, color: '#f59e0b' },
   ];
 
-  const filtered = demoDevices.filter((d) => {
-    if (search && !d.hostname.toLowerCase().includes(search.toLowerCase()) && !d.ip_address.includes(search)) {
-      return false;
-    }
-    if (osFilter !== 'all' && d.os_type !== osFilter) return false;
-    if (statusFilter !== 'all' && d.status !== statusFilter) return false;
-    if (departmentFilter !== 'all' && d.department !== departmentFilter) return false;
+  const depts = [...new Set(DEMO_DEVICES.map(d => d.dept))].sort();
+
+  const filtered = DEMO_DEVICES.filter(d => {
+    if (search && !d.hostname.toLowerCase().includes(search.toLowerCase()) && !d.ip.includes(search) && !d.user.includes(search)) return false;
+    if (osF !== 'all' && d.os !== osF) return false;
+    if (statusF !== 'all' && d.status !== statusF) return false;
+    if (deptF !== 'all' && d.dept !== deptF) return false;
     return true;
   });
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">デバイス管理</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            管理対象エンドポイントのステータス・詳細情報
-          </p>
+          <h1 className="page-title">デバイス管理</h1>
+          <p className="page-subtitle">管理対象エンドポイントのステータス・詳細情報</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="aegis-btn-secondary">
-            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            CSVエクスポート
-          </button>
-          <button className="aegis-btn-primary">
-            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            デバイスを追加
-          </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
+          <button className="btn-primary">デバイスを追加</button>
         </div>
       </div>
 
-      {/* Device Overview Charts */}
-      <div className="aegis-card">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">デバイス概要</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="flex flex-col items-center gap-3">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">オンライン率</p>
-            <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRateColor} label={`${onlineRate}%`} />
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              全 {demoStats.total.toLocaleString()} 台中 {demoStats.online.toLocaleString()} 台オンライン
-            </p>
+      {/* Overview */}
+      <div className="card">
+        <h2 className="card-title">デバイス概要</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">オンライン率</p>
+            <DonutChart value={onlineRate} max={100} size={140} strokeWidth={14} color={onlineRate >= 80 ? '#10b981' : '#f59e0b'} />
+            <p className="chart-sublabel">全 {DEVICE_STATS.total.toLocaleString()} 台中 {DEVICE_STATS.online.toLocaleString()} 台</p>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ステータス別台数</p>
-            <BarChart data={statusBarData} maxValue={demoStats.total} height={160} showValues />
+          <div style={{ flex: 1 }}>
+            <p className="chart-label">ステータス別台数</p>
+            <MiniBarChart data={statusBarData} maxValue={DEVICE_STATS.total} height={160} />
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">合計</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {demoStats.total.toLocaleString()}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400">オンライン</p>
-          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-            {demoStats.online.toLocaleString()}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">オフライン</p>
-          <p className="mt-2 text-3xl font-bold text-gray-500 dark:text-gray-400">
-            {demoStats.offline.toLocaleString()}
-          </p>
-        </div>
-        <div className="aegis-card text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-yellow-600 dark:text-yellow-400">要注意</p>
-          <p className="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-            {demoStats.warning.toLocaleString()}
-          </p>
-        </div>
+      {/* Stats */}
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">合計</p><p className="stat-value">{DEVICE_STATS.total.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label" style={{ color: '#10b981' }}>オンライン</p><p className="stat-value text-green">{DEVICE_STATS.online.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label">オフライン</p><p className="stat-value" style={{ color: '#9ca3af' }}>{DEVICE_STATS.offline.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label" style={{ color: '#f59e0b' }}>要注意</p><p className="stat-value text-amber">{DEVICE_STATS.warning.toLocaleString()}</p></div>
       </div>
 
       {/* Filters */}
-      <div className="aegis-card">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="ホスト名・IPアドレスで検索..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="aegis-input w-full"
-            />
-          </div>
-          <select
-            value={osFilter}
-            onChange={(e) => setOsFilter(e.target.value as OsType | 'all')}
-            className="aegis-input w-auto"
-          >
-            {osTypeOptions.map((os) => (
-              <option key={os} value={os}>
-                {os === 'all' ? 'すべてのOS' : os}
-              </option>
-            ))}
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as DeviceStatus | 'all')}
-            className="aegis-input w-auto"
-          >
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s === 'all' ? 'すべてのステータス' : statusConfig[s]?.label ?? s}
-              </option>
-            ))}
-          </select>
-          <select
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="aegis-input w-auto"
-          >
-            {departmentOptions.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept === 'all' ? 'すべての部門' : dept}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="card filter-row">
+        <SearchInput placeholder="ホスト名・IPアドレス・ユーザー名で検索..." value={search} onChange={setSearch} style={{ flex: 1, minWidth: 200 }} />
+        <Select value={osF} onChange={setOsF} options={[{ value: 'all', label: 'すべてのOS' }, { value: 'Windows', label: 'Windows' }, { value: 'macOS', label: 'macOS' }, { value: 'Linux', label: 'Linux' }]} />
+        <Select value={statusF} onChange={setStatusF} options={[{ value: 'all', label: 'すべてのステータス' }, ...Object.entries(STATUS_CFG).map(([k, v]) => ({ value: k, label: v.l }))]} />
+        <Select value={deptF} onChange={setDeptF} options={[{ value: 'all', label: 'すべての部門' }, ...depts.map(d => ({ value: d, label: d }))]} />
       </div>
 
-      {/* Device Table */}
-      <div className="aegis-card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ホスト名
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  OS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  IPアドレス
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  担当ユーザー
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  部門
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ステータス
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  最終確認
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-                    条件に一致するデバイスがありません
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((device) => {
-                  const status = statusConfig[device.status];
-                  return (
-                    <tr
-                      key={device.id}
-                      className="transition-colors hover:bg-gray-50/70 dark:hover:bg-aegis-dark/40"
-                    >
-                      <td className="px-6 py-4">
-                        <Link href={`/dashboard/devices/${device.id}`} className="flex items-center gap-2 hover:underline">
-                          <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                            device.status === 'online' ? 'bg-green-500' :
-                            device.status === 'warning' ? 'bg-yellow-500' :
-                            device.status === 'maintenance' ? 'bg-blue-500' :
-                            'bg-gray-400'
-                          }`} />
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {device.hostname}
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{device.os_type}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{device.os_version}</p>
+      {/* Table */}
+      <div className="card table-card">
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['ホスト名', 'OS', 'IPアドレス', '担当ユーザー', '部門', 'ステータス', '最終確認', 'リソース'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.map(d => {
+                const sc = getStatus(d.status);
+                return (
+                  <tr key={d.id} className="table-row-hover" onClick={() => setSelected(d)} style={{ cursor: 'pointer' }}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="status-dot" style={{ background: sc.dot }} />
+                        <span className="link-text">{d.hostname}</span>
+                      </div>
+                    </td>
+                    <td><div><span className="text-main">{d.os}</span><br /><span className="text-sub">{d.osVer}</span></div></td>
+                    <td className="mono">{d.ip}</td>
+                    <td>{d.user}</td>
+                    <td>{d.dept}</td>
+                    <td><Badge variant={sc.v} dot>{sc.l}</Badge></td>
+                    <td className="text-sub">{d.lastSeen}</td>
+                    <td>
+                      {d.status !== 'offline' ? (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Tooltip text={`CPU: ${d.cpu}%`}>
+                            <div className="mini-gauge"><div className="mini-gauge-fill" style={{ width: `${d.cpu}%`, background: d.cpu > 80 ? '#ef4444' : d.cpu > 60 ? '#f59e0b' : '#10b981' }} /></div>
+                          </Tooltip>
+                          <Tooltip text={`MEM: ${d.mem}%`}>
+                            <div className="mini-gauge"><div className="mini-gauge-fill" style={{ width: `${d.mem}%`, background: d.mem > 80 ? '#ef4444' : d.mem > 60 ? '#f59e0b' : '#3b82f6' }} /></div>
+                          </Tooltip>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-sm text-gray-700 dark:text-gray-300">
-                        {device.ip_address}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        {device.assigned_user}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        {device.department}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {device.last_seen}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+                      ) : <span className="text-sub">—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 dark:border-aegis-border">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            全 <span className="font-medium">{demoStats.total.toLocaleString()}</span> 件中{' '}
-            <span className="font-medium">{filtered.length}</span> 件を表示（フィルター適用中）
-          </p>
-          <div className="flex gap-2">
-            <button className="aegis-btn-secondary" disabled>前へ</button>
-            <button className="aegis-btn-secondary">次へ</button>
+        <div className="table-footer">
+          <span className="table-info">全 {DEVICE_STATS.total.toLocaleString()} 件中 {filtered.length} 件を表示</span>
+          <div className="table-pagination">
+            <button className="btn-secondary btn-sm" disabled>前へ</button>
+            <button className="btn-primary btn-sm">1</button>
+            <button className="btn-secondary btn-sm">2</button>
+            <button className="btn-secondary btn-sm">次へ</button>
           </div>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.hostname ?? 'デバイス詳細'} wide>
+        {selected && (
+          <div>
+            <div className="detail-grid">
+              {([['OS', selected.osVer], ['IPアドレス', selected.ip], ['担当ユーザー', selected.user], ['部門', selected.dept], ['ステータス', getStatus(selected.status).l], ['最終確認', selected.lastSeen]] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="detail-item"><span className="detail-label">{k}</span><span className="detail-value">{v}</span></div>
+              ))}
+            </div>
+            {selected.status !== 'offline' && (
+              <div style={{ marginTop: 20 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#374151' }}>リソース使用率</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {([['CPU', selected.cpu], ['メモリ', selected.mem], ['ディスク', selected.disk]] as [string, number][]).map(([l, v]) => (
+                    <div key={l}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span className="text-sub">{l}</span>
+                        <span className="text-main" style={{ fontWeight: 600 }}>{v}%</span>
+                      </div>
+                      <ProgressBar value={v} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

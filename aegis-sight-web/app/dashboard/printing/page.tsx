@@ -1,593 +1,148 @@
 'use client';
 
+import { Badge, SearchInput, DonutChart } from '@/components/ui/design-components';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { DonutChart, BarChart } from '@/components/ui/chart';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type PrintJobStatus = 'completed' | 'failed' | 'cancelled';
-type TabId = 'stats' | 'printers' | 'jobs' | 'policies';
-
-interface Printer {
-  id: string;
-  name: string;
-  location: string;
-  ip_address: string | null;
-  model: string;
-  is_network: boolean;
-  is_active: boolean;
-  department: string | null;
-  created_at: string;
-}
-
-interface PrintJob {
-  id: string;
-  printer_id: string;
-  printer_name: string;
-  device_id: string | null;
-  user_name: string;
-  document_name: string;
-  pages: number;
-  copies: number;
-  color: boolean;
-  duplex: boolean;
-  paper_size: string;
-  status: PrintJobStatus;
-  printed_at: string;
-}
-
-interface PrintPolicy {
-  id: string;
-  name: string;
-  description: string | null;
-  max_pages_per_day: number | null;
-  max_pages_per_month: number | null;
-  allow_color: boolean;
-  allow_duplex_only: boolean;
-  target_departments: string[] | null;
-  is_enabled: boolean;
-  created_at: string;
-}
-
-interface UserStat {
-  user_name: string;
-  total_pages: number;
-  total_jobs: number;
-  color_pages: number;
-}
-
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const mockPrinters: Printer[] = [
-  {
-    id: '1',
-    name: 'HP LaserJet Pro M404dn',
-    location: '1F 総務部エリア',
-    ip_address: '192.168.1.101',
-    model: 'HP LaserJet Pro M404dn',
-    is_network: true,
-    is_active: true,
-    department: '総務部',
-    created_at: '2025-06-01T09:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Canon imageRUNNER C3530',
-    location: '2F 営業部エリア',
-    ip_address: '192.168.1.102',
-    model: 'Canon imageRUNNER C3530',
-    is_network: true,
-    is_active: true,
-    department: '営業部',
-    created_at: '2025-06-10T10:00:00Z',
-  },
-  {
-    id: '3',
-    name: 'RICOH MP C3004',
-    location: '3F 開発部エリア',
-    ip_address: '192.168.1.103',
-    model: 'RICOH MP C3004',
-    is_network: true,
-    is_active: true,
-    department: '開発部',
-    created_at: '2025-07-01T08:00:00Z',
-  },
-  {
-    id: '4',
-    name: 'Brother HL-L2375DW',
-    location: '4F 経理部エリア',
-    ip_address: '192.168.1.104',
-    model: 'Brother HL-L2375DW',
-    is_network: true,
-    is_active: false,
-    department: '経理部',
-    created_at: '2025-08-15T11:00:00Z',
-  },
+const PRINTERS = [
+  { id: 'pr-001', name: '本社 3F 複合機-A', model: 'Canon imageRUNNER 2630i', location: '本社 3F', status: 'online', color: true,  jobs: 142, pages: 3840 },
+  { id: 'pr-002', name: '本社 3F 複合機-B', model: 'Canon imageRUNNER 2630i', location: '本社 3F', status: 'online', color: true,  jobs:  98, pages: 2210 },
+  { id: 'pr-003', name: '本社 5F モノクロ', model: 'HP LaserJet Pro M404',    location: '本社 5F', status: 'online', color: false, jobs:  67, pages: 1540 },
+  { id: 'pr-004', name: '大阪支社 複合機',  model: 'Fujifilm Apeos C5570',    location: '大阪支社', status: 'warning', color: true, jobs:  21, pages:  480 },
+  { id: 'pr-005', name: '名古屋支社 複合機', model: 'Ricoh IM C4510',         location: '名古屋支社', status: 'offline', color: true, jobs:  0, pages:    0 },
 ];
 
-const mockJobs: PrintJob[] = [
-  {
-    id: '1',
-    printer_id: '1',
-    printer_name: 'HP LaserJet Pro M404dn',
-    device_id: null,
-    user_name: '田中太郎',
-    document_name: '月次レポート_2026年3月.xlsx',
-    pages: 15,
-    copies: 2,
-    color: false,
-    duplex: true,
-    paper_size: 'A4',
-    status: 'completed',
-    printed_at: '2026-03-27T09:15:00Z',
-  },
-  {
-    id: '2',
-    printer_id: '2',
-    printer_name: 'Canon imageRUNNER C3530',
-    device_id: null,
-    user_name: '鈴木花子',
-    document_name: 'プレゼン資料_新商品企画.pptx',
-    pages: 24,
-    copies: 5,
-    color: true,
-    duplex: false,
-    paper_size: 'A4',
-    status: 'completed',
-    printed_at: '2026-03-27T10:30:00Z',
-  },
-  {
-    id: '3',
-    printer_id: '3',
-    printer_name: 'RICOH MP C3004',
-    device_id: null,
-    user_name: '佐藤一郎',
-    document_name: '設計書_v2.1.pdf',
-    pages: 48,
-    copies: 1,
-    color: false,
-    duplex: true,
-    paper_size: 'A3',
-    status: 'completed',
-    printed_at: '2026-03-27T11:00:00Z',
-  },
-  {
-    id: '4',
-    printer_id: '1',
-    printer_name: 'HP LaserJet Pro M404dn',
-    device_id: null,
-    user_name: '山田次郎',
-    document_name: '契約書_ABC社.docx',
-    pages: 8,
-    copies: 3,
-    color: false,
-    duplex: true,
-    paper_size: 'A4',
-    status: 'failed',
-    printed_at: '2026-03-27T11:30:00Z',
-  },
-  {
-    id: '5',
-    printer_id: '2',
-    printer_name: 'Canon imageRUNNER C3530',
-    device_id: null,
-    user_name: '田中太郎',
-    document_name: '会議アジェンダ.pdf',
-    pages: 3,
-    copies: 10,
-    color: true,
-    duplex: false,
-    paper_size: 'A4',
-    status: 'completed',
-    printed_at: '2026-03-26T14:00:00Z',
-  },
-  {
-    id: '6',
-    printer_id: '3',
-    printer_name: 'RICOH MP C3004',
-    device_id: null,
-    user_name: '鈴木花子',
-    document_name: '見積書_XYZ案件.xlsx',
-    pages: 2,
-    copies: 1,
-    color: false,
-    duplex: false,
-    paper_size: 'A4',
-    status: 'cancelled',
-    printed_at: '2026-03-26T15:30:00Z',
-  },
+const PRINT_LOGS = [
+  { user: '田中 浩',     dept: 'セキュリティ', pages: 12, color: true,  printer: '本社 3F 複合機-A', time: '2025-01-15 14:22' },
+  { user: '山本 健司',   dept: 'エンジニアリング', pages: 4, color: false, printer: '本社 3F 複合機-B', time: '2025-01-15 13:55' },
+  { user: '佐藤 由紀',   dept: 'コンプライアンス', pages: 28, color: true, printer: '本社 3F 複合機-A', time: '2025-01-15 13:10' },
+  { user: '鈴木 明',     dept: '営業',         pages: 50, color: true,  printer: '本社 3F 複合機-A', time: '2025-01-15 12:45' },
+  { user: '渡辺 さくら', dept: '内部監査',     pages: 8,  color: false, printer: '本社 5F モノクロ',  time: '2025-01-15 11:30' },
+  { user: '伊藤 勝',     dept: 'インフラ',     pages: 3,  color: false, printer: '本社 5F モノクロ',  time: '2025-01-15 10:15' },
 ];
 
-const mockPolicies: PrintPolicy[] = [
-  {
-    id: '1',
-    name: 'エコ印刷ポリシー',
-    description: 'カラー印刷を制限し、両面印刷を推奨する環境配慮ポリシー',
-    max_pages_per_day: 100,
-    max_pages_per_month: 2000,
-    allow_color: false,
-    allow_duplex_only: true,
-    target_departments: null,
-    is_enabled: true,
-    created_at: '2026-01-01T00:00:00Z',
-  },
-  {
-    id: '2',
-    name: '営業部カラー許可',
-    description: '営業部はプレゼン資料のためカラー印刷を許可',
-    max_pages_per_day: 200,
-    max_pages_per_month: 5000,
-    allow_color: true,
-    allow_duplex_only: false,
-    target_departments: ['営業部'],
-    is_enabled: true,
-    created_at: '2026-01-15T00:00:00Z',
-  },
-  {
-    id: '3',
-    name: '開発部制限ポリシー',
-    description: '開発部の印刷量を制限（ペーパーレス推進）',
-    max_pages_per_day: 30,
-    max_pages_per_month: 500,
-    allow_color: false,
-    allow_duplex_only: true,
-    target_departments: ['開発部'],
-    is_enabled: true,
-    created_at: '2026-02-01T00:00:00Z',
-  },
-];
+type PrinterStatus = 'online' | 'warning' | 'offline';
+const STATUS_CFG: Record<PrinterStatus, { l: string; v: 'success' | 'warning' | 'default' }> = {
+  online:  { l: 'オンライン', v: 'success' },
+  warning: { l: '警告',       v: 'warning' },
+  offline: { l: 'オフライン', v: 'default' },
+};
 
-const mockUserStats: UserStat[] = [
-  { user_name: '田中太郎', total_pages: 1250, total_jobs: 85, color_pages: 320 },
-  { user_name: '鈴木花子', total_pages: 980, total_jobs: 62, color_pages: 540 },
-  { user_name: '佐藤一郎', total_pages: 760, total_jobs: 45, color_pages: 120 },
-  { user_name: '山田次郎', total_pages: 520, total_jobs: 38, color_pages: 80 },
-  { user_name: '高橋美咲', total_pages: 430, total_jobs: 30, color_pages: 210 },
-];
+const totalPages = PRINTERS.reduce((s, p) => s + p.pages, 0);
+const onlineCount = PRINTERS.filter(p => p.status === 'online').length;
+const colorPages  = Math.round(totalPages * 0.68);
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+export default function PrintingPage() {
+  const [search, setSearch] = useState('');
 
-function statusBadge(status: PrintJobStatus) {
-  switch (status) {
-    case 'completed':
-      return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">完了</Badge>;
-    case 'failed':
-      return <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">失敗</Badge>;
-    case 'cancelled':
-      return <Badge variant="default" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">キャンセル</Badge>;
-  }
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function StatsCards() {
-  const totalPages = mockJobs
-    .filter((j) => j.status === 'completed')
-    .reduce((sum, j) => sum + j.pages * j.copies, 0);
-  const totalJobs = mockJobs.filter((j) => j.status === 'completed').length;
-  const colorJobs = mockJobs.filter((j) => j.status === 'completed' && j.color).length;
-  const colorRatio = totalJobs > 0 ? ((colorJobs / totalJobs) * 100).toFixed(1) : '0.0';
+  const filteredLogs = PRINT_LOGS.filter(l =>
+    !search ||
+    l.user.includes(search) ||
+    l.dept.includes(search) ||
+    l.printer.includes(search)
+  );
 
   return (
-    <div className="space-y-6">
-      {/* 印刷概要チャート */}
-      {(() => {
-        const successRate = totalJobs > 0 ? Math.round((totalJobs / mockJobs.length) * 100) : 0;
-        const successColor = successRate >= 80 ? '#10b981' : successRate >= 60 ? '#f59e0b' : '#ef4444';
-        const userBarData = mockUserStats.slice(0, 5).map((u, i) => ({
-          label: u.user_name.split(/(?=[太花一次美])/)[0] || u.user_name.substring(0, 4),
-          value: u.total_pages,
-          color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500'][i] || 'bg-gray-400',
-        }));
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">印刷概要</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ジョブ成功率</p>
-                <DonutChart value={successRate} max={100} size={140} strokeWidth={14} color={successColor} label={`${successRate}%`} />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  全 {mockJobs.length} ジョブ中 {totalJobs} 件成功
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ユーザー別印刷ページ数 Top 5</p>
-                <BarChart data={userBarData} maxValue={Math.max(...userBarData.map(d => d.value))} height={160} showValues />
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">総印刷ページ数</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-            {totalPages.toLocaleString()}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">今月</div>
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">印刷管理</h1>
+          <p className="page-subtitle">プリンターの稼働状況と印刷ジョブ・使用量の管理</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">総ジョブ数</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{totalJobs}</div>
-          <div className="text-xs text-gray-400 mt-1">今月</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">カラー率</div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{colorRatio}%</div>
-          <div className="text-xs text-gray-400 mt-1">完了ジョブ中</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-          <div className="text-sm text-gray-500 dark:text-gray-400">稼働プリンタ</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
-            {mockPrinters.filter((p) => p.is_active).length} / {mockPrinters.length}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">アクティブ / 全台数</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">CSVエクスポート</button>
         </div>
       </div>
 
-      {/* User Top 5 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">ユーザー別印刷トップ5</h3>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">プリンター数</p><p className="stat-value">{PRINTERS.length}</p></div>
+        <div className="card card-center"><p className="stat-label">オンライン</p><p className="stat-value text-green">{onlineCount}</p></div>
+        <div className="card card-center"><p className="stat-label">本日総印刷枚数</p><p className="stat-value">{totalPages.toLocaleString()}</p></div>
+        <div className="card card-center"><p className="stat-label">カラー印刷比率</p><p className="stat-value text-amber">{Math.round(colorPages / totalPages * 100)}%</p></div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">印刷量内訳</h2>
+        <div className="chart-row">
+          <div className="chart-center">
+            <p className="chart-label">カラー vs モノクロ</p>
+            <DonutChart value={Math.round(colorPages / totalPages * 100)} max={100} size={130} strokeWidth={13} color="#f59e0b" />
+            <p className="chart-sublabel">カラー印刷率 {Math.round(colorPages / totalPages * 100)}%</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p className="chart-label" style={{ marginBottom: 8 }}>プリンター別印刷枚数（本日）</p>
+            {PRINTERS.filter(p => p.pages > 0).map(p => (
+              <div key={p.id} className="activity-item">
+                <div className="activity-dot" style={{ background: p.status === 'online' ? '#10b981' : '#f59e0b' }} />
+                <div className="activity-content">
+                  <p className="activity-text">
+                    <strong>{p.name}</strong>
+                    <span className="text-sub" style={{ marginLeft: 8 }}>{p.pages.toLocaleString()} 枚</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">順位</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ユーザー名</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">総ページ数</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ジョブ数</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カラーページ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {mockUserStats.map((u, i) => (
-                <tr key={u.user_name} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">{i + 1}</td>
-                  <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{u.user_name}</td>
-                  <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{u.total_pages.toLocaleString()}</td>
-                  <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{u.total_jobs}</td>
-                  <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{u.color_pages.toLocaleString()}</td>
-                </tr>
-              ))}
+      </div>
+
+      <div className="card table-card">
+        <h2 className="card-title">プリンター一覧</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['プリンター名', 'モデル', '設置場所', 'カラー', '本日ジョブ数', '本日印刷枚数', '状態'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {PRINTERS.map(p => {
+                const st = STATUS_CFG[p.status as PrinterStatus] ?? STATUS_CFG.offline;
+                return (
+                  <tr key={p.id} className="table-row-hover">
+                    <td><span className="text-main" style={{ fontWeight: 500 }}>{p.name}</span></td>
+                    <td className="text-sub">{p.model}</td>
+                    <td className="text-sub">{p.location}</td>
+                    <td><Badge variant={p.color ? 'info' : 'default'}>{p.color ? 'カラー' : 'モノクロ'}</Badge></td>
+                    <td className="text-sub">{p.jobs}</td>
+                    <td className="text-sub">{p.pages.toLocaleString()}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
-  );
-}
 
-function PrintersTable() {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">プリンタ一覧</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">名前</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">設置場所</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">IPアドレス</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">機種</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">部門</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ネットワーク</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {mockPrinters.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{p.name}</td>
-                <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{p.location}</td>
-                <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{p.ip_address ?? '-'}</td>
-                <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{p.model}</td>
-                <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">{p.department ?? '-'}</td>
-                <td className="px-5 py-3 text-sm text-center">
-                  {p.is_network ? (
-                    <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">LAN</Badge>
-                  ) : (
-                    <Badge variant="default" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">USB</Badge>
-                  )}
-                </td>
-                <td className="px-5 py-3 text-sm text-center">
-                  {p.is_active ? (
-                    <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">稼働中</Badge>
-                  ) : (
-                    <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">停止</Badge>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function JobsTable() {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">印刷ジョブ履歴</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">日時</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ユーザー</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ドキュメント</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">プリンタ</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ページ</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">部数</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カラー</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">両面</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">用紙</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {mockJobs.map((j) => (
-              <tr key={j.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(j.printed_at)}</td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{j.user_name}</td>
-                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate" title={j.document_name}>{j.document_name}</td>
-                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{j.printer_name}</td>
-                <td className="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{j.pages}</td>
-                <td className="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{j.copies}</td>
-                <td className="px-4 py-3 text-sm text-center">
-                  {j.color ? (
-                    <span className="inline-block w-3 h-3 rounded-full bg-blue-500" title="カラー" />
-                  ) : (
-                    <span className="inline-block w-3 h-3 rounded-full bg-gray-400" title="モノクロ" />
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-center text-gray-700 dark:text-gray-300">{j.duplex ? '両面' : '片面'}</td>
-                <td className="px-4 py-3 text-sm text-center text-gray-700 dark:text-gray-300">{j.paper_size}</td>
-                <td className="px-4 py-3 text-sm text-center">{statusBadge(j.status)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function PoliciesTable() {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">印刷ポリシー管理</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ポリシー名</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">説明</th>
-              <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">日次上限</th>
-              <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">月次上限</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カラー</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">両面のみ</th>
-              <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">対象部門</th>
-              <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {mockPolicies.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">{p.name}</td>
-                <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300 max-w-[250px] truncate" title={p.description ?? undefined}>{p.description ?? '-'}</td>
-                <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{p.max_pages_per_day?.toLocaleString() ?? '-'}</td>
-                <td className="px-5 py-3 text-sm text-right text-gray-700 dark:text-gray-300">{p.max_pages_per_month?.toLocaleString() ?? '-'}</td>
-                <td className="px-5 py-3 text-sm text-center">
-                  {p.allow_color ? (
-                    <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">許可</Badge>
-                  ) : (
-                    <Badge variant="default" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">禁止</Badge>
-                  )}
-                </td>
-                <td className="px-5 py-3 text-sm text-center">
-                  {p.allow_duplex_only ? (
-                    <Badge variant="default" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">必須</Badge>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-                  {p.target_departments ? p.target_departments.join(', ') : '全部門'}
-                </td>
-                <td className="px-5 py-3 text-sm text-center">
-                  {p.is_enabled ? (
-                    <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">有効</Badge>
-                  ) : (
-                    <Badge variant="default" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">無効</Badge>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main Page
-// ---------------------------------------------------------------------------
-
-const tabs: { id: TabId; label: string }[] = [
-  { id: 'stats', label: '統計' },
-  { id: 'printers', label: 'プリンタ' },
-  { id: 'jobs', label: 'ジョブ履歴' },
-  { id: 'policies', label: 'ポリシー' },
-];
-
-export default function PrintingPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('stats');
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">印刷管理</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          プリンタ管理、印刷ジョブ監視、ポリシーによる印刷制御
-        </p>
+      <div className="card filter-row">
+        <SearchInput placeholder="ユーザー・部門・プリンターで検索..." value={search} onChange={v => setSearch(v)} style={{ flex: 1, minWidth: 200 }} />
       </div>
 
-      {/* Tab navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-6" aria-label="印刷管理タブ">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-300'
-              }`}
-              aria-current={activeTab === tab.id ? 'page' : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="card table-card">
+        <h2 className="card-title">印刷ログ（本日）</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['ユーザー', '部門', '印刷枚数', '種別', 'プリンター', '時刻'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filteredLogs.length > 0 ? filteredLogs.map((l, i) => (
+                <tr key={i} className="table-row-hover">
+                  <td><span className="text-main">{l.user}</span></td>
+                  <td className="text-sub">{l.dept}</td>
+                  <td className="text-sub">{l.pages}</td>
+                  <td><Badge variant={l.color ? 'info' : 'default'}>{l.color ? 'カラー' : 'モノクロ'}</Badge></td>
+                  <td className="text-sub">{l.printer}</td>
+                  <td className="text-sub">{l.time}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} className="table-empty">条件に一致するログが見つかりません</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-footer">
+          <span className="table-info">全 {PRINT_LOGS.length} 件中 {filteredLogs.length} 件を表示</span>
+        </div>
       </div>
-
-      {/* Tab content */}
-      {activeTab === 'stats' && <StatsCards />}
-      {activeTab === 'printers' && <PrintersTable />}
-      {activeTab === 'jobs' && <JobsTable />}
-      {activeTab === 'policies' && <PoliciesTable />}
     </div>
   );
 }

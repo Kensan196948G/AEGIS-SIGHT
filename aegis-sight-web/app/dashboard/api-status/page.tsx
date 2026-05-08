@@ -1,319 +1,115 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Badge, ProgressBar } from '@/components/ui/design-components';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-interface HealthCheck {
-  status: string;
-  latency_ms?: number;
-  error?: string;
-  workers?: number;
-  free_gb?: number;
-  total_gb?: number;
-  used_percent?: number;
-}
-
-interface HealthDetail {
-  status: string;
-  version: string;
-  checks: Record<string, HealthCheck>;
-}
-
-interface EndpointStatus {
-  name: string;
-  url: string;
-  status: 'ok' | 'error' | 'loading';
-  latency_ms: number | null;
-  statusCode: number | null;
-}
-
-const ENDPOINTS_TO_CHECK: { name: string; url: string }[] = [
-  { name: 'Health', url: '/health' },
-  { name: 'Health Detail', url: '/health/detail' },
-  { name: 'Health Ready', url: '/health/ready' },
-  { name: 'Version', url: '/api/v1/version' },
-  { name: 'OpenAPI Schema', url: '/openapi.json' },
+const ENDPOINTS = [
+  { name: 'Authentication API',   path: '/api/auth',          status: 'healthy',  latency: 42,  uptime: 99.99, rps: 1240 },
+  { name: 'Device Management',    path: '/api/devices',       status: 'healthy',  latency: 87,  uptime: 99.97, rps:  380 },
+  { name: 'Alert Service',        path: '/api/alerts',        status: 'healthy',  latency: 65,  uptime: 99.95, rps:  210 },
+  { name: 'Compliance Engine',    path: '/api/compliance',    status: 'warning',  latency: 312, uptime: 99.80, rps:   95 },
+  { name: 'SIEM Integration',     path: '/api/siem',          status: 'critical', latency: 890, uptime: 97.50, rps:   12 },
+  { name: 'License Validator',    path: '/api/licenses',      status: 'healthy',  latency: 54,  uptime: 99.98, rps:  540 },
+  { name: 'Patch Management',     path: '/api/patches',       status: 'healthy',  latency: 73,  uptime: 99.96, rps:  160 },
+  { name: 'Report Generator',     path: '/api/reports',       status: 'healthy',  latency: 145, uptime: 99.92, rps:   44 },
 ];
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    healthy: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    ok: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    ready: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-    degraded: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    unhealthy: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    unavailable: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    error: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    loading: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    unknown: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
-  };
+const SERVICES = [
+  { name: 'PostgreSQL (Primary)',  status: 'healthy',  detail: 'Read/Write OK'  },
+  { name: 'PostgreSQL (Replica)', status: 'healthy',  detail: 'Replication lag: 2ms' },
+  { name: 'Redis Cache',          status: 'healthy',  detail: 'HIT rate: 94.2%' },
+  { name: 'Celery Worker',        status: 'warning',  detail: 'Queue depth: 1,240' },
+  { name: 'MinIO Object Storage', status: 'healthy',  detail: 'Capacity: 42%' },
+];
 
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] || colors.unknown}`}
-    >
-      {status}
-    </span>
-  );
-}
+type EpStatus = 'healthy' | 'warning' | 'critical';
+const STATUS_CFG: Record<EpStatus, { l: string; v: 'success' | 'warning' | 'danger' }> = {
+  healthy:  { l: '正常', v: 'success' },
+  warning:  { l: '警告', v: 'warning' },
+  critical: { l: '危険', v: 'danger'  },
+};
+
+const getLatencyColor = (ms: number) => ms >= 500 ? '#ef4444' : ms >= 200 ? '#f59e0b' : '#10b981';
+
+const healthyCount  = ENDPOINTS.filter(e => e.status === 'healthy').length;
+const warningCount  = ENDPOINTS.filter(e => e.status === 'warning').length;
+const criticalCount = ENDPOINTS.filter(e => e.status === 'critical').length;
+const avgLatency    = Math.round(ENDPOINTS.reduce((s, e) => s + e.latency, 0) / ENDPOINTS.length);
 
 export default function ApiStatusPage() {
-  const [healthDetail, setHealthDetail] = useState<HealthDetail | null>(null);
-  const [endpoints, setEndpoints] = useState<EndpointStatus[]>(
-    ENDPOINTS_TO_CHECK.map((e) => ({
-      ...e,
-      status: 'loading' as const,
-      latency_ms: null,
-      statusCode: null,
-    }))
-  );
-  const [lastRefreshed, setLastRefreshed] = useState<string>('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setIsRefreshing(true);
-
-    // Fetch health detail
-    try {
-      const res = await fetch(`${API_BASE}/health/detail`);
-      if (res.ok) {
-        setHealthDetail(await res.json());
-      }
-    } catch {
-      setHealthDetail(null);
-    }
-
-    // Check each endpoint
-    const results = await Promise.all(
-      ENDPOINTS_TO_CHECK.map(async (ep) => {
-        const start = performance.now();
-        try {
-          const res = await fetch(`${API_BASE}${ep.url}`);
-          const latency = Math.round(performance.now() - start);
-          return {
-            ...ep,
-            status: res.ok ? ('ok' as const) : ('error' as const),
-            latency_ms: latency,
-            statusCode: res.status,
-          };
-        } catch {
-          return {
-            ...ep,
-            status: 'error' as const,
-            latency_ms: null,
-            statusCode: null,
-          };
-        }
-      })
-    );
-
-    setEndpoints(results);
-    setLastRefreshed(new Date().toLocaleTimeString('ja-JP'));
-    setIsRefreshing(false);
-  }, []);
-
-  useEffect(() => {
-    // Schedule initial fetch asynchronously to avoid synchronous setState in effect body
-    const initialTimeout = setTimeout(refresh, 0);
-    const interval = setInterval(refresh, 30000);
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(interval);
-    };
-  }, [refresh]);
-
-  const checks = healthDetail?.checks || {};
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            API接続状態
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            APIヘルスチェックとエンドポイント応答状況
-          </p>
+          <h1 className="page-title">API ステータス</h1>
+          <p className="page-subtitle">バックエンド API エンドポイントとインフラサービスの稼働状況</p>
         </div>
-        <div className="flex items-center gap-3">
-          {lastRefreshed && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              最終更新: {lastRefreshed}
-            </span>
-          )}
-          <button
-            onClick={refresh}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-          >
-            {isRefreshing ? '更新中...' : '更新'}
-          </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">更新</button>
         </div>
       </div>
 
-      {/* Overall Status */}
-      <div className="aegis-card">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              全体ステータス
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              API: {API_BASE}
-            </p>
-          </div>
-          {healthDetail && <StatusBadge status={healthDetail.status} />}
-        </div>
+      <div className="grid-4">
+        <div className="card card-center"><p className="stat-label">正常</p><p className="stat-value text-green">{healthyCount}</p></div>
+        <div className="card card-center"><p className="stat-label">警告</p><p className="stat-value text-amber">{warningCount}</p></div>
+        <div className="card card-center"><p className="stat-label">異常</p><p className="stat-value text-red">{criticalCount}</p></div>
+        <div className="card card-center"><p className="stat-label">平均レイテンシ</p><p className="stat-value" style={{ color: getLatencyColor(avgLatency), fontSize: 20 }}>{avgLatency}ms</p></div>
       </div>
 
-      {/* Subsystem Health */}
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
-          サブシステム
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Database */}
-          <div className="aegis-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Database
-              </h3>
-              <StatusBadge status={checks.database?.status || 'unknown'} />
-            </div>
-            {checks.database?.latency_ms != null && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                応答時間: {checks.database.latency_ms}ms
-              </p>
-            )}
-            {checks.database?.error && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {checks.database.error}
-              </p>
-            )}
-          </div>
-
-          {/* Redis */}
-          <div className="aegis-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Redis
-              </h3>
-              <StatusBadge status={checks.redis?.status || 'unknown'} />
-            </div>
-            {checks.redis?.latency_ms != null && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                応答時間: {checks.redis.latency_ms}ms
-              </p>
-            )}
-            {checks.redis?.error && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {checks.redis.error}
-              </p>
-            )}
-          </div>
-
-          {/* Celery */}
-          <div className="aegis-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Celery
-              </h3>
-              <StatusBadge status={checks.celery?.status || 'unknown'} />
-            </div>
-            {checks.celery?.workers != null && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                ワーカー数: {checks.celery.workers}
-              </p>
-            )}
-            {checks.celery?.error && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                {checks.celery.error}
-              </p>
-            )}
-          </div>
-
-          {/* Disk */}
-          <div className="aegis-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Disk
-              </h3>
-              <StatusBadge status={checks.disk?.status || 'unknown'} />
-            </div>
-            {checks.disk?.used_percent != null && (
-              <>
-                <div className="mb-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className={`h-full rounded-full ${
-                      checks.disk.used_percent > 90
-                        ? 'bg-red-500'
-                        : checks.disk.used_percent > 75
-                          ? 'bg-amber-500'
-                          : 'bg-emerald-500'
-                    }`}
-                    style={{ width: `${checks.disk.used_percent}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {checks.disk.free_gb}GB 空き / {checks.disk.total_gb}GB (
-                  {checks.disk.used_percent}% 使用)
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Endpoint Response Times */}
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
-          エンドポイント応答時間
-        </h2>
-        <div className="aegis-card overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-aegis-border">
-            <thead>
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  エンドポイント
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  URL
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  ステータス
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  応答時間
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-aegis-border">
-              {endpoints.map((ep) => (
-                <tr key={ep.url}>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                    {ep.name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-gray-500 dark:text-gray-400">
-                    {ep.url}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <StatusBadge status={ep.status} />
-                    {ep.statusCode && (
-                      <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                        {ep.statusCode}
+      <div className="card table-card">
+        <h2 className="card-title">API エンドポイント一覧</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['サービス名', 'パス', 'レイテンシ', '稼働率', 'RPS', 'ステータス'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {ENDPOINTS.map(ep => {
+                const st = STATUS_CFG[ep.status as EpStatus] ?? STATUS_CFG.healthy;
+                return (
+                  <tr key={ep.path} className="table-row-hover">
+                    <td><span className="text-main" style={{ fontWeight: 500 }}>{ep.name}</span></td>
+                    <td className="mono text-sub">{ep.path}</td>
+                    <td>
+                      <span style={{ color: getLatencyColor(ep.latency), fontWeight: 600, fontSize: 13 }}>
+                        {ep.latency}ms
                       </span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500 dark:text-gray-400">
-                    {ep.latency_ms != null ? `${ep.latency_ms}ms` : '-'}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td style={{ minWidth: 120 }}>
+                      <ProgressBar value={ep.uptime} max={100} color={ep.uptime >= 99.9 ? '#10b981' : ep.uptime >= 99 ? '#f59e0b' : '#ef4444'} size="sm" />
+                      <span className="text-sub" style={{ fontSize: 11 }}>{ep.uptime}%</span>
+                    </td>
+                    <td className="text-sub">{ep.rps.toLocaleString()}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">インフラサービス</h2>
+        <div className="activity-list">
+          {SERVICES.map(svc => {
+            const st = STATUS_CFG[svc.status as EpStatus] ?? STATUS_CFG.healthy;
+            return (
+              <div key={svc.name} className="activity-item">
+                <div className="activity-dot" style={{
+                  background: svc.status === 'healthy' ? '#10b981' : svc.status === 'warning' ? '#f59e0b' : '#ef4444',
+                }} />
+                <div className="activity-content">
+                  <p className="activity-text">
+                    <strong>{svc.name}</strong>
+                    <span className="text-sub" style={{ marginLeft: 8 }}>{svc.detail}</span>
+                  </p>
+                  <div style={{ marginTop: 4 }}>
+                    <Badge variant={st.v}>{st.l}</Badge>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

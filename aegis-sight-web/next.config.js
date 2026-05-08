@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 
+const isDev = process.env.NODE_ENV !== 'production';
+
+// In dev we also allow ws:/http: from LAN hosts so HMR WebSocket works
+// when the dev server is reached over a non-localhost origin.
+const devConnectExtras = isDev ? " ws: http:" : "";
+
 // Content-Security-Policy
 // Note: 'unsafe-inline'/'unsafe-eval' required for Next.js hydration and Tailwind inline styles.
 // frame-ancestors, form-action, object-src, base-uri provide strong protection without breaking functionality.
@@ -9,7 +15,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob:",
   "font-src 'self' https://fonts.gstatic.com",
-  "connect-src 'self' http://localhost:8000 http://localhost:3000 ws://localhost:*",
+  `connect-src 'self' http://localhost:8000 http://localhost:3000 ws://localhost:*${devConnectExtras}`,
   "media-src 'none'",
   "object-src 'none'",
   "frame-src 'none'",
@@ -31,6 +37,8 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: __dirname,
   reactStrictMode: true,
+  // Allow LAN hosts to use HMR / dev server. Effective only in dev mode.
+  allowedDevOrigins: ['192.168.0.185', '*.local', '127.0.0.1', 'localhost'],
   async headers() {
     return [
       {

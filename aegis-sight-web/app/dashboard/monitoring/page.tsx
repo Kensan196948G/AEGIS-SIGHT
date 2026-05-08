@@ -1,355 +1,88 @@
 'use client';
 
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { ProgressBar, BarChart } from '@/components/ui/chart';
+import {
+  Badge, ProgressBar, Sparkline,
+} from '@/components/ui/design-components';
 
-type AlertLevel = 'critical' | 'warning' | 'info';
-
-interface MonitorEvent {
-  id: string;
-  time: string;
-  level: AlertLevel;
-  host: string;
-  message: string;
-}
-
-interface ServiceStatus {
-  name: string;
-  host: string;
-  status: 'healthy' | 'degraded' | 'down';
-  uptime_pct: number;
-  response_ms: number;
-  last_checked: string;
-}
-
-interface HostMetrics {
-  host: string;
-  label: string;
-  cpu_pct: number;
-  mem_pct: number;
-  disk_pct: number;
-}
-
-const demoEvents: MonitorEvent[] = [
-  { id: 'e001', time: '14:32', level: 'critical', host: 'srv-prod-03', message: 'CPU使用率が95%を超過' },
-  { id: 'e002', time: '14:15', level: 'warning', host: 'db-replica-02', message: 'レプリケーション遅延 5秒' },
-  { id: 'e003', time: '13:58', level: 'info', host: 'srv-web-01', message: 'デプロイ完了 v2.4.1' },
-  { id: 'e004', time: '13:42', level: 'warning', host: 'storage-nas-01', message: 'ディスク使用率 85%' },
-  { id: 'e005', time: '13:30', level: 'info', host: 'fw-edge-01', message: 'ファームウェア更新完了' },
-  { id: 'e006', time: '13:10', level: 'critical', host: 'srv-app-02', message: 'メモリ不足エラー（OOM Killer 発動）' },
-  { id: 'e007', time: '12:55', level: 'info', host: 'srv-web-02', message: 'SSL証明書自動更新完了' },
-  { id: 'e008', time: '12:40', level: 'warning', host: 'switch-core-01', message: 'ポートエラーカウント増加' },
+const SERVERS = [
+  { id: 'sv-001', name: 'aegis-ap-01',   role: 'アプリケーション', cpu: 42, mem: 68, disk: 55, status: 'healthy', uptime: '99.98%', cpuHistory: [35,40,38,42,45,40,42] },
+  { id: 'sv-002', name: 'aegis-ap-02',   role: 'アプリケーション', cpu: 38, mem: 62, disk: 55, status: 'healthy', uptime: '99.97%', cpuHistory: [30,35,38,36,40,38,38] },
+  { id: 'sv-003', name: 'aegis-db-01',   role: 'データベース',     cpu: 71, mem: 85, disk: 78, status: 'warning', uptime: '99.95%', cpuHistory: [50,60,65,70,72,70,71] },
+  { id: 'sv-004', name: 'aegis-auth-01', role: '認証サーバー',     cpu: 25, mem: 45, disk: 40, status: 'healthy', uptime: '100%',   cpuHistory: [20,22,25,24,26,25,25] },
+  { id: 'sv-005', name: 'aegis-proxy-01', role: 'リバースプロキシ', cpu: 15, mem: 30, disk: 25, status: 'healthy', uptime: '100%',   cpuHistory: [12,14,15,16,15,14,15] },
+  { id: 'sv-006', name: 'aegis-siem-01', role: 'SIEM',            cpu: 88, mem: 92, disk: 91, status: 'critical', uptime: '99.50%', cpuHistory: [70,75,80,85,88,90,88] },
 ];
 
-const demoServices: ServiceStatus[] = [
-  { name: 'Web Frontend', host: 'srv-web-01', status: 'healthy', uptime_pct: 99.98, response_ms: 45, last_checked: '14:32:01' },
-  { name: 'API Server', host: 'srv-api-01', status: 'healthy', uptime_pct: 99.95, response_ms: 120, last_checked: '14:32:05' },
-  { name: 'Database (Primary)', host: 'db-primary-01', status: 'healthy', uptime_pct: 99.99, response_ms: 8, last_checked: '14:32:10' },
-  { name: 'Database (Replica)', host: 'db-replica-02', status: 'degraded', uptime_pct: 98.20, response_ms: 380, last_checked: '14:31:50' },
-  { name: 'Application Server', host: 'srv-app-02', status: 'down', uptime_pct: 95.10, response_ms: 0, last_checked: '14:30:00' },
-  { name: 'File Storage', host: 'storage-nas-01', status: 'degraded', uptime_pct: 99.50, response_ms: 210, last_checked: '14:32:03' },
-  { name: 'Monitoring (Prometheus)', host: 'mon-prom-01', status: 'healthy', uptime_pct: 100.0, response_ms: 22, last_checked: '14:32:08' },
-  { name: 'Grafana Dashboard', host: 'mon-graf-01', status: 'healthy', uptime_pct: 99.90, response_ms: 95, last_checked: '14:32:06' },
-];
-
-// Prometheus scrape target metrics
-const demoHostMetrics: HostMetrics[] = [
-  { host: 'srv-prod-03', label: 'Production Server', cpu_pct: 95, mem_pct: 78, disk_pct: 62 },
-  { host: 'srv-api-01', label: 'API Server', cpu_pct: 42, mem_pct: 55, disk_pct: 38 },
-  { host: 'db-primary-01', label: 'DB Primary', cpu_pct: 28, mem_pct: 82, disk_pct: 71 },
-  { host: 'db-replica-02', label: 'DB Replica', cpu_pct: 35, mem_pct: 76, disk_pct: 70 },
-  { host: 'storage-nas-01', label: 'NAS Storage', cpu_pct: 12, mem_pct: 34, disk_pct: 85 },
-];
-
-// 24h response time trend data (hourly averages)
-const responseTrendData = [
-  { label: '03:00', value: 68 },
-  { label: '05:00', value: 52 },
-  { label: '07:00', value: 95 },
-  { label: '09:00', value: 180 },
-  { label: '11:00', value: 145 },
-  { label: '13:00', value: 310 },
-  { label: '14:00', value: 220 },
-  { label: '14:32', value: 120 },
-];
-
-const alertConfig: Record<AlertLevel, { label: string; variant: 'danger' | 'warning' | 'info'; dotColor: string }> = {
-  critical: { label: '重大', variant: 'danger', dotColor: 'bg-red-500' },
-  warning: { label: '警告', variant: 'warning', dotColor: 'bg-amber-500' },
-  info: { label: '情報', variant: 'info', dotColor: 'bg-blue-500' },
+type SrvStatus = 'healthy' | 'warning' | 'critical' | 'offline';
+const STATUS_CFG: Record<SrvStatus, { l: string; v: 'success' | 'warning' | 'danger' | 'default' }> = {
+  healthy:  { l: '正常',   v: 'success' },
+  warning:  { l: '警告',   v: 'warning' },
+  critical: { l: '危険',   v: 'danger'  },
+  offline:  { l: 'オフライン', v: 'default' },
 };
+const getStatus = (s: string) => STATUS_CFG[s as SrvStatus] ?? STATUS_CFG.offline;
 
-const serviceStatusConfig: Record<ServiceStatus['status'], { label: string; variant: 'success' | 'warning' | 'danger'; dotColor: string }> = {
-  healthy: { label: '正常', variant: 'success', dotColor: 'bg-green-500' },
-  degraded: { label: '低下', variant: 'warning', dotColor: 'bg-amber-500' },
-  down: { label: '停止', variant: 'danger', dotColor: 'bg-red-500' },
-};
+const getColor = (v: number) => v >= 80 ? '#ef4444' : v >= 60 ? '#f59e0b' : '#10b981';
 
-const stats = {
-  healthy: demoServices.filter((s) => s.status === 'healthy').length,
-  degraded: demoServices.filter((s) => s.status === 'degraded').length,
-  down: demoServices.filter((s) => s.status === 'down').length,
-  total: demoServices.length,
-};
-
-type MetricTab = 'cpu' | 'mem' | 'disk';
-
-const metricConfig: Record<MetricTab, { label: string; key: keyof HostMetrics; unit: string }> = {
-  cpu:  { label: 'CPU使用率',      key: 'cpu_pct',  unit: '%' },
-  mem:  { label: 'メモリ使用率',   key: 'mem_pct',  unit: '%' },
-  disk: { label: 'ディスク使用率', key: 'disk_pct', unit: '%' },
-};
+const healthyCount  = SERVERS.filter(s => s.status === 'healthy').length;
+const warningCount  = SERVERS.filter(s => s.status === 'warning').length;
+const criticalCount = SERVERS.filter(s => s.status === 'critical').length;
 
 export default function MonitoringPage() {
-  const [levelFilter, setLevelFilter] = useState<AlertLevel | 'all'>('all');
-  const [metricTab, setMetricTab] = useState<MetricTab>('cpu');
-
-  const filteredEvents = demoEvents.filter(
-    (e) => levelFilter === 'all' || e.level === levelFilter
-  );
-
-  const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_URL;
-
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+    <div className="page-content">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">監視ダッシュボード</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            システムとネットワークのリアルタイム監視
-          </p>
+          <h1 className="page-title">システム監視</h1>
+          <p className="page-subtitle">サーバー・インフラの稼働状況とリソース使用率のリアルタイム監視</p>
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          最終更新: 14:32 JST
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary">更新</button>
         </div>
       </div>
 
-      {/* Status Overview */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="aegis-card text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-            <div className="h-3 w-3 rounded-full bg-emerald-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.healthy}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">正常</p>
-        </div>
-        <div className="aegis-card text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-            <div className="h-3 w-3 rounded-full bg-amber-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.degraded}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">低下</p>
-        </div>
-        <div className="aegis-card text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-            <div className="h-3 w-3 rounded-full bg-red-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.down}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">停止中</p>
-        </div>
-        <div className="aegis-card text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-            <div className="h-3 w-3 rounded-full bg-blue-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">合計サービス</p>
-        </div>
+      <div className="grid-3">
+        <div className="card card-center"><p className="stat-label">正常</p><p className="stat-value text-green">{healthyCount}</p></div>
+        <div className="card card-center"><p className="stat-label">警告</p><p className="stat-value text-amber">{warningCount}</p></div>
+        <div className="card card-center"><p className="stat-label">危険</p><p className="stat-value text-red">{criticalCount}</p></div>
       </div>
 
-      {/* Prometheus Metrics Panel */}
-      <div className="aegis-card">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              リソース使用率（Prometheus）
-            </h2>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              スクレイプ間隔: 15秒 — 最終収集: 14:32:08 JST
-            </p>
-          </div>
-          {/* Metric Tab Selector */}
-          <div className="flex gap-1">
-            {(Object.keys(metricConfig) as MetricTab[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setMetricTab(tab)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  metricTab === tab
-                    ? 'bg-aegis-blue text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-aegis-dark dark:text-gray-400 dark:hover:bg-aegis-surface'
-                }`}
-              >
-                {metricConfig[tab].label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-3">
-          {demoHostMetrics.map((m) => {
-            const value = m[metricConfig[metricTab].key] as number;
-            const color: 'auto' = 'auto';
-            return (
-              <div key={m.host} className="flex items-center gap-3">
-                <div className="w-36 shrink-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{m.label}</p>
-                  <p className="font-mono text-xs text-gray-500 dark:text-gray-400">{m.host}</p>
-                </div>
-                <div className="flex-1">
-                  <ProgressBar value={value} max={100} color={color} size="md" showLabel />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Response Time Trend (24h) */}
-      <div className="aegis-card">
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-            応答時間トレンド（24時間）
-          </h2>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            API Server (srv-api-01) — 単位: ms
-          </p>
-        </div>
-        <BarChart
-          data={responseTrendData.map((d) => ({
-            label: d.label,
-            value: d.value,
-            color: d.value > 200 ? 'bg-red-500' : d.value > 100 ? 'bg-amber-500' : 'bg-emerald-500',
-          }))}
-          maxValue={400}
-          height={180}
-          showValues
-        />
-      </div>
-
-      {/* Grafana Embed / Placeholder */}
-      <div className="aegis-card">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-          システムメトリクス（Grafana）
-        </h2>
-        {grafanaUrl ? (
-          <iframe
-            src={grafanaUrl}
-            className="h-96 w-full rounded-lg"
-            frameBorder="0"
-            title="Grafana Dashboard"
-          />
-        ) : (
-          <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 dark:border-aegis-border dark:bg-aegis-dark">
-            <div className="text-center">
-              <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-              </svg>
-              <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">
-                Grafana ダッシュボード未接続
-              </p>
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                環境変数 <code className="rounded bg-gray-200 px-1 dark:bg-gray-700">NEXT_PUBLIC_GRAFANA_URL</code> を設定してください
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Service Status Table */}
-      <div className="aegis-card overflow-hidden p-0">
-        <div className="border-b border-gray-200 px-6 py-4 dark:border-aegis-border">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">サービス稼働状況</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/50 dark:border-aegis-border dark:bg-aegis-dark/50">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">サービス</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ホスト</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">状態</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">稼働率</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">応答時間</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">最終確認</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-aegis-border">
-              {demoServices.map((svc) => {
-                const cfg = serviceStatusConfig[svc.status];
+      <div className="card table-card">
+        <h2 className="card-title">サーバー一覧</h2>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead><tr>
+              {['サーバー名', 'ロール', 'CPU', 'メモリ', 'ディスク', 'CPU トレンド', '稼働率', 'ステータス'].map(h => <th key={h}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {SERVERS.map(sv => {
+                const st = getStatus(sv.status);
                 return (
-                  <tr key={svc.host} className="transition-colors hover:bg-gray-50/70 dark:hover:bg-aegis-dark/40">
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full flex-shrink-0 ${cfg.dotColor}`} />
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{svc.name}</span>
-                      </div>
+                  <tr key={sv.id} className="table-row-hover">
+                    <td><span className="link-text mono">{sv.name}</span></td>
+                    <td className="text-sub">{sv.role}</td>
+                    <td style={{ minWidth: 100 }}>
+                      <ProgressBar value={sv.cpu} max={100} color={getColor(sv.cpu)} size="sm" />
+                      <span className="text-sub" style={{ fontSize: 11 }}>{sv.cpu}%</span>
                     </td>
-                    <td className="px-6 py-3 font-mono text-sm text-gray-600 dark:text-gray-400">{svc.host}</td>
-                    <td className="px-6 py-3">
-                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                    <td style={{ minWidth: 100 }}>
+                      <ProgressBar value={sv.mem} max={100} color={getColor(sv.mem)} size="sm" />
+                      <span className="text-sub" style={{ fontSize: 11 }}>{sv.mem}%</span>
                     </td>
-                    <td className="px-6 py-3">
-                      <span className={`text-sm font-medium ${svc.uptime_pct >= 99.9 ? 'text-green-600 dark:text-green-400' : svc.uptime_pct >= 99.0 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {svc.uptime_pct.toFixed(2)}%
-                      </span>
+                    <td style={{ minWidth: 100 }}>
+                      <ProgressBar value={sv.disk} max={100} color={getColor(sv.disk)} size="sm" />
+                      <span className="text-sub" style={{ fontSize: 11 }}>{sv.disk}%</span>
                     </td>
-                    <td className="px-6 py-3">
-                      <span className={`text-sm font-mono ${svc.response_ms === 0 ? 'text-gray-400' : svc.response_ms > 200 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {svc.response_ms === 0 ? '—' : `${svc.response_ms} ms`}
-                      </span>
+                    <td>
+                      <Sparkline data={sv.cpuHistory} color={getColor(sv.cpu)} width={80} height={28} />
                     </td>
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{svc.last_checked}</td>
+                    <td className="text-sub">{sv.uptime}</td>
+                    <td><Badge variant={st.v} dot>{st.l}</Badge></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Recent Events */}
-      <div className="aegis-card">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">最近のイベント</h2>
-          <div className="flex gap-2">
-            {(['all', 'critical', 'warning', 'info'] as const).map((lvl) => (
-              <button
-                key={lvl}
-                onClick={() => setLevelFilter(lvl)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  levelFilter === lvl
-                    ? 'bg-aegis-blue text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-aegis-dark dark:text-gray-400 dark:hover:bg-aegis-surface'
-                }`}
-              >
-                {lvl === 'all' ? 'すべて' : alertConfig[lvl].label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-2">
-          {filteredEvents.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              該当するイベントがありません
-            </p>
-          ) : (
-            filteredEvents.map((event) => {
-              const cfg = alertConfig[event.level];
-              return (
-                <div key={event.id} className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-aegis-surface/50">
-                  <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${cfg.dotColor}`} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                      <span className="font-mono text-xs text-gray-500 dark:text-gray-400">{event.host}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-900 dark:text-white">{event.message}</p>
-                  </div>
-                  <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{event.time}</span>
-                </div>
-              );
-            })
-          )}
         </div>
       </div>
     </div>
