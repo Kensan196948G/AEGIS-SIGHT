@@ -128,7 +128,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@aegis-sight.local"
+                  placeholder="admin@mirai-kensetsu.co.jp"
                   className="aegis-input pl-10"
                 />
               </div>
@@ -217,7 +217,7 @@ export default function LoginPage() {
           {/* Demo Hint */}
           <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              <span className="font-semibold">Demo:</span> admin@aegis-sight.local / admin
+              <span className="font-semibold">Demo:</span> admin@mirai-kensetsu.co.jp / Password123!
             </p>
           </div>
         </div>
