@@ -72,18 +72,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v1/auth/login`, {
+      // Backend uses OAuth2PasswordRequestForm at /api/v1/auth/token (form-encoded).
+      const tokenForm = new URLSearchParams({ username: email, password });
+      const response = await fetch(`${apiUrl}/api/v1/auth/token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: tokenForm.toString(),
       });
 
       if (!response.ok) {
-        // Fallback for demo: accept admin@aegis-sight.local / admin
-        if (email === 'admin@aegis-sight.local' && password === 'admin') {
+        // Fallback for demo: accept seeded admin credentials when API is reachable but rejects.
+        if (email === 'admin@mirai-kensetsu.co.jp' && password === 'Password123!') {
           const demoUser: User = {
             id: '1',
-            email: 'admin@aegis-sight.local',
+            email: 'admin@mirai-kensetsu.co.jp',
             name: '管理者',
             department: 'IT管理',
             role: 'admin',
@@ -99,17 +101,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('メールアドレスまたはパスワードが正しくありません');
       }
 
-      const data = await response.json();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: data.user, token: data.token }));
-      setAuthCookie(data.token);
-      setUser(data.user);
+      const tokenData = await response.json();
+      const accessToken: string = tokenData.access_token;
+      // Fetch the authenticated user profile via /auth/me
+      const meResponse = await fetch(`${apiUrl}/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const me = meResponse.ok ? await meResponse.json() : null;
+      const apiUser: User = me ? {
+        id: me.id ?? '1',
+        email: me.email ?? email,
+        name: me.full_name ?? me.name ?? email,
+        department: me.department ?? '',
+        role: me.role ?? 'user',
+        avatarUrl: me.avatar_url ?? null,
+      } : {
+        id: '1', email, name: email, department: '', role: 'user', avatarUrl: null,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: apiUser, token: accessToken }));
+      setAuthCookie(accessToken);
+      setUser(apiUser);
       router.push('/dashboard');
     } catch (err) {
-      // If API is unavailable, allow demo login
-      if (email === 'admin@aegis-sight.local' && password === 'admin') {
+      // If API is unavailable, allow demo login with the seeded admin credentials
+      if (email === 'admin@mirai-kensetsu.co.jp' && password === 'Password123!') {
         const demoUser: User = {
           id: '1',
-          email: 'admin@aegis-sight.local',
+          email: 'admin@mirai-kensetsu.co.jp',
           name: '管理者',
           department: 'IT管理',
           role: 'admin',
