@@ -30,7 +30,17 @@ class Settings(BaseSettings):
     AZURE_CLIENT_SECRET: str = ""
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # 開発時に systemd で常駐する Next.js dev server が port 3080 を使い、
+    # かつ LAN 経由 (192.168.0.185) でモバイル / 別端末から確認するため、
+    # localhost と LAN IP の両方の origin を許容する。
+    # production は CORS_ORIGINS env var で本番ドメインに上書きすること。
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3080",
+        "http://localhost:5173",
+        "http://192.168.0.185:3000",
+        "http://192.168.0.185:3080",
+    ]
 
 
 settings = Settings()
