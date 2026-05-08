@@ -72,7 +72,7 @@
 | 🌐 **環境** | 本社・支社・建設現場（拠点外）・テレワーク |
 | 🛠️ **開発方式** | ClaudeOS v8 自律型開発（AI-Augmented Development） |
 | 📊 **統合元** | IAMS (IntegratedITAssetServiceManagement) — 統合スコア 78/100 |
-| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,648件** / vitest **2,764件**・SAM M365 Graph API 実統合 (alias-first SKU matching) ＆ 調達承認通知（email/Slack/Teams）完了・**SAM Frontend API 実接続完了 (PR#484/#485)** ・**Dashboard design 実装完了 (PR#523, 純静的 design-data 駆動)** ・**branch coverage 91.30% / functions 99.82% 達成** |
+| 📅 **開発期間** | 全117フェーズ完了（Phase 0-117 Done）・pytest **4,648件** / vitest **2,764件**・SAM M365 Graph API 実統合 ＆ 調達承認通知完了・**Dashboard design 実装完了 (PR#523, 純静的 design-data 駆動)** ・**Session 2026-05-08: 16 PR merged** (Dependabot 3 + dashboard refactor + vitest smoke 10 file + 外部レビュー対応 5 + login chain 修正 3) ・**Login E2E 動作確認 ✅** ・**branch coverage 91.30% / functions 99.82% 達成** |
 
 ### 💡 なぜ AEGIS-SIGHT を作るのか
 
@@ -693,7 +693,8 @@ graph LR
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：✅ STABLE — Session 2026-05-01 全チェック通過 (PR#503/#507 merged, PR#508 open, pytest 4,648 / vitest 2,764 / functions 99.82% / branches 91.30%)
+> **N = 3** (通常変更)：✅ STABLE — Session 2026-05-08 全チェック通過 (16 PR merged 含む PR#523 dashboard静的化 / PR#530-#536 外部レビュー対応 5件 / PR#537-#539 login chain 完全修復, pytest 4,648 / vitest 2,764 / functions 99.82% / branches 91.30%)
+> **Login E2E**: 2026-05-08 動作確認済 — `admin@mirai-kensetsu.co.jp` / `Password123!` で `192.168.0.185:3080/login` から /dashboard 遷移成功 ✅
 
 ### Agent Teams
 
