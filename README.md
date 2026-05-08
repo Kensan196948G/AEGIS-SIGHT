@@ -157,8 +157,8 @@ flowchart LR
     end
 
     subgraph TEST["🧪 テスト (DB付き)"]
-        PYTEST["🐍 pytest\n4,636件 + coverage"]
-        VITEST["⚛️ vitest\n2,720件 + coverage v8"]
+        PYTEST["🐍 pytest\n4,648件 + coverage"]
+        VITEST["⚛️ vitest\n2,764件 + coverage v8"]
         REPORT["📊 PR Summary\nコメント自動投稿"]
     end
 
@@ -335,7 +335,7 @@ flowchart LR
 │   ├── app/core/                 # 設定・認証・DB・例外・メッセージ・ページネーション・ミドルウェア
 │   ├── alembic/                  # DBマイグレーション (24版)
 │   ├── scripts/                  # シードデータ
-│   └── tests/                    # pytest (181ファイル, 4,636テスト)
+│   └── tests/                    # pytest (182ファイル, 4,648テスト)
 │
 ├── ⚛️ aegis-sight-web/           # Next.js 16 フロントエンド (~220ファイル)
 │   ├── app/dashboard/            # ダッシュボード (45+ページ)
@@ -653,7 +653,7 @@ graph LR
 | 調達承認通知サービス統合 | email / Slack / Teams チャネル経由の `send_procurement_notification` / 単体テスト 10件 | [#474](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/474) ✅ |
 | SKU → License alias mapping | `software_sku_aliases` テーブル + 2-pass matcher (alias-first → substring fallback) + claim exclusivity / 単体テスト 10件 | [#478](https://github.com/Kensan196948G/AEGIS-SIGHT/pull/478) ✅ |
 | Issue 整理 | #425 / #426 / #477 を close、残 Open は upstream 待ちの #325 のみ | — |
-| テスト数 | pytest `collected 4,636 tests` 達成 (前回比 +2,838) | — |
+| テスト数 | pytest `collected 4,648 tests` 達成 (前回比 +2,838) | — |
 
 </details>
 
@@ -682,8 +682,8 @@ graph LR
 
 | 条件 | 基準 | 現在 |
 |:---|:---|:---:|
-| Backend テスト | 全テスト通過 | ✅ **181 ファイル / 4,636件** pytest |
-| Frontend テスト | 全テスト通過 | ✅ 92 ファイル / 2,720件 vitest |
+| Backend テスト | 全テスト通過 | ✅ **182 ファイル / 4,648件** pytest |
+| Frontend テスト | 全テスト通過 | ✅ 92 ファイル / 2,764件 vitest |
 | フロントカバレッジ | Lines ≥ 90% | ✅ **99.57%** |
 | ブランチカバレッジ | Branches ≥ 85% | ✅ **91.30%** |
 | 関数カバレッジ | Functions ≥ 85% | ✅ **99.82%** |
@@ -693,7 +693,7 @@ graph LR
 | エラー | 実行時エラー 0 | ✅ |
 | セキュリティ | Critical 脆弱性 0 | ✅ |
 
-> **N = 3** (通常変更)：✅ STABLE — Session 2026-05-01 全チェック通過 (PR#503/#507 merged, PR#508 open, pytest 4,636 / vitest 2,720 / functions 99.82% / branches 91.30%)
+> **N = 3** (通常変更)：✅ STABLE — Session 2026-05-01 全チェック通過 (PR#503/#507 merged, PR#508 open, pytest 4,648 / vitest 2,764 / functions 99.82% / branches 91.30%)
 
 ### Agent Teams
 
