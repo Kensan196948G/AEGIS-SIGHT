@@ -21,9 +21,21 @@ from app.core.security_headers import SecurityHeadersMiddleware
 logger = logging.getLogger(__name__)
 
 
+DEFAULT_INSECURE_SECRET_KEY = "CHANGE-ME-IN-PRODUCTION"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
+    # Startup security gate: refuse to boot in production with the default placeholder
+    # SECRET_KEY. JWT signing must not fall back to a hard-coded value when DEBUG=False.
+    if not settings.DEBUG and settings.SECRET_KEY == DEFAULT_INSECURE_SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY must not use the placeholder value 'CHANGE-ME-IN-PRODUCTION' "
+            "when DEBUG is False. Set the SECRET_KEY environment variable (or .env entry) "
+            "to a strong random secret before starting the API in production."
+        )
+
     # Startup: verify DB connectivity
     try:
         async with engine.connect() as conn:
